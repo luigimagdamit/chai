@@ -1,103 +1,64 @@
-use core::fmt;
-use std::fmt::write;
+mod token;      // Importing the token module
+mod parser;     // Importing the parser module
+mod error;      // Importing the error module
 
-#[derive(Clone)]
-enum KeywordType {
-    Print
-}
-#[derive(Clone)]
-enum Op {
-    Add,
-    Subtract,
-    Multiply,
-    Divide,
-    Mod
-}
-#[derive(Clone)]
-enum Type {
-    Number,
-    String,
-    Boolean,
-    Operator(Op),
-    Keyword(KeywordType),
-    Identifiers
-}
-impl fmt::Display for Type {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Type::Keyword(KeywordType::Print) => write!(f, " is Keyword -> Print"),
-            Type::Operator(Op::Add) => write!(f, " is <Operator/Add>"),
-            Type::Number => write!(f, " is Number"),
-            _ => write!(f, "Unidentified <Type>")
-        }
-    }
-}
-impl Copy for Type {}
-impl Copy for KeywordType {}
-impl Copy for Op {}
+use parser::{match_literal, match_number, ParserResult};
+use token::{TokenType, KeywordType, Op};
+use error::ErrorCode;
 
-struct Tree {
-    left: Type,
-    operator: Op,
-    right: Type
-}
+const ADD_OP: TokenType = TokenType::Operator(Op::Add);
 
-struct Literal <'a>{
-    lexeme: &'a str,
-    literal_type: Type
-}
-impl<'a> fmt::Display for Literal <'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "[Literal]\n\t<&'a str> Lexeme: {}, \n\t<Type> literal_type {}", self.lexeme, self.literal_type)
-    }
-}
-
-struct ParserSuccess <'a>{
-    literal: Literal<'a>,
-    remainder: &'a str
-}
-impl<'a> fmt::Display for ParserSuccess <'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "[ParserSuccess]\n<Literal> literal: {}, <&'a str> remainder {}", self.literal, self.remainder)
-    }
-}
-fn match_literal<'a>(expected: &'static str, t: Type) 
-    -> impl Fn(&'a str) -> Result<ParserSuccess, &'a str> {
+fn pair<'a, P1, P2, R1, R2>(parser1: P1, parser2: P2) -> impl Fn(&'a str) -> (ParserResult<'a>, ParserResult<'a>) 
+where 
+    P1: Fn(&'a str) -> ParserResult<'a>,
+    P2: Fn(&'a str) -> ParserResult<'a>
+{
     move |input| {
-        match input.get(0..expected.len()) {
-            Some(next) if next == expected => {
-                // Create a Literal using a reference to part of the input string
-                let literal = Literal {
-                    lexeme: &input[0..expected.len()],
-                    literal_type: t,
-                };
-                let success = ParserSuccess {
-                    literal: literal,
-                    remainder: &input[expected.len()..]
-                };
-                // Return the remaining string and the Literal struct
-                Ok((success))
-            }
-            _ => Err(input), // No match, return the original input
+        let result1 = parser1(&input);
+        match &result1.token {
+            Some(_) => {
+                let result2 = parser2(&result1.remainder);
+                match &result2.token {
+                    Some(_) => { (result1, result2) }
+                    _ => { (result1, ParserResult{token: None, remainder: input})}
+                }
+            },
+            _ => { (ParserResult{token: None, remainder: input}, ParserResult{token: None, remainder: input} )}
         }
     }
 }
-
-
 fn main() {
-    let PrintLn = match_literal("println", Type::Keyword(KeywordType::Print));
-    let Add = match_literal("+", Type::Operator(Op::Add));
+    let source = "12+20000";
+    let parse_add = match_literal("+", ADD_OP);
+    // let parse_add_res = parse_add(&source);
+    let parse_num_res = match_number(&source);
     
-    let result = PrintLn("println(\"echo\")");
-    //let result = parse_add("+");
-    match result {
-        Ok(_) => {
-            let success = result.unwrap();
-            
-            println!("{} {}", success.literal, success.remainder)
+    let pr = &parse_num_res.token;
+    match &pr {
+        Some(token) => {
+            println!("{}", &token);
+            let plus = parse_add(parse_num_res.remainder);
+            match &plus.token {
+                Some(t) => {
+                    println!("{}", &t);
+                    let rh = match_number(plus.remainder);
+                    match rh.token {
+                        Some(rht) => {
+                            println!("{}", rht);
+                        }
+                        _ => {}
+                    }
+                },
+                _ => {}
+            }
         },
-        Err(_) => {print!("Error")}
-    };
+        _ => {}
+    }
 
+    let t = pair::<_, _, ParserResult, ParserResult>(parse_add, match_number);
+    let u_res = t("4000");
+    let t_res = t("+23");
+   
+    println!("{} {} {}", u_res.0, t_res.0, t_res.1);
 
 }
