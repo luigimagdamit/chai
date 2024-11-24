@@ -6,7 +6,7 @@ use token::{TokenType, ErrorCode};
 
 fn main() {
 
-    let scanner = &mut Scanner::init_scanner("++`-=,.!\"hello there0");
+    let scanner = &mut Scanner::init_scanner("123+");
 
     while !scanner.is_at_end() {
         let s = scanner.scan_token();

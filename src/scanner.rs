@@ -83,6 +83,17 @@ impl<'a> Scanner<'a> {
         self.advance();
         self.make_token(TokenType::String)
     }
+    fn number(&mut self) -> Token{
+        while let Some(c) = self.current_char() {
+            match c.is_numeric() {
+                true => {
+                    self.advance();
+                },
+                false => break
+            }
+        }
+        return self.make_token(TokenType::Number)
+    }
 
     pub fn advance(&mut self) -> Option<char> {
         self.current += 1;
@@ -109,8 +120,10 @@ impl<'a> Scanner<'a> {
         }
 
         let advancer = self.advance();
+        
         match advancer {
             Some(c) => match c {
+                '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => self.number(),
                 '(' => self.make_token(TokenType::LeftParen),
                 ')' => self.make_token(TokenType::RightParen),
                 '{' => self.make_token(TokenType::LeftBrace),
