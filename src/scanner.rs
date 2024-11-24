@@ -82,7 +82,7 @@ impl<'a> Scanner<'a> {
         self.make_token(TokenType::String)
     }
 
-    fn advance(&mut self) -> Option<char> {
+    pub fn advance(&mut self) -> Option<char> {
         self.current += 1;
         self.source.chars().nth(self.current - 1)
     }
