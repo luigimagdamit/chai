@@ -37,13 +37,15 @@ impl<'a> Scanner<'a> {
 
     fn error_token(&self, message: &'a str) -> Token {
         Token {
-            token_type: TokenType::Error,
+            token_type: TokenType::Error((self.start, self.current)),
             start: message,
             length: message.len(),
             line: self.line,
         }
     }
-
+    pub fn get_lexeme(&self, loc: (usize, usize)) -> &'a str{
+        return &self.source[loc.0..loc.1]
+    }
     fn current_char(&mut self) -> Option<char> {
         self.source.chars().nth(self.current)
     }

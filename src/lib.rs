@@ -8,12 +8,12 @@ mod scanner;  // Import the Scanner module
 
 #[cfg(test)]
 mod tests {
-    use crate::{scanner::Scanner, token::{TokenType, ErrorCode}};
+    use crate::{scanner::Scanner, token::TokenType};
 
     #[test]
     fn test_scanner_eof() {
         let test_str = "\0";
-        let s = &mut Scanner::init_scanner(&test_str);
+        let s = &mut Scanner::init_scanner(test_str);
         assert_eq!(s.is_at_end(), true);
     }
     #[test]
@@ -47,7 +47,7 @@ mod tests {
         let s = &mut Scanner::init_scanner(&test_str);
 
         let test_token = s.scan_token();
-        assert_eq!(test_token.token_type, TokenType::Error);
+        assert_eq!(test_token.token_type, TokenType::Error((0, 0)));
         assert_eq!(test_token.start, "Unterminated String");
         assert_eq!(s.is_at_end(), true);
     }

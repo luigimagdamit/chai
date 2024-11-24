@@ -76,7 +76,7 @@ pub enum TokenType {
     StringTag,
     Struct,
 
-    Error,
+    Error((usize, usize)),
     DotDot,
     Len,
     PlusPlus,
@@ -85,10 +85,6 @@ pub enum TokenType {
 }
 #[allow(unused)]
 impl TokenType {
-    pub fn to_u32(self) -> u32 {
-        // Use the `as` keyword to cast the enum variant to its underlying value.
-        self as u32
-    }
 }
 impl fmt::Display for TokenType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -144,7 +140,7 @@ impl fmt::Display for TokenType {
             TokenType::StringTag => write!(f, "StringTag"),
             TokenType::Struct => write!(f, "Struct"),
 
-            TokenType::Error => write!(f, "Error"),
+            TokenType::Error(_) => write!(f, "Error"),
             TokenType::DotDot => write!(f, "DotDot"),
             TokenType::Len => write!(f, "Len"),
             TokenType::PlusPlus => write!(f, "PlusPlus"),
