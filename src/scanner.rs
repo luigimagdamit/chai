@@ -1,4 +1,4 @@
-use crate::token::{Token, TokenType};
+use crate::token::{self, Token, TokenType};
 
 pub struct Scanner<'a> {
     pub source: &'a str,
@@ -85,6 +85,7 @@ impl<'a> Scanner<'a> {
     }
     fn number(&mut self) -> Token{
         while let Some(c) = self.current_char() {
+            
             match c.is_numeric() {
                 true => {
                     self.advance();
@@ -93,6 +94,73 @@ impl<'a> Scanner<'a> {
             }
         }
         return self.make_token(TokenType::Number)
+    }
+    fn check_keyword(&self, rest: &str, token_type: TokenType) -> TokenType {
+        let lexeme = self.get_lexeme((self.start + 1, self.current));
+        //println!("check_keyword: {} {}", lexeme, rest);
+        if lexeme == rest {
+            return token_type
+        }
+        return TokenType::Identifier
+    }
+    fn identifier_type(&self) -> TokenType {
+        let first = self.source.chars().nth(self.start);
+        let lexeme_length = self.current - self.start;
+        //println!("first: {}", first.unwrap());
+        match first {
+            Some(c) => {
+                match c {
+                    'a' => return self.check_keyword("nd", TokenType::And),
+                    'c' => return self.check_keyword("lass", TokenType::Class),
+                    'e' => return self.check_keyword("lse", TokenType::Else),
+                    'f' => {
+                        if lexeme_length > 1 {
+                            match self.source.chars().nth(self.start + 1).unwrap() {
+                                'a' => return self.check_keyword("alse", TokenType::False),
+                                'o' => return self.check_keyword("or", TokenType::For),
+                                'n' => return self.check_keyword("n", TokenType::Fun),
+                                _ => {
+                                    
+                                    return TokenType::Identifier 
+                                }
+                            }
+                        }
+                    }
+                    'i' => return self.check_keyword("f", TokenType::If),
+                    'n' => return self.check_keyword("il", TokenType::Nil),
+                    'o' => return self.check_keyword("r", TokenType::Or),
+                    'p' => return self.check_keyword("rint", TokenType::Print),
+                    'r' => return self.check_keyword("eturn", TokenType::Return),
+                    's' => return self.check_keyword("uper", TokenType::Super),
+                    't' => {
+                        if lexeme_length > 1 {
+                            match self.source.chars().nth(self.start + 1).unwrap() {
+                                'h' => return self.check_keyword("his", TokenType::This),
+                                'r' => return self.check_keyword("rue", TokenType::True),
+                                _ => {
+                                    
+                                    return TokenType::Identifier 
+                                }
+                            }
+                        }
+                    }
+                    'v' => return self.check_keyword("ar", TokenType::Var),
+                    'w' => return self.check_keyword("hile", TokenType::While),
+                    _ => return TokenType::Identifier
+                }
+            },
+            _ => return TokenType::Error((self.start, self.current))
+        }
+        return TokenType::Identifier
+    }
+    fn identifier(&mut self) -> Token {
+        while let Some(c) = self.current_char() {
+            //println!("{}", c);
+            if c.is_alphanumeric() { 
+                self.advance(); 
+            } else { break }
+        }
+        return self.make_token(self.identifier_type());
     }
 
     pub fn advance(&mut self) -> Option<char> {
@@ -123,6 +191,7 @@ impl<'a> Scanner<'a> {
         
         match advancer {
             Some(c) => match c {
+                c if c.is_alphabetic() => self.identifier(),
                 '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => self.number(),
                 '(' => self.make_token(TokenType::LeftParen),
                 ')' => self.make_token(TokenType::RightParen),

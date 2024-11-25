@@ -47,7 +47,9 @@ mod tests {
         let s = &mut Scanner::init_scanner(&test_str);
 
         let test_token = s.scan_token();
-        assert_eq!(test_token.token_type, TokenType::Error((0, 0)));
+
+        // since the EOF is at index 5
+        assert_eq!(test_token.token_type, TokenType::Error((0, 5)));
         assert_eq!(test_token.start, "Unterminated String");
         assert_eq!(s.is_at_end(), true);
     }
