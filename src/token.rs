@@ -13,11 +13,18 @@ impl fmt::Display for ErrorCode {
 }
 
 #[allow(unused)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Token<'a>{
     pub token_type: TokenType,
     pub start: &'a str,
     pub length: usize,
     pub line: u32
+}
+impl<'a> fmt::Display for Token<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "token_type: {} start: {} length: {} line: {}", 
+               self.token_type, self.start, self.length, self.line)
+    }
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[allow(unused)]

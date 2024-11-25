@@ -26,7 +26,7 @@ impl<'a> Scanner<'a> {
         }
     }
 
-    fn make_token(&self, token_type: TokenType) -> Token {
+    fn make_token(&self, token_type: TokenType) -> Token<'a> {
         Token {
             token_type,
             start: &self.source[self.start..self.current],
@@ -35,7 +35,7 @@ impl<'a> Scanner<'a> {
         }
     }
 
-    fn error_token(&self, message: &'a str) -> Token {
+    fn error_token(&self, message: &'a str) -> Token<'a> {
         Token {
             token_type: TokenType::Error((self.start, self.current)),
             start: message,
@@ -65,7 +65,7 @@ impl<'a> Scanner<'a> {
         }
     }
 
-    fn string(&mut self) -> Token {
+    fn string(&mut self) -> Token<'a> {
         while let Some(c) = self.current_char() {
             if self.is_at_end() || c == '"' {
                 break;
@@ -83,7 +83,7 @@ impl<'a> Scanner<'a> {
         self.advance();
         self.make_token(TokenType::String)
     }
-    fn number(&mut self) -> Token{
+    fn number(&mut self) -> Token<'a> {
         while let Some(c) = self.current_char() {
             
             match c.is_numeric() {
@@ -153,7 +153,7 @@ impl<'a> Scanner<'a> {
         }
         return TokenType::Identifier
     }
-    fn identifier(&mut self) -> Token {
+    fn identifier(&mut self) -> Token<'a> {
         while let Some(c) = self.current_char() {
             //println!("{}", c);
             if c.is_alphanumeric() { 
@@ -179,7 +179,7 @@ impl<'a> Scanner<'a> {
         true
     }
 
-    pub fn scan_token(&mut self) -> Token {
+    pub fn scan_token(&mut self) -> Token<'a> {
         self.skip_whitespace();
 
         self.start = self.current;
