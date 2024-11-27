@@ -11,7 +11,7 @@ mod llvm_primitives;
 
 use parser::Parser;
 use std::io::{self, Write};
-use std::fs::{self, File};
+use std::fs::{self};
 
 fn repl() {
     loop {
@@ -43,8 +43,11 @@ fn main() {
         match &args[1] {
             s if s == "repl" => repl(),
             s if s == "cmd" => {
-                let parser = &mut Parser::init_parser(&args[2]);
-                parser.compile();
+
+                    let parser = &mut Parser::init_parser(&args[2]);
+                    parser.compile();
+
+                
             }
             s if s.is_ascii()=> {
 

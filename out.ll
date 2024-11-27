@@ -2,7 +2,7 @@ declare i32 @printf(i8*, ...)
 @fmt = private constant [4 x i8] c"%d\0A\00"
 define i32 @0() {
 entry:
-    ret i32 3005
+    ret i32 197
 }
 define i32 @main() {
 entry:
