@@ -1,7 +1,7 @@
 use std::fmt;
 #[derive(Clone)]
 pub enum DataType {
-    Integer(u32)
+    Integer(i32)
 }
 impl<'a> fmt::Display for DataType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

@@ -11,8 +11,7 @@ mod common;
 use parser::Parser;
 use std::io::{self, Write};
 
-
-fn main() {
+fn repl() {
     loop {
         let mut input = String::new();
         print!(">");
@@ -25,7 +24,17 @@ fn main() {
         let parser = &mut Parser::init_parser(source);
         parser.compile(); // warmup
     }
-    
-
-
+}
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() <= 1 {
+        let parser = &mut Parser::init_parser("21 * 10 + 21 * 10");
+        parser.compile(); // warmup
+    } else {
+        match &args[1] {
+            s if s == "repl" => repl(),
+            _ => println!("unrecognized terminal command")
+        }
+        
+    }
 }

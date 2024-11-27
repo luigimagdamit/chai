@@ -17,6 +17,21 @@ pub fn get_rule<'a>(token_type: TokenType) -> ParseRule<'a> {
             infix: Some(parse_binary),
             precedence: Precedence::PrecTerm 
         },
+        TokenType::Minus => ParseRule { 
+            prefix: None, 
+            infix: Some(parse_binary),
+            precedence: Precedence::PrecTerm 
+        },
+        TokenType::Star => ParseRule { 
+            prefix: None, 
+            infix: Some(parse_binary),
+            precedence: Precedence::PrecFactor
+        },
+        TokenType::Slash => ParseRule { 
+            prefix: None, 
+            infix: Some(parse_binary),
+            precedence: Precedence::PrecFactor
+        },
         TokenType::Number => ParseRule { 
             prefix: Some(parse_number), 
             infix: None, 

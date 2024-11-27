@@ -1,3 +1,4 @@
+use crate::common::PARSE_FN_OUTPUT;
 use crate::token::{Token, TokenType};
 use crate::scanner::Scanner;
 use crate::error::ErrorCode;
@@ -12,8 +13,9 @@ pub struct Parser<'a>{
     pub scanner: Scanner<'a>,
     had_error: bool,
     panic_mode: bool,
-    pub left_hand: Option<Expr>,
-    pub right_hand: Option<Expr>
+    // pub left_hand: Option<Expr>,
+    // pub right_hand: Option<Expr>
+    pub constant_stack: Vec<Option<Expr>>
 }
 impl<'a>Parser <'a>{
     pub fn error_at(&mut self, token: &Token, message: &str) {
@@ -73,23 +75,24 @@ impl<'a>Parser <'a>{
             scanner: Scanner::init_scanner(&source),
             panic_mode: false,
             had_error: false,
-            left_hand: None,
-            right_hand: None
+            // left_hand: None,
+            // right_hand: None
+            constant_stack: Vec::new()
         }
     }
-    pub fn print_parser(&self) {
-        println!("<Parser State> ");
-        if let Some(left) = &self.left_hand {
-            left.print_leaf();
-        } else { 
-            println!("<left: None>");
+    pub fn print_parser(&mut self) {
+        if PARSE_FN_OUTPUT {
+            println!("<Parser State> ");
+
+            let stack = &mut self.constant_stack;
+            println!("<Stack Top>");
+            println!("{}", stack.len());
+            for expr in  stack{
+                expr.clone().unwrap().print_leaf();
+            }
+            println!("</Parser State>")
         }
-        if let Some(right) = &self.right_hand {
-            right.print_leaf();
-        } else { 
-            println!("<right: None>");
-        }
-        println!("</Parser State>")
+        
     }
     pub fn compile(&mut self) {
         self.advance();
