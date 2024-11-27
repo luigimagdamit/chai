@@ -1,7 +1,7 @@
-use crate::token::TokenType;
-use crate::precedence::Precedence;
-use crate::parser::Parser;
-use crate::parse_fn::{parse_binary, parse_number};
+use crate::scanner::token::TokenType;
+use crate::parser::precedence::Precedence;
+use crate::parser::parser::Parser;
+use crate::parser::parse_fn::{parse_binary, parse_number};
 pub struct ParseRule<'a>{
     pub prefix: Option<ParseFn<'a>>,
     pub infix: Option<ParseFn<'a>>,

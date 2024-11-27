@@ -1,4 +1,4 @@
-use crate::common::NO_MAIN;
+use crate::common::common::NO_MAIN;
 pub fn llvm_print_declare() -> String {
     let codegen = "declare i32 @printf(i8*, ...)";
     if NO_MAIN { println!("{}", codegen) }

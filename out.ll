@@ -7,7 +7,7 @@ define void @print_i32(i32 %value) {
     }
 define i32 @0() {
 entry:
-    ret i32 35001
+    ret i32 49
 }
 define i32 @main() {
 entry:

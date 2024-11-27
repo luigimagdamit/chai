@@ -1,14 +1,6 @@
-mod token;    // Import the Token and TokenType module
-mod scanner;  // Import the Scanner module
-
-
-
-
-
-
 #[cfg(test)]
 mod tests {
-    use crate::{scanner::Scanner, token::TokenType};
+    use crate::{scanner::scanner::Scanner, scanner::token::TokenType};
 
     #[test]
     fn test_scanner_eof() {

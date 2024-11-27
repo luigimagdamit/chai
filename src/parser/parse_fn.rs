@@ -1,11 +1,11 @@
-use crate::parser::Parser;
-use crate::parse_rule::get_rule;
-use crate::precedence::Precedence;
-use crate::expr::{Expr, DataType};
-use crate::token::TokenType;
-use crate::common::PARSE_FN_OUTPUT;
-use crate::llvm_primitives::llvm_top_level_expr;
-use crate::llvm_print::{llvm_print_declare, llvm_print_no_main, llvm_fmt_string_int, llvm_print_i32};
+use crate::parser::parser::Parser;
+use crate::parser::parse_rule::get_rule;
+use crate::parser::precedence::Precedence;
+use crate::parser::expr::{Expr, DataType};
+use crate::scanner::token::TokenType;
+use crate::common::common::PARSE_FN_OUTPUT;
+use crate::llvm::llvm_primitives::llvm_top_level_expr;
+use crate::llvm::llvm_print::{llvm_print_declare, llvm_print_no_main, llvm_fmt_string_int, llvm_print_i32};
 
 pub fn top_level_expr(parser: &mut Parser) {
     if let Some(constant) = parser.constant_stack.pop() {

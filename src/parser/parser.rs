@@ -1,9 +1,12 @@
-use crate::common::{PARSE_FN_OUTPUT, PARSE_TOKEN_OUTPUT};
-use crate::token::{Token, TokenType};
-use crate::scanner::Scanner;
-use crate::error::ErrorCode;
-use crate::parse_fn::expression;
-use crate::expr::Expr;
+use crate::common::common::{PARSE_FN_OUTPUT, PARSE_TOKEN_OUTPUT};
+use crate::scanner::{
+    token::{Token, TokenType},
+    scanner::Scanner
+};
+
+use crate::common::error::ErrorCode;
+use crate::parser::parse_fn::expression;
+use crate::parser::expr::Expr;
 
 
 #[allow(unused)]

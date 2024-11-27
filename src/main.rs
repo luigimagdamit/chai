@@ -1,15 +1,10 @@
-mod token;    // Import the Token and TokenType module
+
 mod scanner;  // Import the Scanner module
 mod parser;
-mod error; 
-mod parse_rule;
-mod precedence;
-mod parse_fn;
-mod expr;
 mod common;
-mod llvm_primitives;
-mod llvm_print;
-use parser::Parser;
+mod llvm;
+
+use parser::parser::Parser;
 use std::io::{self, Write};
 use std::fs::{self};
 
