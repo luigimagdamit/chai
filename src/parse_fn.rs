@@ -4,20 +4,22 @@ use crate::precedence::Precedence;
 use crate::expr::{Expr, DataType};
 use crate::token::TokenType;
 use crate::common::PARSE_FN_OUTPUT;
-use crate::llvm_codegen::llvm_top_level_expr;
+use crate::llvm_primitives::llvm_top_level_expr;
 
-
+pub fn top_level_expr(parser: &mut Parser) {
+    if let Some(constant) = parser.constant_stack.pop() {
+        // println!("{}", &constant.unwrap().left);
+        let expr_eval = &constant.unwrap();
+        llvm_top_level_expr(&expr_eval.right, &expr_eval.data_type, 0);
+    }
+}
 pub fn expression(parser: &mut Parser) {
     parse_precedence(parser, Precedence::PrecAssignment);
 
     // assume this is just a high level expression
 
     parser.print_parser();
-    if let Some(constant) = parser.constant_stack.pop() {
-        // println!("{}", &constant.unwrap().left);
-        let expr_eval = &constant.unwrap();
-        llvm_top_level_expr(&expr_eval.right, &expr_eval.data_type, 0);
-    }
+    top_level_expr(parser);
 }
 
 pub fn parse_number(parser: &mut Parser) {
@@ -27,14 +29,8 @@ pub fn parse_number(parser: &mut Parser) {
         right: String::from(value),
         data_type: DataType::Integer(value.parse().unwrap())
     };
-    // number_leaf.print_leaf();
-    // match parser.left_hand {
-    //     None => parser.left_hand = Some(number_leaf),
-    //     Some(_) => parser.right_hand = Some(number_leaf)
-    // }
+
     parser.constant_stack.push(Some(number_leaf));
-    
-    // println!("<number: {}>", value)
 }
 
 pub fn parse_precedence(parser: &mut Parser, precedence: Precedence) {

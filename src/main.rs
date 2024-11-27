@@ -7,7 +7,7 @@ mod precedence;
 mod parse_fn;
 mod expr;
 mod common;
-mod llvm_codegen;
+mod llvm_primitives;
 
 use parser::Parser;
 use std::io::{self, Write};
