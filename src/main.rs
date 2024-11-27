@@ -2,6 +2,7 @@ mod token;    // Import the Token and TokenType module
 mod scanner;  // Import the Scanner module
 use scanner::Scanner;
 use token::{TokenType, ErrorCode, Token};
+use std::{fmt, os::unix::process};
 
 enum Precedence {
     PrecNone,
@@ -54,8 +55,8 @@ struct Parser<'a>{
     scanner: Scanner<'a>,
     had_error: bool,
     panic_mode: bool,
-    left_hand: Option<Leaf>,
-    right_hand: Option<Leaf>
+    left_hand: Option<Expr>,
+    right_hand: Option<Expr>
 }
 impl<'a>Parser <'a>{
     fn error_at(&mut self, token: &Token, message: &str) {
@@ -72,14 +73,13 @@ impl<'a>Parser <'a>{
                 println!("{} {}  at `{}`", stderr, message, token.start);
             }
         }
+        std::process::exit(1);
         if self.panic_mode {
             return
         }
     } 
     fn advance(&mut self) {
         self.previous = self.current.take();
-        
-        // println!("Scanner State");
         loop {
             let token = self.get_token();
             match token.token_type {
@@ -88,15 +88,6 @@ impl<'a>Parser <'a>{
                 },
                 _ => {
                     self.current = Some(token);
-                    // match self.previous {
-                    //     Some(t) => println!("\t<{}>", t),
-                    //     _ => println!("\t<no token>")
-                    // }
-                    // match self.current {
-                    //     Some(t) => println!("\t<{}>", t),
-                    //     _ => println!("<\tno token>")
-                    // }
-
                     break;
                 }
             }
@@ -129,6 +120,20 @@ impl<'a>Parser <'a>{
             right_hand: None
         }
     }
+    fn print_parser(&self) {
+        println!("<Parser State> ");
+        if let Some(left) = &self.left_hand {
+            left.print_leaf();
+        } else { 
+            println!("<left: None>");
+        }
+        if let Some(right) = &self.right_hand {
+            right.print_leaf();
+        } else { 
+            println!("<right: None>");
+        }
+        println!("</Parser State>")
+    }
     fn compile(&mut self) {
         self.advance();
         expression(self);
@@ -136,36 +141,45 @@ impl<'a>Parser <'a>{
 
     }
 }
-
+#[derive(Clone)]
 enum DataType {
-    Integer(String)
+    Integer(u32)
 }
-enum Operator {
-    Add
+impl<'a> fmt::Display for DataType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            DataType::Integer(int) => write!(f, "int:{}", int)
+        }
+    }
 }
-struct Leaf {
+// enum Operator {
+//     Add
+// }
+#[derive(Clone)]
+struct Expr {
     left: String,
     right: String,
     data_type: DataType
 }
-impl Leaf {
+
+impl Expr {
     fn print_leaf(&self) {
-        println!("<leaf> <left: {}> <right: {}>", self.left, self.right);
+        println!("<leaf> <left: {}> <right: {}> <data_type: {}>", self.left, self.right, self.data_type);
     }
 }
-struct Root {
-    left: Leaf,
-    right: Leaf,
-    operator: Operator
-}
+// struct Root {
+//     left: Expr,
+//     right: Expr,
+//     operator: Operator
+// }
 fn parse_number(parser: &mut Parser) {
     let value = parser.previous.unwrap().start;
-    let number_leaf = Leaf {
+    let number_leaf = Expr {
         left: String::from(format!("i32 {}", value)),
         right: String::from(value),
-        data_type: DataType::Integer((String::from(value)))
+        data_type: DataType::Integer(value.parse().unwrap())
     };
-    &number_leaf.print_leaf();
+    number_leaf.print_leaf();
     match parser.left_hand {
         None => parser.left_hand = Some(number_leaf),
         Some(_) => parser.right_hand = Some(number_leaf)
@@ -178,27 +192,21 @@ fn expression(parser: &mut Parser) {
 }
 fn parse_precedence(parser: &mut Parser, precedence: Precedence) {
     parser.advance();
-    // println!("AHHH {}", parser.previous.unwrap());
     if let Some(prev) = parser.previous {
         let prefix_rule = get_rule(prev.token_type).prefix;
         match prefix_rule {
             None => { 
-                 panic!()
+                let err_msg = format!("Expected a prefix rule for <{}>", prev);
+                 parser.error_at(&prev, &err_msg);
             },
             Some(prefix_fn) => {
                 prefix_fn(parser);
             }
         }
         if let Some(curr) = parser.current {
-            // println!("aaaaa{}", curr.token_type);
-            // println!("Status {} {}", parser.previous.unwrap(), parser.current.unwrap());
-            // println!("Prec {} {}", precedence.to_u32(), get_rule(curr.token_type).precedence.to_u32());
             while precedence.to_u32() <= get_rule(curr.token_type).precedence.to_u32() {
-                
                 parser.advance();
-
                 if let Some(infix_rule) = get_rule(parser.previous.unwrap().token_type).infix {
-
                     infix_rule(parser);
                 } else {
                     break
@@ -216,14 +224,34 @@ fn parse_binary(parser: &mut Parser) {
         let new_prec = rule_fn.precedence as u32;
         parse_precedence(parser, Precedence::from_u32(new_prec + 1));
 
-        if let Some(left) = &parser.left_hand {
-            left.print_leaf();
-        }
-        if let Some(right) = &parser.right_hand {
-            right.print_leaf();
-        }
+        let local_left = &mut parser.left_hand;
+        let local_right = &mut parser.right_hand;
+
+        
         match operator_type {
-            TokenType::Plus => println!("<plus>"),
+            TokenType::Plus => {
+                let left = local_left.clone().unwrap();
+                let right = local_right.clone().unwrap();
+                match (left.data_type, right.data_type) {
+                    (DataType::Integer(a), DataType::Integer(b)) => {
+                        println!("<add: <constant fold: {}+{}={}>>", a, b, a + b);
+                        parser.left_hand = Some(Expr {
+                            left: String::from("i32 ") + &(a + b).to_string(),
+                            right: (a + b).to_string(),
+                            data_type: DataType::Integer(a+b) 
+                        });
+                        parser.right_hand = None;
+                        if let Some(new_left) = &parser.left_hand {
+                            new_left.print_leaf();
+                        } else {
+                            parser.error_at(&parser.previous.unwrap(), "Expected an integer evaluation");
+                        }
+                    }
+                    _ => println!("<left operand: {}> <plus> <right operand: {}>", left.left, right.right)
+                }
+                parser.print_parser();
+
+            },
             _ => {}
         }
 
@@ -260,7 +288,7 @@ struct ParseRule<'a>{
 }
 type ParseFn<'a> = fn(&'a mut Parser);
 fn main() {
-    let source = "69+320+3000";
+    let source = "69+320+3000+a";
 
 
     let parser = &mut Parser::init_parser(source);
