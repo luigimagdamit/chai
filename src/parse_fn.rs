@@ -1,26 +1,12 @@
-use std::fmt::format;
-
 use crate::parser::Parser;
 use crate::parse_rule::get_rule;
 use crate::precedence::Precedence;
 use crate::expr::{Expr, DataType};
 use crate::token::TokenType;
-use crate::common::{PARSE_FN_OUTPUT, LLVM_DEBUG_OUTPUT};
+use crate::common::PARSE_FN_OUTPUT;
+use crate::llvm_codegen::llvm_top_level_expr;
 
-const BINARY_ADD_ERROR: &str = "Expected an integer in mathematical binary operation";
 
-pub fn llvm_top_level_expr(value: &str, value_type: &DataType, index: u32) {
-    if LLVM_DEBUG_OUTPUT {println!("Read top-level expression:");}
-    
-    match value_type {
-        DataType::Integer(int) => {
-            // let codegen = format!("define i32 @{}() {{\nentry:\n    ret i32 {}\n}}", index, int);
-            let codegen = format!("define i32 @main() {{\nentry:\n    ret i32 {}\n}}", int);
-            println!("{}", codegen);
-        }
-    }
-    
-}
 pub fn expression(parser: &mut Parser) {
     parse_precedence(parser, Precedence::PrecAssignment);
 
@@ -86,15 +72,15 @@ pub fn parse_binary(parser: &mut Parser) {
         match operator_type {
             TokenType::Plus => {
                 if PARSE_FN_OUTPUT { println!("<add>"); }
-                parse_add(parser);
+                binary_op(parser, add_op);
             },
             TokenType::Minus => {
                 if PARSE_FN_OUTPUT { println!("<minus>"); }
-                parse_subtract(parser);
+                binary_op(parser, sub_op);
             },
             TokenType::Star => {
                 if PARSE_FN_OUTPUT { println!("<multiply>"); }
-                parse_multiply(parser);
+                binary_op(parser, mult_op);
             }
             _ => {}
         }
@@ -109,7 +95,19 @@ pub fn parse_binary(parser: &mut Parser) {
 //     parser.consume(TokenType::RightParen, "Expect ')' after expression");
 // }
 
-fn parse_add(parser: &mut Parser) {
+fn add_op(a: i32, b: i32) -> i32 {
+    a + b
+}
+fn sub_op(a: i32, b: i32) -> i32 {
+    a - b
+}
+fn mult_op(a: i32, b: i32) -> i32 {
+    a * b
+}
+fn binary_op(parser: &mut Parser, operator: fn(i32, i32) -> i32) 
+where
+
+{
     let local_right = &mut parser.constant_stack.pop().unwrap();
     let local_left = &mut parser.constant_stack.pop().unwrap();
     
@@ -124,69 +122,8 @@ fn parse_add(parser: &mut Parser) {
     
     match (left.data_type, right.data_type) {
         (DataType::Integer(a), DataType::Integer(b)) => {
+            let calculation = operator(a, b);
             // println!("<add: <constant fold: {}+{}={}>>", a, b, a + b);
-            parser.constant_stack.push(Some(Expr {
-                left: String::from("i32 ") + &(a + b).to_string(),
-                right: (a + b).to_string(),
-                data_type: DataType::Integer(a+b) 
-            }))
-            
-        }
-        // _ => println!("<left operand: {}> <plus> <right operand: {}>", left.left, right.right)
-    }
-    if PARSE_FN_OUTPUT {
-        parser.print_parser();
-    }
-}
-
-fn parse_subtract(parser: &mut Parser) {
-    let local_right = &mut parser.constant_stack.pop().unwrap();
-    let local_left = &mut parser.constant_stack.pop().unwrap();
-    
-    let left = local_left.clone().unwrap();
-    let right = local_right.clone().unwrap();
-
-    if PARSE_FN_OUTPUT {
-        println!("\n==");
-        parser.print_parser();
-        println!("==");
-    }
-    
-    match (left.data_type, right.data_type) {
-        (DataType::Integer(a), DataType::Integer(b)) => {
-            let calculation = a - b;
-            // println!("<add: <constant fold: {}+{}={}>>", a, b, calculation);
-            parser.constant_stack.push(Some(Expr {
-                left: String::from("i32 ") + &(calculation).to_string(),
-                right: (calculation).to_string(),
-                data_type: DataType::Integer(calculation) 
-            }))
-            
-        }
-        // _ => println!("<left operand: {}> <plus> <right operand: {}>", left.left, right.right)
-    }
-    if PARSE_FN_OUTPUT {
-        parser.print_parser();
-    }
-}
-
-fn parse_multiply(parser: &mut Parser) {
-    let local_right = &mut parser.constant_stack.pop().unwrap();
-    let local_left = &mut parser.constant_stack.pop().unwrap();
-    
-    let left = local_left.clone().unwrap();
-    let right = local_right.clone().unwrap();
-
-    if PARSE_FN_OUTPUT {
-        println!("\n==");
-        parser.print_parser();
-        println!("==");
-    }
-    
-    match (left.data_type, right.data_type) {
-        (DataType::Integer(a), DataType::Integer(b)) => {
-            let calculation = a * b;
-            // println!("<add: <constant fold: {}+{}={}>>", a, b, calculation);
             parser.constant_stack.push(Some(Expr {
                 left: String::from("i32 ") + &(calculation).to_string(),
                 right: (calculation).to_string(),
