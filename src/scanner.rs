@@ -1,4 +1,4 @@
-use crate::token::{self, Token, TokenType};
+use crate::token::{Token, TokenType};
 
 pub struct Scanner<'a> {
     pub source: &'a str,

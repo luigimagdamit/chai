@@ -1,16 +1,6 @@
 use std::fmt;
 // use parser::parse_binary;
 
-pub enum ErrorCode {
-    SyntaxError
-}
-impl fmt::Display for ErrorCode {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ErrorCode::SyntaxError => write!(f, "SyntaxError")
-        }
-    }
-}
 
 #[allow(unused)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

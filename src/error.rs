@@ -1,4 +1,4 @@
-use std::fmt::{self, write};
+use std::fmt::{self};
 
 pub enum ErrorCode {
     SyntaxError,
