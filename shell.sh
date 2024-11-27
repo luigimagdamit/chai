@@ -10,7 +10,7 @@ fi
 
 # Option 1: Run the LLVM IR directly using lli (LLVM Interpreter)
 echo "Compiling out.ll to machine code..."
-cargo run $1 $2> out.ll
+cargo run $1 $2  --quiet> out.ll
 clang out.ll -w -o out  # Running directly from .ll file
 ./out
 # Option 2: Alternatively, you can compile the bitcode to a native executable using clang

@@ -8,7 +8,7 @@ mod parse_fn;
 mod expr;
 mod common;
 mod llvm_primitives;
-
+mod llvm_print;
 use parser::Parser;
 use std::io::{self, Write};
 use std::fs::{self};
