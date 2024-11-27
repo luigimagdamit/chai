@@ -11,6 +11,7 @@ mod llvm_primitives;
 
 use parser::Parser;
 use std::io::{self, Write};
+use std::fs::{self, File};
 
 fn repl() {
     loop {
@@ -22,8 +23,15 @@ fn repl() {
         if source == "exit" {
             break
         }
+
+
+
+        // std::mem::replace(&mut stdout, writer);
+
         let parser = &mut Parser::init_parser(source);
         parser.compile(); // warmup
+
+
     }
 }
 fn main() {
@@ -34,7 +42,17 @@ fn main() {
     } else {
         match &args[1] {
             s if s == "repl" => repl(),
-            _ => println!("unrecognized terminal command")
+            s if s == "cmd" => {
+                let parser = &mut Parser::init_parser(&args[2]);
+                parser.compile();
+            }
+            s if s.is_ascii()=> {
+
+                let contents = fs::read_to_string(s).unwrap();
+                let parser = &mut Parser::init_parser(&contents);
+                parser.compile();
+            }
+            _ => {}
         }
         
     }

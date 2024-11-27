@@ -4,7 +4,7 @@ use crate::precedence::Precedence;
 use crate::expr::{Expr, DataType};
 use crate::token::TokenType;
 use crate::common::PARSE_FN_OUTPUT;
-use crate::llvm_primitives::llvm_top_level_expr;
+use crate::llvm_primitives::{llvm_top_level_expr, llvm_print_declare, llvm_print_no_main, llvm_fmt_string_int};
 
 pub fn top_level_expr(parser: &mut Parser) {
     if let Some(constant) = parser.constant_stack.pop() {
@@ -19,7 +19,14 @@ pub fn expression(parser: &mut Parser) {
     // assume this is just a high level expression
 
     parser.print_parser();
+    
+    println!("{}", llvm_print_declare());
+    llvm_fmt_string_int();
     top_level_expr(parser);
+    llvm_print_no_main(0);
+    
+    
+    
 }
 
 pub fn parse_number(parser: &mut Parser) {

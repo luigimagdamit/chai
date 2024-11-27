@@ -1,4 +1,4 @@
-use crate::common::PARSE_FN_OUTPUT;
+use crate::common::{PARSE_FN_OUTPUT, PARSE_TOKEN_OUTPUT};
 use crate::token::{Token, TokenType};
 use crate::scanner::Scanner;
 use crate::error::ErrorCode;
@@ -41,12 +41,14 @@ impl<'a>Parser <'a>{
         self.previous = self.current.take();
         loop {
             let token = self.get_token();
+            
             match token.token_type {
                 TokenType::Error(_)=> {
                     self.error_at(&token, token.start);
                 },
                 _ => {
                     self.current = Some(token);
+                    if PARSE_TOKEN_OUTPUT { println!("[CompilerSuccess] {}", token)}
                     break;
                 }
             }
