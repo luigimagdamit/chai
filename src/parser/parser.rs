@@ -88,13 +88,8 @@ impl<'a>Parser <'a>{
     pub fn print_parser(&mut self) {
         if PARSE_FN_OUTPUT {
             println!("<Parser State> ");
-
             let stack = &mut self.constant_stack;
-            println!("<Stack Top>");
-            println!("{}", stack.len());
-            for expr in  stack{
-                expr.clone().unwrap().print_leaf();
-            }
+            println!("\n\tPrevious: {}\n\tCurrent {}", self.previous.unwrap(), self.current.unwrap());
             println!("</Parser State>")
         }
         

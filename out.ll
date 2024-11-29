@@ -7,12 +7,11 @@ define void @print_i32(i32 %value) {
     }
 define i32 @0() {
 entry:
-    ret i32 49
+    ret i32 88
 }
 define i32 @main() {
 entry:
-    %result = call i32 @0()
-
-    call void @print_i32(i32 %result)
-    ret i32 0
-}
+        %result = call i32 @0()
+        call void @print_i32(i32 %result)
+        ret i32 0
+    }

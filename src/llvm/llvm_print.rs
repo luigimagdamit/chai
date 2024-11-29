@@ -1,10 +1,10 @@
 use crate::common::common::NO_MAIN;
-pub fn llvm_print_declare() -> String {
+pub fn llvm_print_define() -> String {
     let codegen = "declare i32 @printf(i8*, ...)";
     if NO_MAIN { println!("{}", codegen) }
     return String::from(codegen)
 }
-pub fn llvm_print_i32() -> String {
+pub fn llvm_print_i32_define() -> String {
     let codegen =
     "define void @print_i32(i32 %value) {
         %fmt_ptr = getelementptr [4 x i8], [4 x i8]* @fmt, i32 0, i32 0
@@ -19,11 +19,10 @@ pub fn llvm_fmt_string_int() {
 }
 pub fn llvm_print_no_main(index: u32) {
     let codegen = format!(
-"define i32 @main() {{\nentry:
-    %result = call i32 @{}()
-
-    call void @print_i32(i32 %result)
-    ret i32 0
-}}", index);
+    "define i32 @main() {{\nentry:
+        %result = call i32 @{}()
+        call void @print_i32(i32 %result)
+        ret i32 0
+    }}", index);
     println!("{}", codegen)
 }

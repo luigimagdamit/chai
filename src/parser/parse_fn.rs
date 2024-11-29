@@ -5,7 +5,7 @@ use crate::parser::expr::{Expr, DataType};
 use crate::scanner::token::TokenType;
 use crate::common::common::PARSE_FN_OUTPUT;
 use crate::llvm::llvm_primitives::llvm_top_level_expr;
-use crate::llvm::llvm_print::{llvm_print_declare, llvm_print_no_main, llvm_fmt_string_int, llvm_print_i32};
+use crate::llvm::llvm_print::{llvm_print_define, llvm_print_no_main, llvm_fmt_string_int, llvm_print_i32_define};
 
 pub fn top_level_expr(parser: &mut Parser) {
     if let Some(constant) = parser.constant_stack.pop() {
@@ -17,16 +17,25 @@ pub fn top_level_expr(parser: &mut Parser) {
 pub fn expression(parser: &mut Parser) {
     parse_precedence(parser, Precedence::PrecAssignment);
 
+    if let Some(eof) = parser.current {
+        match eof.token_type {
+            TokenType::EOF => {
+                parser.print_parser();
+    
+                println!("{}", llvm_print_define());
+                llvm_fmt_string_int();
+                llvm_print_i32_define();
+                
+                top_level_expr(parser);
+                llvm_print_no_main(0);
+            },
+            _ => {}
+        }
+        
+    }
     // assume this is just a high level expression
 
-    parser.print_parser();
-    
-    println!("{}", llvm_print_declare());
-    llvm_fmt_string_int();
-    llvm_print_i32();
-    
-    top_level_expr(parser);
-    llvm_print_no_main(0);
+
     
     
     
@@ -39,7 +48,6 @@ pub fn parse_number(parser: &mut Parser) {
         right: String::from(value),
         data_type: DataType::Integer(value.parse().unwrap())
     };
-
     parser.constant_stack.push(Some(number_leaf));
 }
 
@@ -54,13 +62,14 @@ pub fn parse_precedence(parser: &mut Parser, precedence: Precedence) {
         }
 
         if let Some(curr) = parser.current {
-            while precedence.to_u32() <= get_rule(curr.token_type).precedence.to_u32() {
+            while precedence.to_u32() <= get_rule(parser.current.unwrap().token_type).precedence.to_u32() {
                 parser.advance();
                 if let Some(infix_rule) = get_rule(parser.previous.unwrap().token_type).infix {
                     infix_rule(parser);
                 } else {
                     break
                 }
+                parser.print_parser();
             }
         }
     }
@@ -88,18 +97,25 @@ pub fn parse_binary(parser: &mut Parser) {
                 if PARSE_FN_OUTPUT { println!("<multiply>"); }
                 binary_op(parser, mult_op);
             }
+            TokenType::Slash => {
+                if PARSE_FN_OUTPUT { println!("<divide>"); }
+                binary_op(parser, div_op);
+            }
             _ => {}
         }
+        
 
 
     }
     
 }
 
-// pub fn parse_grouping(parser: &mut Parser) {
-//     expression(parser);
-//     parser.consume(TokenType::RightParen, "Expect ')' after expression");
-// }
+pub fn parse_grouping(parser: &mut Parser) {
+
+    expression(parser);
+    //parser.constant_stack.pop().unwrap().unwrap().print_leaf();
+    parser.consume(TokenType::RightParen, "Expect ')' after expression, found something else at");
+}
 
 fn add_op(a: i32, b: i32) -> i32 {
     a + b
@@ -110,21 +126,19 @@ fn sub_op(a: i32, b: i32) -> i32 {
 fn mult_op(a: i32, b: i32) -> i32 {
     a * b
 }
+fn div_op(a: i32, b: i32) -> i32 {
+    a / b
+}
 fn binary_op(parser: &mut Parser, operator: fn(i32, i32) -> i32) 
 where
 
 {
-    let local_right = &mut parser.constant_stack.pop().unwrap();
-    let local_left = &mut parser.constant_stack.pop().unwrap();
+    let local_right = &mut parser.constant_stack.pop().unwrap_or_else(|| panic!());
+    let local_left = &mut parser.constant_stack.pop().unwrap_or_else(|| panic!());
     
     let left = local_left.clone().unwrap();
     let right = local_right.clone().unwrap();
 
-    if PARSE_FN_OUTPUT {
-        println!("\n==");
-        parser.print_parser();
-        println!("==");
-    }
     
     match (left.data_type, right.data_type) {
         (DataType::Integer(a), DataType::Integer(b)) => {
@@ -139,7 +153,7 @@ where
         }
         // _ => println!("<left operand: {}> <plus> <right operand: {}>", left.left, right.right)
     }
-    if PARSE_FN_OUTPUT {
-        parser.print_parser();
-    }
+    // if PARSE_FN_OUTPUT {
+    //     parser.print_parser();
+    // }
 }
