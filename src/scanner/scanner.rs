@@ -233,7 +233,7 @@ impl<'a> Scanner<'a> {
                     }
                 }
                 '"' => self.string(),
-                _ => self.error_token("Unexpected character."),
+                _ => self.error_token("Unexpected character"),
             },
             None => self.error_token("Unexpected character."),
         }

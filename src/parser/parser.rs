@@ -35,10 +35,8 @@ impl<'a>Parser <'a>{
                 println!("[{}] {} {}  at `{}`", ErrorCode::CompilerError, stderr, message, token.start);
             }
         }
-        //std::process::exit(1);
-        // if self.panic_mode {
-        //     return
-        // }
+        std::process::exit(1);
+
     } 
     pub fn advance(&mut self) {
         self.previous = self.current.take();
@@ -88,7 +86,7 @@ impl<'a>Parser <'a>{
     pub fn print_parser(&mut self) {
         if PARSE_FN_OUTPUT {
             println!("<Parser State> ");
-            let stack = &mut self.constant_stack;
+            
             println!("\n\tPrevious: {}\n\tCurrent {}", self.previous.unwrap(), self.current.unwrap());
             println!("</Parser State>")
         }

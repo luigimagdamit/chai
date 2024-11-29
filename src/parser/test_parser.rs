@@ -37,6 +37,16 @@ mod tests {
         }
         
     }
+    #[test]
+    fn test_parser_string() {
+        let parser = &mut Parser::init_parser("\"grinch\"\0");
+        parser.advance();
+        if let Some(number_token) = parser.current {
+            assert_eq!(number_token.token_type, TokenType::String);
+            assert_eq!(number_token.start, "\"grinch\"");
+        }
+        
+    }
     #[test] 
     fn test_parse_one_plus_two() {
         let parser = &mut Parser::init_parser("1+2\0");

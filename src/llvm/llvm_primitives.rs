@@ -18,6 +18,7 @@ pub fn llvm_top_level_expr(_value: &str, value_type: &DataType, index: u32) -> S
                 return codegen;
             }
         }
+        _ => String::from("")
     }
     
 }

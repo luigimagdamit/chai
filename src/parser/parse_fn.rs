@@ -50,7 +50,38 @@ pub fn parse_number(parser: &mut Parser) {
     };
     parser.constant_stack.push(Some(number_leaf));
 }
-
+fn create_literal(parser: &mut Parser, token_type: TokenType, value: &str) {
+    match token_type {
+        TokenType::False => {
+            let false_leaf = Expr {
+                left: String::from(format!("i1 {}", value)),
+                right: String::from(value),
+                data_type: DataType::Boolean(false)
+            };
+            false_leaf.print_leaf();
+            parser.constant_stack.push(Some(false_leaf));
+        }
+        TokenType::True => {
+            let false_leaf = Expr {
+                left: String::from(format!("i1 {}", value)),
+                right: String::from(value),
+                data_type: DataType::Boolean(true)
+            };
+            false_leaf.print_leaf();
+            parser.constant_stack.push(Some(false_leaf));
+        }
+        _ => parser.error_at(&parser.previous.unwrap(), "Invalid literal token"),
+    }
+}
+pub fn parse_literal(parser: &mut Parser) {
+    if let Some(prev) = parser.previous {
+        match prev.token_type {
+            TokenType::False => create_literal(parser, TokenType::False, "0"),
+            TokenType::True => create_literal(parser, TokenType::True, "1"),
+            _ => parser.error_at(&prev, "Unrecognizeed literal token type"),
+        }
+    }
+}
 pub fn parse_precedence(parser: &mut Parser, precedence: Precedence) {
     parser.advance();
     if let Some(prev) = parser.previous {
@@ -61,7 +92,7 @@ pub fn parse_precedence(parser: &mut Parser, precedence: Precedence) {
             parser.error_at(&prev, &err_msg);
         }
 
-        if let Some(curr) = parser.current {
+        if let Some(_) = parser.current {
             while precedence.to_u32() <= get_rule(parser.current.unwrap().token_type).precedence.to_u32() {
                 parser.advance();
                 if let Some(infix_rule) = get_rule(parser.previous.unwrap().token_type).infix {
@@ -151,6 +182,11 @@ where
             }))
             
         }
+        (_, _) => {
+            if let Some(t) = parser.previous {
+                parser.error_at(&t, "Invalid binary operands");
+            }
+        },
         // _ => println!("<left operand: {}> <plus> <right operand: {}>", left.left, right.right)
     }
     // if PARSE_FN_OUTPUT {
