@@ -3,7 +3,7 @@ use crate::parser::precedence::Precedence;
 use crate::parser::parser::Parser;
 use crate::parser::parse_fn::{parse_binary, parse_number, parse_literal};
 
-use super::parse_fn::parse_grouping;
+use super::parse_fn::{parse_fn_declare, parse_grouping};
 pub struct ParseRule<'a>{
     pub prefix: Option<ParseFn<'a>>,
     pub infix: Option<ParseFn<'a>>,
@@ -22,6 +22,11 @@ pub fn get_rule<'a>(token_type: TokenType) -> ParseRule<'a> {
         },
         TokenType::RightParen => ParseRule {
             prefix: None,
+            infix: None,
+            precedence: Precedence::PrecNone
+        },
+        TokenType::Fun => ParseRule {
+            prefix: Some(parse_fn_declare),
             infix: None,
             precedence: Precedence::PrecNone
         },

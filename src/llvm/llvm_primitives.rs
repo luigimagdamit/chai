@@ -1,3 +1,5 @@
+use std::env::consts::FAMILY;
+
 use crate::parser::expr::DataType;
 use crate::common::common::{LLVM_DEBUG_OUTPUT, NO_MAIN};
 #[warn(unused_variables)]
@@ -17,8 +19,26 @@ pub fn llvm_top_level_expr(_value: &str, value_type: &DataType, index: u32) -> S
                 println!("{}", codegen);
                 return codegen;
             }
+        },
+        DataType::Boolean(bool) => {
+            if *bool {
+                llvm_top_level_boolean("1", true, index)
+            } else {
+                llvm_top_level_boolean("0", false, index)
+            }
         }
         _ => String::from("")
     }
     
+}
+fn llvm_top_level_boolean(chars: &str, value: bool, index: u32) -> String{
+    let codegen = 
+    format!(
+    "define i1 @{}() {{
+        entry:
+        ret i1 {}
+    }}
+    ", index, chars);
+    println!("{}", codegen);
+    return codegen
 }

@@ -7,7 +7,7 @@ use crate::scanner::{
 use crate::common::error::ErrorCode;
 use crate::parser::parse_fn::expression;
 use crate::parser::expr::Expr;
-
+use crate::llvm::llvm_print::{llvm_call_print, llvm_call_print_local, llvm_fmt_string_int, llvm_main_close, llvm_main_start, llvm_print_define, llvm_print_i32_define};
 
 #[allow(unused)]
 pub struct Parser<'a>{
@@ -18,7 +18,8 @@ pub struct Parser<'a>{
     panic_mode: bool,
     // pub left_hand: Option<Expr>,
     // pub right_hand: Option<Expr>
-    pub constant_stack: Vec<Option<Expr>>
+    pub constant_stack: Vec<Option<Expr>>,
+    pub expr_count: u32
 }
 impl<'a>Parser <'a>{
     pub fn error_at(&mut self, token: &Token, message: &str) {
@@ -80,7 +81,8 @@ impl<'a>Parser <'a>{
             had_error: false,
             // left_hand: None,
             // right_hand: None
-            constant_stack: Vec::new()
+            constant_stack: Vec::new(),
+            expr_count: 0
         }
     }
     pub fn print_parser(&mut self) {
@@ -93,8 +95,14 @@ impl<'a>Parser <'a>{
         
     }
     pub fn compile(&mut self) {
+        println!("{}", llvm_print_define());
+        llvm_fmt_string_int();
+        llvm_print_i32_define();
+        // llvm_main_start();
         self.advance();
         expression(self);
+        // llvm_call_print_local(self.expr_count - 1, "i32");
+        // llvm_main_close();
         self.consume(TokenType::EOF, "Expect end of expression");
 
     }

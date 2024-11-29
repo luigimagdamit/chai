@@ -1,11 +1,12 @@
+
 use crate::parser::parser::Parser;
 use crate::parser::parse_rule::get_rule;
 use crate::parser::precedence::Precedence;
 use crate::parser::expr::{Expr, DataType};
 use crate::scanner::token::TokenType;
-use crate::common::common::PARSE_FN_OUTPUT;
+use crate::common::common::{PARSE_CONSTANT_FOLD, PARSE_FN_OUTPUT};
 use crate::llvm::llvm_primitives::llvm_top_level_expr;
-use crate::llvm::llvm_print::{llvm_print_define, llvm_print_no_main, llvm_fmt_string_int, llvm_print_i32_define};
+use crate::llvm::llvm_print::{llvm_call_print, llvm_call_print_local, llvm_fmt_string_int, llvm_main_close, llvm_main_start, llvm_print_define, llvm_print_i32_define, llvm_print_no_main};
 
 pub fn top_level_expr(parser: &mut Parser) {
     if let Some(constant) = parser.constant_stack.pop() {
@@ -20,14 +21,17 @@ pub fn expression(parser: &mut Parser) {
     if let Some(eof) = parser.current {
         match eof.token_type {
             TokenType::EOF => {
-                parser.print_parser();
+                // parser.print_parser();
     
-                println!("{}", llvm_print_define());
-                llvm_fmt_string_int();
-                llvm_print_i32_define();
+                // println!("{}", llvm_print_define());
+                // llvm_fmt_string_int();
+                // llvm_print_i32_define();
                 
-                top_level_expr(parser);
-                llvm_print_no_main(0);
+                // top_level_expr(parser);
+                // llvm_main_start();
+                // llvm_call_print(0, "i32");
+                // llvm_main_close();
+                
             },
             _ => {}
         }
@@ -40,7 +44,38 @@ pub fn expression(parser: &mut Parser) {
     
     
 }
+// fn name() ret type
+pub fn parse_fn_declare(parser: &mut Parser) {
+    print!("\ndefine ");
+    parser.consume(TokenType::Identifier, "Expected function name");
+    let fn_name = parser.previous.unwrap().clone();
+    
+    parser.consume(TokenType::LeftParen, "");
+    
+    parser.consume(TokenType::RightParen, "");
+    parser.consume(TokenType::Identifier, "");
+    let fn_type = parser.previous.unwrap_or_else(|| panic!()).clone();
+    parser.consume(TokenType::LeftBrace, "Expected {");
 
+
+    // i32
+    
+    
+    print!("{}", fn_type.start);
+    print!(" @{}", fn_name.start);
+    print!("(");
+    // func args here
+    print!("){{");
+    println!("\nentry:");
+    // func body here
+    //
+    expression(parser);
+    llvm_call_print_local(parser.expr_count-1, "i32");
+    parser.consume(TokenType::RightBrace, "Unclosed function body");
+    println!("ret i32 0\n}}");
+
+    
+}
 pub fn parse_number(parser: &mut Parser) {
     let value = parser.previous.unwrap().start;
     let number_leaf = Expr {
@@ -48,6 +83,7 @@ pub fn parse_number(parser: &mut Parser) {
         right: String::from(value),
         data_type: DataType::Integer(value.parse().unwrap())
     };
+
     parser.constant_stack.push(Some(number_leaf));
 }
 fn create_literal(parser: &mut Parser, token_type: TokenType, value: &str) {
@@ -118,7 +154,11 @@ pub fn parse_binary(parser: &mut Parser) {
         match operator_type {
             TokenType::Plus => {
                 if PARSE_FN_OUTPUT { println!("<add>"); }
+                print!("%{} = add ", parser.expr_count);
+                
                 binary_op(parser, add_op);
+                parser.expr_count += 1;
+                
             },
             TokenType::Minus => {
                 if PARSE_FN_OUTPUT { println!("<minus>"); }
@@ -169,17 +209,28 @@ where
     
     let left = local_left.clone().unwrap();
     let right = local_right.clone().unwrap();
-
+    print!("{}, ", left.left);
+    print!("{}\n", right.right);
     
     match (left.data_type, right.data_type) {
         (DataType::Integer(a), DataType::Integer(b)) => {
             let calculation = operator(a, b);
-            // println!("<add: <constant fold: {}+{}={}>>", a, b, a + b);
-            parser.constant_stack.push(Some(Expr {
+            if PARSE_CONSTANT_FOLD {
+                parser.constant_stack.push(Some(Expr {
                 left: String::from("i32 ") + &(calculation).to_string(),
                 right: (calculation).to_string(),
                 data_type: DataType::Integer(calculation) 
-            }))
+                }))
+            } else {
+                parser.constant_stack.push(Some(Expr {
+                    left: String::from("i32 %") + &(parser.expr_count).to_string(),
+                    right: (parser.expr_count).to_string(),
+                    data_type: DataType::Integer(calculation) 
+                }))
+            }
+            // println!("<add: <constant fold: {}+{}={}>>", a, b, a + b);
+
+
             
         }
         (_, _) => {
