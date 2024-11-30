@@ -44,6 +44,10 @@ pub fn expression(parser: &mut Parser) {
     
     
 }
+pub fn expression_statement(parser: &mut Parser) {
+    expression(parser);
+    parser.consume(TokenType::Semicolon, "Expect ; after expression");
+}
 pub fn print_statement(parser: &mut Parser) {
 
     expression(parser);
@@ -53,17 +57,23 @@ pub fn print_statement(parser: &mut Parser) {
         println!("%{} = add {}, 0", parser.expr_count , print_val);
     }
     llvm_call_print_local(parser.expr_count, "i32");
+    parser.expr_count += 1;
     parser.consume(TokenType::Semicolon, "Expect semicolon after value");
 }
 pub fn declaration(parser: &mut Parser) {
-    statement(parser);
+    if parser.match_current(TokenType::Fun) {
+        parse_fn_declare(parser);
+    } else {
+        statement(parser);
+    }
+    
 }
 pub fn statement(parser: &mut Parser) {
     if parser.match_current(TokenType::Print) {
 
         print_statement(parser);
-    } else if parser.match_current(TokenType::Fun) {
-        parse_fn_declare(parser);
+    } else {
+        expression_statement(parser);
     }
 }
 pub fn parse_block(parser: &mut Parser) {
@@ -94,8 +104,10 @@ pub fn parse_fn_declare(parser: &mut Parser) {
     println!("\nentry:");
     // func body here
     //
-    declaration(parser);
-    parser.consume(TokenType::RightBrace, "Unclosed function body");
+    
+    while !parser.match_current(TokenType::RightBrace) {
+        declaration(parser);
+    }
     println!("ret i32 0\n}}");
 
     
@@ -186,7 +198,10 @@ pub fn parse_binary(parser: &mut Parser) {
             },
             TokenType::Minus => {
                 if PARSE_FN_OUTPUT { println!("<minus>"); }
+                print!("%{} = sub ", parser.expr_count);
+                
                 binary_op(parser, sub_op);
+                parser.expr_count += 1;
             },
             TokenType::Star => {
                 if PARSE_FN_OUTPUT { println!("<multiply>"); }
