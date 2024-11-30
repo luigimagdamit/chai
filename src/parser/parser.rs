@@ -8,7 +8,7 @@ use crate::common::error::ErrorCode;
 use crate::parser::parse_fn::expression;
 use crate::parser::expr::Expr;
 use crate::llvm::llvm_print::{llvm_call_print, llvm_call_print_local, llvm_fmt_string_int, llvm_main_close, llvm_main_start, llvm_print_define, llvm_print_i32_define};
-
+use crate::parser::parse_fn::declaration;
 #[allow(unused)]
 pub struct Parser<'a>{
     pub current: Option<Token<'a>>,
@@ -69,6 +69,21 @@ impl<'a>Parser <'a>{
             }
         }
     }
+    pub fn check_current(&mut self, token_type: TokenType) -> bool {
+        if let Some(current) = self.current {
+            return current.token_type == token_type
+        } else {
+            return false
+        }
+    }
+    pub fn match_current(&mut self, token_type: TokenType) -> bool {
+        if !self.check_current(token_type) {
+            return false
+        } else {
+            self.advance();
+            return true
+        }
+    }
     fn get_token(&mut self) -> Token<'a> {
         return self.scanner.scan_token().clone()
     }
@@ -100,7 +115,10 @@ impl<'a>Parser <'a>{
         llvm_print_i32_define();
         // llvm_main_start();
         self.advance();
-        expression(self);
+
+        while !self.match_current(TokenType::EOF) {
+            declaration(self);
+        }
         // llvm_call_print_local(self.expr_count - 1, "i32");
         // llvm_main_close();
         self.consume(TokenType::EOF, "Expect end of expression");

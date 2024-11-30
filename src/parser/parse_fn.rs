@@ -44,6 +44,31 @@ pub fn expression(parser: &mut Parser) {
     
     
 }
+pub fn print_statement(parser: &mut Parser) {
+
+    expression(parser);
+    if let Some(expr) = parser.constant_stack.pop() {
+
+        let print_val = expr.unwrap().left;
+        println!("%{} = add {}, 0", parser.expr_count , print_val);
+    }
+    llvm_call_print_local(parser.expr_count, "i32");
+    parser.consume(TokenType::Semicolon, "Expect semicolon after value");
+}
+pub fn declaration(parser: &mut Parser) {
+    statement(parser);
+}
+pub fn statement(parser: &mut Parser) {
+    if parser.match_current(TokenType::Print) {
+
+        print_statement(parser);
+    } else if parser.match_current(TokenType::Fun) {
+        parse_fn_declare(parser);
+    }
+}
+pub fn parse_block(parser: &mut Parser) {
+
+}
 // fn name() ret type
 pub fn parse_fn_declare(parser: &mut Parser) {
     print!("\ndefine ");
@@ -69,8 +94,7 @@ pub fn parse_fn_declare(parser: &mut Parser) {
     println!("\nentry:");
     // func body here
     //
-    expression(parser);
-    llvm_call_print_local(parser.expr_count-1, "i32");
+    declaration(parser);
     parser.consume(TokenType::RightBrace, "Unclosed function body");
     println!("ret i32 0\n}}");
 

@@ -9,11 +9,10 @@ define void @print_i32(i32 %value) {
 
 define i32 @main(){
 entry:
-%0 = add i32 1, 2
-%1 = add i32 3, 3
-%2 = add i32 6, 4
-%3 = add i32 10, 2000
-call void @print_i32(i32 %3)
+%0 = add i32 69, 420
+%1 = add i32 %0, 200
+%2 = add i32 %1, 0
+call void @print_i32(i32 %2)
 
 ret i32 0
 }
