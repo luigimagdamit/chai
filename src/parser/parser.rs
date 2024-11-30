@@ -6,7 +6,7 @@ use crate::scanner::{
 
 use crate::common::error::ErrorCode;
 use crate::parser::expr::Expr;
-use crate::llvm::llvm_print::{llvm_fmt_string_int, llvm_print_define, llvm_print_i32_define};
+use crate::llvm::llvm_print::{llvm_fmt_string_int, llvm_print_bool_declare, llvm_print_define, llvm_print_i32_define};
 use crate::parser::parse_fn::declaration;
 
 use super::parse_fn::expression;
@@ -114,6 +114,7 @@ impl<'a>Parser <'a>{
     fn llvm_stdlib(&self) {
         if !PARSE_SUPRESS_PREDEFINES {
             llvm_print_define();
+            llvm_print_bool_declare();
             llvm_fmt_string_int();
             llvm_print_i32_define();
         }

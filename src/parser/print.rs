@@ -1,7 +1,8 @@
 use {
     super::{
         parser::Parser,
-        parse_fn::expression
+        parse_fn::expression,
+        expr::DataType
     },
     crate::{
         llvm::llvm_print::llvm_call_print_local,
@@ -15,11 +16,16 @@ pub fn print_statement(parser: &mut Parser) {
 
     expression(parser);
     if let Some(expr) = parser.constant_stack.pop() {
-
-        let print_val = expr.unwrap().left;
+        let value = expr.unwrap();
+        let print_val = value.left;
         println!("%{} = add {}, 0", parser.expr_count , print_val);
+        match value.data_type {
+            DataType::Boolean(bool) => llvm_call_print_local(parser.expr_count, "i1"),
+            DataType::Integer(int) => llvm_call_print_local(parser.expr_count, "i32"),
+            _ => ()
+        }
     }
-    llvm_call_print_local(parser.expr_count, "i32");
+    
     parser.expr_count += 1;
     parser.consume(TokenType::Semicolon, "Expect semicolon after value");
 }
