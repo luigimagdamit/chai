@@ -10,20 +10,23 @@ use crate::scanner::token::TokenType;
 fn create_literal(parser: &mut Parser, token_type: TokenType, value: &str) {
     match token_type {
         TokenType::False => {
-            let false_leaf = Expr {
-                left: String::from(format!("i1 {}", value)),
-                right: String::from(value),
-                data_type: DataType::Boolean(false)
-            };
-            parser.constant_stack.push(Some(false_leaf));
+            parser.constant_stack.push(Some(
+                Expr {
+                    left: String::from(format!("i1 {}", value)),
+                    right: String::from(value),
+                    data_type: DataType::Boolean(false)
+                }
+            ))
         }
         TokenType::True => {
-            let false_leaf = Expr {
-                left: String::from(format!("i1 {}", value)),
-                right: String::from(value),
-                data_type: DataType::Boolean(true)
-            };
-            parser.constant_stack.push(Some(false_leaf));
+            parser.constant_stack.push(Some(
+                Expr {
+                    left: String::from(format!("i1 {}", value)),
+                    right: String::from(value),
+                    data_type: DataType::Boolean(true)
+                }
+            ));
+            
         }
         _ => parser.error_at(&parser.previous.unwrap(), "Invalid literal token"),
     }

@@ -30,8 +30,3 @@ impl Expr {
         println!("<leaf> <left: {}> <right: {}> <data_type: {}>", self.left, self.right, self.data_type);
     }
 }
-// struct Root {
-//     left: Expr,
-//     right: Expr,
-//     operator: Operator
-// }

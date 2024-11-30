@@ -4,7 +4,8 @@ use super::{
     parse_fn::parse_number,
     literal::parse_literal,
     binary::parse_binary,
-    parse_fn::{parse_fn_declare, parse_grouping},
+    parse_fn::parse_grouping,
+    function::parse_fn_declare,
     precedence::Precedence
 };
 pub struct ParseRule<'a>{
@@ -52,6 +53,26 @@ pub fn get_rule<'a>(token_type: TokenType) -> ParseRule<'a> {
             prefix: None,
             infix: Some(parse_binary),
             precedence: Precedence::PrecEquality
+        },
+        TokenType::Greater => ParseRule {
+            prefix: None,
+            infix: Some(parse_binary),
+            precedence: Precedence::PrecComparison
+        },
+        TokenType::Less => ParseRule {
+            prefix: None,
+            infix: Some(parse_binary),
+            precedence: Precedence::PrecComparison
+        },
+        TokenType::GreaterEqual => ParseRule {
+            prefix: None,
+            infix: Some(parse_binary),
+            precedence: Precedence::PrecComparison
+        },
+        TokenType::LessEqual => ParseRule {
+            prefix: None,
+            infix: Some(parse_binary),
+            precedence: Precedence::PrecComparison
         },
         TokenType::Plus => ParseRule { 
             prefix: None, 

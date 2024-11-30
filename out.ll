@@ -67,7 +67,7 @@ call void @print_i32(i32 %7)
 %11 = add i1 %10, 0
 call void @print_i1(i1 %11)
 
-%12 = icmp ne i32 69, 69
+%12 = icmp uge i32 1, 69
 %13 = add i1 %12, 0
 call void @print_i1(i1 %13)
 

@@ -6,7 +6,8 @@ use super::{
         Expr,
         DataType
     },
-    print::print_statement
+    print::print_statement,
+    function::parse_fn_declare
 };
 use crate::{
     llvm::expr_mode::expr_mode,
@@ -44,32 +45,7 @@ pub fn parse_block(parser: &mut Parser) {
 
 }
 // fn name() ret type
-pub fn parse_fn_declare(parser: &mut Parser) {
-    print!("\ndefine ");
-    parser.consume(TokenType::Identifier, "Expected function name");
-    let fn_name = parser.previous.unwrap().clone();
-    parser.consume(TokenType::LeftParen, "");
-    parser.consume(TokenType::RightParen, "");
-    parser.consume(TokenType::Identifier, "");
-    let fn_type = parser.previous.unwrap_or_else(|| panic!("Expected a function return type")).clone();
-    parser.consume(TokenType::LeftBrace, "Expected {");
 
-    print!("{}", fn_type.start);
-    print!(" @{}", fn_name.start);
-    print!("(");
-    // func args here
-    print!("){{");
-    println!("\nentry:");
-    // func body here
-    //
-    
-    while !parser.match_current(TokenType::RightBrace) {
-        declaration(parser);
-    }
-    println!("ret i32 0\n}}");
-
-    
-}
 pub fn parse_number(parser: &mut Parser) {
     let value = parser.previous.unwrap().start;
     let number_leaf = Expr {
@@ -83,26 +59,23 @@ pub fn parse_number(parser: &mut Parser) {
 
 pub fn parse_precedence(parser: &mut Parser, precedence: Precedence) {
     parser.advance();
-    if let Some(prev) = parser.previous {
-        if let Some(prefix_fn) = get_rule(prev.token_type).prefix {
-            prefix_fn(parser);
-        } else {
-            let err_msg = format!("Expected a prefix rule for token <{}>", prev);
-            parser.error_at(&prev, &err_msg);
-        }
 
-        if let Some(_) = parser.current {
-            while precedence.to_u32() <= get_rule(parser.current.unwrap().token_type).precedence.to_u32() {
-                parser.advance();
-                if let Some(infix_rule) = get_rule(parser.previous.unwrap().token_type).infix {
-                    infix_rule(parser);
-                } else {
-                    break
-                }
-                parser.print_parser();
-            }
+    if let Some(prefix_fn) = get_rule(parser.previous.unwrap().token_type).prefix {
+        prefix_fn(parser);
+    } else {
+        let err_msg = format!("Expected a prefix rule for token <{}>", parser.previous.unwrap());
+        parser.error_at(&parser.previous.unwrap(), &err_msg);
+    }
+
+    while precedence.to_u32() <= get_rule(parser.current.unwrap_or_else(||panic!("Current token not present for parse_precedence()")).token_type).precedence.to_u32() {
+        parser.advance();
+        if let Some(infix_rule) = get_rule(parser.previous.unwrap().token_type).infix {
+            infix_rule(parser);
+        } else {
+            break
         }
     }
+    
     
 }
 

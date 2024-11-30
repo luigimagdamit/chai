@@ -20,8 +20,8 @@ pub fn print_statement(parser: &mut Parser) {
         let print_val = value.left;
         println!("%{} = add {}, 0", parser.expr_count , print_val);
         match value.data_type {
-            DataType::Boolean(bool) => llvm_call_print_local(parser.expr_count, "i1"),
-            DataType::Integer(int) => llvm_call_print_local(parser.expr_count, "i32"),
+            DataType::Boolean(_) => llvm_call_print_local(parser.expr_count, "i1"),
+            DataType::Integer(_) => llvm_call_print_local(parser.expr_count, "i32"),
             _ => ()
         }
     }

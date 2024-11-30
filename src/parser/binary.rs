@@ -1,4 +1,4 @@
-use crate::common::common::{PARSE_DECLARATION_MODE, PARSE_FN_OUTPUT};
+use crate::common::common::PARSE_DECLARATION_MODE;
 use super::{
     expr::{Expr, DataType},
     parse_fn::parse_precedence, parse_rule::get_rule, parser::Parser, precedence::Precedence
@@ -23,6 +23,10 @@ pub fn parse_binary(parser: &mut Parser) {
             // Boolean
             TokenType::EqualEqual => binary_op(parser, eq_op, EQL),
             TokenType::BangEqual => binary_op(parser, neq_op, NEQ),
+            TokenType::Greater => binary_op(parser, gt_op, GT),
+            TokenType::Less => binary_op(parser, lt_op, LT),
+            TokenType::GreaterEqual => binary_op(parser, gt_op, GTE),
+            TokenType::LessEqual => binary_op(parser, gt_op, LTE),
             _ => parser.error_at(&token, "Unsupported binary instruction: check parse_binary()")
         }
     }
@@ -82,7 +86,23 @@ fn eq_op(a: i32, b: i32) -> i32 {
     if res {1} else {0}
 }
 fn neq_op(a: i32, b: i32) -> i32 {
-    let res = a == b;
+    let res = a != b;
+    if res {1} else {0}
+}
+fn gt_op(a: i32, b: i32) -> i32 {
+    let res = a > b;
+    if res {1} else {0}
+}
+fn gte_op(a: i32, b: i32) -> i32 {
+    let res = a >= b;
+    if res {1} else {0}
+}
+fn lt_op(a: i32, b: i32) -> i32 {
+    let res = a < b;
+    if res {1} else {0}
+}
+fn lte_op(a: i32, b: i32) -> i32 {
+    let res = a <= b;
     if res {1} else {0}
 }
 
@@ -102,4 +122,8 @@ const DIV: &str = "div";
 
 const EQL: &str = "icmp eq";
 const NEQ: &str = "icmp ne";
-const BOOL_OPS: [&'static str; 4] = [EQL, NEQ, EQL, EQL];
+const GT: &str = "icmp ugt";
+const GTE: &str = "icmp uge";
+const LT: &str = "icmp ult";
+const LTE: &str = "icmp ule";
+const BOOL_OPS: [&'static str; 6] = [EQL, NEQ, GT, GTE, LT, LTE];
