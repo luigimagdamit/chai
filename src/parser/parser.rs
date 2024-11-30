@@ -46,7 +46,7 @@ impl<'a>Parser <'a>{
                 println!("[{}] {} {}  at `{}`", ErrorCode::CompilerError, stderr, message, token.start);
             }
         }
-        std::process::exit(1);
+        panic!()
 
     } 
     pub fn advance(&mut self) {
@@ -134,11 +134,13 @@ impl<'a>Parser <'a>{
         self.llvm_stdlib();
         // llvm_main_start();
         self.advance();
-
+        
         if !PARSE_EXPRESSION_MODE {
             while !self.match_current(TokenType::EOF) {
                 declaration(self);
+                
             }
+            
             for (str, entry) in &self.string_table {
                 println!("{}",entry.codegen);
             }

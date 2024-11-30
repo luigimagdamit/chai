@@ -22,7 +22,7 @@ pub fn print_statement(parser: &mut Parser) {
         match &value.data_type {
             DataType::Boolean(_) => {
                 
-                llvm_call_print_local(parser.expr_count, "i1");
+                llvm_call_print_local(parser.expr_count - 1, "i1");
             },
             DataType::Integer(_) => {
                 println!("%{} = add {}, 0", parser.expr_count , print_val);

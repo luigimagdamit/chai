@@ -198,6 +198,7 @@ impl<'a> Scanner<'a> {
                 '{' => self.make_token(TokenType::LeftBrace),
                 '}' => self.make_token(TokenType::RightBrace),
                 ';' => self.make_token(TokenType::Semicolon),
+                ':' => self.make_token(TokenType::Colon),
                 ',' => self.make_token(TokenType::Comma),
                 '.' => self.make_token(TokenType::Dot),
                 '-' => self.make_token(TokenType::Minus),

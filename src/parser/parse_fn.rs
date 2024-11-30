@@ -23,13 +23,46 @@ pub fn expression_statement(parser: &mut Parser) {
     expression(parser);
     parser.consume(TokenType::Semicolon, "Expect ; after expression");
 }
+pub fn parse_variable(parser: &mut Parser, err_msg: &str) -> String {
+    parser.consume(TokenType::Identifier, err_msg);
+    return String::from(parser.previous.unwrap().start)
+    // store this in the hash table
+}
+pub fn convert_type_tag(tag: &str) -> String {
+    match tag {
+        "int" => String::from("alloca i32"),
+        "bool" => String::from("alloca i1"),
+        //"str" => String::from(format!("load i8*, i8** @{}, align 8", )),
+        _ => String::from("")
+    }
+}
+pub fn variable_declaration(parser: &mut Parser) {
+    // let name: type;
+    let global_name = parse_variable(parser, "Expected a variable name");
+    parser.consume(TokenType::Colon, "Expected : when declaring variable");
+    parser.consume(TokenType::Identifier, "Expected a type identifier when declaring variable");
+    let type_tag = convert_type_tag(parser.previous.clone().unwrap().start);
+    println!("%{} = {}", global_name, type_tag);
+    if parser.match_current(TokenType::Equal) {
+        expression(parser);
+    } else {
+        
+    }
 
+
+    parser.consume(TokenType::Semicolon, "Expected a semicolon after variable declaration");
+}
 pub fn declaration(parser: &mut Parser) {
+    
     if parser.match_current(TokenType::Fun) {
         parse_fn_declare(parser);
+
+    } else if parser.match_current(TokenType::Var) {
+        variable_declaration(parser);
     } else {
         statement(parser);
     }
+
     
 }
 pub fn statement(parser: &mut Parser) {
@@ -63,7 +96,7 @@ pub fn parse_precedence(parser: &mut Parser, precedence: Precedence) {
     if let Some(prefix_fn) = get_rule(parser.previous.unwrap().token_type).prefix {
         prefix_fn(parser);
     } else {
-        let err_msg = format!("Expected a prefix rule for token <{}>", parser.previous.unwrap());
+        let err_msg = format!("Expected a prefix rule or valid expression but found <{}>", parser.previous.unwrap());
         parser.error_at(&parser.previous.unwrap(), &err_msg);
     }
 

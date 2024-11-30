@@ -21,8 +21,10 @@ pub fn parse_fn_declare(parser: &mut Parser) {
     //
     
     while !parser.match_current(TokenType::RightBrace) {
+        
         declaration(parser);
     }
+
     println!("ret i32 0\n}}");
 
     
