@@ -1,10 +1,9 @@
-use crate::common::common::NO_MAIN;
-
+#[allow(unused)]
 pub fn llvm_main_start() -> String {
     let codegen = "define i32 @main() {\n    entry:\n";
     println!("{}", codegen);
     return String::from(codegen)
-}
+}#[allow(unused)]
 pub fn llvm_main_close() -> String {
     let codegen = 
     "    ret i32 0\n}";
@@ -13,7 +12,7 @@ pub fn llvm_main_close() -> String {
 }
 pub fn llvm_print_define() -> String {
     let codegen = "declare i32 @printf(i8*, ...)";
-    if NO_MAIN { println!("{}", codegen) }
+    println!("{}", codegen);
     return String::from(codegen)
 }
 pub fn llvm_print_i32_define() -> String {
@@ -27,6 +26,7 @@ pub fn llvm_print_i32_define() -> String {
     println!("{}", codegen);
     return String::from(codegen)
 }
+#[allow(unused)]
 pub fn llvm_call_print(index: u32, data_type: &str) {
     let codegen = format!(
         "    %result = call {} @{}()
@@ -43,6 +43,7 @@ pub fn llvm_call_print_local(index: u32, data_type: &str) {
 pub fn llvm_fmt_string_int() {
     println!("@fmt = private constant [4 x i8] c\"%d\\0A\\00\"")
 }
+#[allow(unused)]
 pub fn llvm_print_no_main(index: u32) {
     let codegen = format!(
     "define i32 @main() {{\nentry:

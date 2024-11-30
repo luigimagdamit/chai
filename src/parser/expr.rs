@@ -1,5 +1,6 @@
 use std::fmt;
 #[derive(Clone)]
+#[allow(unused)]
 pub enum DataType {
     Integer(i32),
     String(String),

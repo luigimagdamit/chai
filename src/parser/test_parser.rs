@@ -1,6 +1,8 @@
 mod tests {
     use core::panic;
 
+    use crate::common::common::PARSE_CONSTANT_FOLD;
+    use crate::parser::expr::DataType;
     use crate::parser::parse_fn::parse_precedence;
     use crate::scanner::token::TokenType;
     use crate::parser::parser::Parser;
@@ -54,8 +56,10 @@ mod tests {
         parse_precedence(parser, Precedence::PrecAssignment);
 
         if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            assert_eq!(c.left, "i32 3");
-            assert_eq!(c.right, "3");
+            match c.data_type {
+                DataType::Integer(value) => assert_eq!(value, 3),
+                _ => {}
+            }
         } else {
             panic!();
         }
@@ -70,8 +74,16 @@ mod tests {
         parse_precedence(parser, Precedence::PrecAssignment);
 
         if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            assert_eq!(c.left, test_left);
-            assert_eq!(c.right, test_right);
+            if PARSE_CONSTANT_FOLD {
+                assert_eq!(c.left, test_left);
+                assert_eq!(c.right, test_right);
+            } else {
+                match c.data_type {
+                    DataType::Integer(value) => assert_eq!(value, 420),
+                    _ => {}
+                }
+            }
+            
         } else {
             panic!();
         }
@@ -86,8 +98,16 @@ mod tests {
         parse_precedence(parser, Precedence::PrecAssignment);
 
         if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            assert_eq!(c.left, test_left);
-            assert_eq!(c.right, test_right);
+            if PARSE_CONSTANT_FOLD {
+                assert_eq!(c.left, test_left);
+                assert_eq!(c.right, test_right);
+            } else {
+                match c.data_type {
+                    DataType::Integer(value) => assert_eq!(value, 18),
+                    _ => {}
+                }
+            }
+            
         } else {
             panic!();
         }
@@ -101,8 +121,16 @@ mod tests {
         parse_precedence(parser, Precedence::PrecAssignment);
 
         if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            assert_eq!(c.left, test_left);
-            assert_eq!(c.right, test_right);
+            if PARSE_CONSTANT_FOLD {
+                assert_eq!(c.left, test_left);
+                assert_eq!(c.right, test_right);
+            } else {
+                match c.data_type {
+                    DataType::Integer(value) => assert_eq!(value, 66),
+                    _ => {}
+                }
+            }
+            
         } else {
             panic!();
         }

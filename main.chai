@@ -1,6 +1,11 @@
+fn test() i32 {
+    print(12);
+}
+
 fn main() i32 {
     print(32 - 64);
     print(25);
 
     print((60 - 30) - (4 - 2));
+    print(3005);
 }

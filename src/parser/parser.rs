@@ -1,14 +1,15 @@
-use crate::common::common::{PARSE_FN_OUTPUT, PARSE_TOKEN_OUTPUT};
+use crate::common::common::{PARSE_EXPRESSION_MODE, PARSE_FN_OUTPUT, PARSE_SUPRESS_PREDEFINES, PARSE_TOKEN_OUTPUT};
 use crate::scanner::{
     token::{Token, TokenType},
     scanner::Scanner
 };
 
 use crate::common::error::ErrorCode;
-use crate::parser::parse_fn::expression;
 use crate::parser::expr::Expr;
-use crate::llvm::llvm_print::{llvm_call_print, llvm_call_print_local, llvm_fmt_string_int, llvm_main_close, llvm_main_start, llvm_print_define, llvm_print_i32_define};
+use crate::llvm::llvm_print::{llvm_fmt_string_int, llvm_print_define, llvm_print_i32_define};
 use crate::parser::parse_fn::declaration;
+
+use super::parse_fn::expression;
 #[allow(unused)]
 pub struct Parser<'a>{
     pub current: Option<Token<'a>>,
@@ -109,19 +110,32 @@ impl<'a>Parser <'a>{
         }
         
     }
+    // Should always be included
+    fn llvm_stdlib(&self) {
+        if !PARSE_SUPRESS_PREDEFINES {
+            llvm_print_define();
+            llvm_fmt_string_int();
+            llvm_print_i32_define();
+        }
+        
+    }
     pub fn compile(&mut self) {
-        println!("{}", llvm_print_define());
-        llvm_fmt_string_int();
-        llvm_print_i32_define();
+        self.llvm_stdlib();
         // llvm_main_start();
         self.advance();
 
-        while !self.match_current(TokenType::EOF) {
-            declaration(self);
+        if !PARSE_EXPRESSION_MODE {
+            while !self.match_current(TokenType::EOF) {
+                declaration(self);
+            }
+        } else {
+            expression(self);
+            self.consume(TokenType::EOF, "Expect end of expression");
         }
+        
         // llvm_call_print_local(self.expr_count - 1, "i32");
         // llvm_main_close();
-        self.consume(TokenType::EOF, "Expect end of expression");
+        
 
     }
 }

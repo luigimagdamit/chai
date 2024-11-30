@@ -4,3 +4,6 @@ pub mod parser;
 pub mod precedence;
 pub mod expr;
 pub mod test_parser;
+pub mod binary;
+pub mod literal;
+pub mod print;
