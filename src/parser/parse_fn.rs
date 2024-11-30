@@ -263,7 +263,7 @@ where
             } else {
                 parser.constant_stack.push(Some(Expr {
                     left: String::from("i32 %") + &(parser.expr_count).to_string(),
-                    right: (parser.expr_count).to_string(),
+                    right: String::from("%") + &(parser.expr_count).to_string(),
                     data_type: DataType::Integer(calculation) 
                 }))
             }

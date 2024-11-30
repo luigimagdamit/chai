@@ -18,7 +18,7 @@ call void @print_i32(i32 %2)
 
 %3 = sub i32 60, 30
 %4 = sub i32 4, 2
-%5 = sub i32 %3, 4
+%5 = sub i32 %3, %4
 %6 = add i32 %5, 0
 call void @print_i32(i32 %6)
 
