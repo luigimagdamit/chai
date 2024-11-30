@@ -52,22 +52,23 @@ pub fn variable_declaration(parser: &mut Parser) {
 
     parser.consume(TokenType::Semicolon, "Expected a semicolon after variable declaration");
 }
+fn advance_then_declaration(parser: &mut Parser, declaration: fn(&mut Parser)) {
+    parser.advance();
+    declaration(parser);
+}
 pub fn declaration(parser: &mut Parser) {
-    
-    if parser.match_current(TokenType::Fun) {
-        parse_fn_declare(parser);
-
-    } else if parser.match_current(TokenType::Var) {
-        variable_declaration(parser);
-    } else {
-        statement(parser);
+    if let Some(curr) = parser.current {
+        match curr.token_type {
+            TokenType::Fun => advance_then_declaration(parser, parse_fn_declare),
+            TokenType::Var => advance_then_declaration(parser, variable_declaration),
+            _ => statement(parser),
+        }
     }
 
-    
 }
 pub fn statement(parser: &mut Parser) {
-    if parser.match_current(TokenType::Print) {
 
+    if parser.match_current(TokenType::Print) {
         print_statement(parser);
     } else {
         expression_statement(parser);
@@ -79,27 +80,16 @@ pub fn parse_block(parser: &mut Parser) {
 }
 // fn name() ret type
 
-pub fn parse_number(parser: &mut Parser) {
-    let value = parser.previous.unwrap().start;
-    let number_leaf = Expr {
-        left: String::from(format!("i32 {}", value)),
-        right: String::from(value),
-        data_type: DataType::Integer(value.parse().unwrap())
-    };
 
-    parser.constant_stack.push(Some(number_leaf));
-}
 
 pub fn parse_precedence(parser: &mut Parser, precedence: Precedence) {
     parser.advance();
-
     if let Some(prefix_fn) = get_rule(parser.previous.unwrap().token_type).prefix {
         prefix_fn(parser);
     } else {
         let err_msg = format!("Expected a prefix rule or valid expression but found <{}>", parser.previous.unwrap());
         parser.error_at(&parser.previous.unwrap(), &err_msg);
     }
-
     while precedence.to_u32() <= get_rule(parser.current.unwrap_or_else(||panic!("Current token not present for parse_precedence()")).token_type).precedence.to_u32() {
         parser.advance();
         if let Some(infix_rule) = get_rule(parser.previous.unwrap().token_type).infix {
@@ -108,11 +98,7 @@ pub fn parse_precedence(parser: &mut Parser, precedence: Precedence) {
             break
         }
     }
-    
-    
 }
-
-
 
 pub fn parse_grouping(parser: &mut Parser) {
     expression(parser);

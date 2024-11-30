@@ -16,7 +16,7 @@ use super::parse_fn::expression;
 pub struct StringEntry {
     pub codegen: String,
     pub length: usize,
-    pub index: u32
+    pub index: usize
 }
 #[allow(unused)]
 pub struct Parser<'a>{
@@ -32,6 +32,10 @@ pub struct Parser<'a>{
     pub expr_count: u32
 }
 impl<'a>Parser <'a>{
+    pub fn new_expr(&mut self, expr: Expr) {
+        self.constant_stack.push(Some(expr));
+        self.expr_count += 1;
+    }
     pub fn error_at(&mut self, token: &Token, message: &str) {
         self.panic_mode = true;
         let stderr = format!("Line: {} - ", token.line);
@@ -49,6 +53,13 @@ impl<'a>Parser <'a>{
         panic!()
 
     } 
+    pub fn error_at_previous(&mut self, message: &str) {
+        if let Some(prev) = self.previous {
+            self.error_at(&prev, message);
+        } else {
+            panic!("[ParserDev] - Tried generating a error message at previous but failed");
+        }
+    }
     pub fn advance(&mut self) {
         self.previous = self.current.take();
         loop {

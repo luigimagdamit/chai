@@ -1,38 +1,39 @@
 use super::parser::{Parser, StringEntry};
 use super::expr::{DataType, Expr};
+use crate::llvm::llvm_string::*;
 
 pub fn parse_string(parser: &mut Parser) {
     let value = parser.previous.unwrap().start;
-    let length = value.len();
+    let length = value.len() ;
 
-    let codegen = format!("@str{} = private unnamed_addr constant [{} x i8] c\"{}\\0A\\00\", align 1", parser.expr_count, length , &value[1..length - 1]);
+    
+    let codegen = llvm_new_static_string(length, parser.string_table.len(), &value[1..length - 1]);
+
     match parser.string_table.get(value) {
         Some(str) => {
-            let string_expr = Expr {
-                left: String::from(format!("getelementptr inbounds [{} x i8], [{} x i8]* @str{}, i32 0, i32 0", str.index , length, str.index)),
-                right: String::from(format!("getelementptr inbounds [{} x i8], [{} x i8]* @str{}, i32 0, i32 0", str.index , length, str.index)),
-                data_type: DataType::String(String::from(value))
-            };
-            parser.constant_stack.push(Some(string_expr));
-            parser.expr_count += 1;
+            parser.new_expr(string_expr(length - 1, str.index, value));
         },
         None => {
             parser.string_table.insert(String::from(value), StringEntry {
                 codegen: codegen,
                 length: length - 1,
-                index: parser.expr_count
+                index: parser.expr_count as usize
             }); 
-            let string_expr = Expr {
-                left: String::from(format!("getelementptr inbounds [{} x i8], [{} x i8]* @str{}, i32 0, i32 0", length , length, parser.expr_count)),
-                right: String::from(format!("getelementptr inbounds [{} x i8], [{} x i8]* @str{}, i32 0, i32 0", length , length, parser.expr_count)),
-                data_type: DataType::String(String::from(value))
-            };
-            // println!("{}", string_expr.left);
-            parser.constant_stack.push(Some(string_expr));
-            parser.expr_count += 1;
+
+            let new_index = parser.string_table.len() - 1;
+            parser.new_expr(string_expr(length, new_index, value));
         }
     }
-    
+}
+fn string_expr(str_length: usize, str_index: usize, str_value: &str) -> Expr {
+    let codegen = llvm_retrieve_static_string(str_length, str_index);
+    Expr {
+        left: String::from(&codegen),
+        right: String::from(&codegen),
+        data_type: str_data_type(str_value)
+    }
+}
 
-    
+fn str_data_type(value: &str) -> DataType {
+    DataType::String(String::from(value))
 }
