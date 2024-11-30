@@ -26,7 +26,7 @@ pub fn parse_binary(parser: &mut Parser) {
             TokenType::Greater => binary_op(parser, gt_op, GT),
             TokenType::Less => binary_op(parser, lt_op, LT),
             TokenType::GreaterEqual => binary_op(parser, gt_op, GTE),
-            TokenType::LessEqual => binary_op(parser, gt_op, LTE),
+            TokenType::LessEqual => binary_op(parser, lte_op, LTE),
             _ => parser.error_at(&token, "Unsupported binary instruction: check parse_binary()")
         }
     }

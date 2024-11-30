@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::common::common::{PARSE_EXPRESSION_MODE, PARSE_FN_OUTPUT, PARSE_SUPRESS_PREDEFINES, PARSE_TOKEN_OUTPUT};
 use crate::scanner::{
     token::{Token, TokenType},
@@ -10,6 +12,12 @@ use crate::llvm::llvm_print::{llvm_fmt_string_int, llvm_print_bool_declare, llvm
 use crate::parser::parse_fn::declaration;
 
 use super::parse_fn::expression;
+
+pub struct StringEntry {
+    pub codegen: String,
+    pub length: usize,
+    pub index: u32
+}
 #[allow(unused)]
 pub struct Parser<'a>{
     pub current: Option<Token<'a>>,
@@ -20,6 +28,7 @@ pub struct Parser<'a>{
     // pub left_hand: Option<Expr>,
     // pub right_hand: Option<Expr>
     pub constant_stack: Vec<Option<Expr>>,
+    pub string_table: HashMap<String, StringEntry>,
     pub expr_count: u32
 }
 impl<'a>Parser <'a>{
@@ -98,6 +107,7 @@ impl<'a>Parser <'a>{
             // left_hand: None,
             // right_hand: None
             constant_stack: Vec::new(),
+            string_table: HashMap::new(),
             expr_count: 0
         }
     }
@@ -128,6 +138,9 @@ impl<'a>Parser <'a>{
         if !PARSE_EXPRESSION_MODE {
             while !self.match_current(TokenType::EOF) {
                 declaration(self);
+            }
+            for (str, entry) in &self.string_table {
+                println!("{}",entry.codegen);
             }
         } else {
             expression(self);

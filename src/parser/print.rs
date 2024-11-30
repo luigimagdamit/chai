@@ -17,11 +17,22 @@ pub fn print_statement(parser: &mut Parser) {
     expression(parser);
     if let Some(expr) = parser.constant_stack.pop() {
         let value = expr.unwrap();
-        let print_val = value.left;
-        println!("%{} = add {}, 0", parser.expr_count , print_val);
-        match value.data_type {
-            DataType::Boolean(_) => llvm_call_print_local(parser.expr_count, "i1"),
-            DataType::Integer(_) => llvm_call_print_local(parser.expr_count, "i32"),
+        let print_val = &value.left;
+        
+        match &value.data_type {
+            DataType::Boolean(_) => {
+                
+                llvm_call_print_local(parser.expr_count, "i1");
+            },
+            DataType::Integer(_) => {
+                println!("%{} = add {}, 0", parser.expr_count , print_val);
+                llvm_call_print_local(parser.expr_count, "i32")
+            }
+            DataType::String(str) => {
+                println!("%{} = {}", parser.expr_count, print_val);
+                println!("call i32 (i8*, ...) @printf(i8* %{})", parser.expr_count);
+                parser.expr_count += 1;
+            },
             _ => ()
         }
     }

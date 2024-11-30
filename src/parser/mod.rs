@@ -8,3 +8,4 @@ pub mod binary;
 pub mod literal;
 pub mod print;
 pub mod function;
+pub mod string;
