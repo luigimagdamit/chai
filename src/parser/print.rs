@@ -20,7 +20,7 @@ pub fn print_statement(parser: &mut Parser) {
         let print_val = &value.left;
         
         match &value.data_type {
-            DataType::Boolean(_) => llvm_call_print_local(parser.expr_count - 1, "i1"),
+            DataType::Boolean(_) => llvm_print_i1_local(parser.expr_count, print_val),
             DataType::Integer(_) => llvm_print_i32_local(parser.expr_count, print_val),
             DataType::String(_) => {
                 if value.right != "__var_string" {
@@ -46,4 +46,8 @@ fn llvm_print_i32_local(reg_name: u32, value: &String) {
 fn llvm_print_str_local(reg_name: u32, value: &String) {
     println!("%{} = {}", reg_name, value);
     println!("call i32 (i8*, ...) @printf(i8* %{})", reg_name);
+}
+fn llvm_print_i1_local(reg_name: u32, value: &String) {
+    println!("%{} = add {}, 0", reg_name , value);
+    llvm_call_print_local(reg_name, "i1")
 }

@@ -12,12 +12,13 @@ pub fn parse_string(parser: &mut Parser) {
     match parser.string_table.get(value) {
         Some(str) => {
             parser.new_expr(string_expr(length - 1, str.index, value));
+            parser.string_table.get_mut(value).unwrap().index += 1;
         },
         None => {
             parser.string_table.insert(String::from(value), StringEntry {
                 codegen: codegen,
                 length: length - 1,
-                index: parser.expr_count as usize
+                index: parser.string_table.len() as usize
             }); 
 
             let new_index = parser.string_table.len() - 1;

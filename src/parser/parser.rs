@@ -44,8 +44,8 @@ impl<'a>Parser <'a>{
         self.constant_stack.push(Some(expr));
         self.expr_count += 1;
     }
-    pub fn error_at(&mut self, token: &Token, message: &str) {
-        self.panic_mode = true;
+    pub fn error_at(&self, token: &Token, message: &str) {
+
         let stderr = format!("Line: {} - ", token.line);
         match token.token_type {
             TokenType::EOF => {
