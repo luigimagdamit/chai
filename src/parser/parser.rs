@@ -61,11 +61,10 @@ impl<'a>Parser <'a>{
 
             }
         }
-        eprintln!("\x1b[93mchai knocks out..\x1b[0m");
-        exit(1);
-        
-        
-
+        if self.current.unwrap().token_type == TokenType::EOF {
+            eprintln!("\x1b[93mchai knocks out..\x1b[0m");
+            exit(1);
+        }
 
 
     } 

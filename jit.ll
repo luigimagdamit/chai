@@ -7,9 +7,9 @@ define void @print_i32(i32 %value) {
 define i32 @main() {
 entry:
 
-getelementptr inbounds [7 x i8], [7 x i8]* @str0, i32 0, i32 0
-%1 = getelementptr inbounds [7 x i8], [7 x i8]* @str0, i32 0, i32 0
-call i32 (i8*, ...) @printf(i8* %1)
-
+%greeting = alloca i8*
+getelementptr inbounds [14 x i8], [14 x i8]* @str0, i32 0, i32 0%1 = getelementptr inbounds [14 x i8], [14 x i8]* @str0, i32 0, i32 0store i8* %1, i8** %greeting
+%greeting_0 = load i8*, i8** %greeting
+call i32 (i8*, ...) @printf(i8* %greeting_0)
 ret i32 0
-}@str0 = private unnamed_addr constant [7 x i8] c"hello\0A\00", align 1
+}@str0 = private unnamed_addr constant [14 x i8] c"hello world!\0A\00", align 1
