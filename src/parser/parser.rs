@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::process::exit;
 
 use crate::common::common::{PARSE_EXPRESSION_MODE, PARSE_FN_OUTPUT, PARSE_SUPRESS_PREDEFINES, PARSE_TOKEN_OUTPUT};
 use crate::scanner::{
@@ -49,17 +50,23 @@ impl<'a>Parser <'a>{
         let stderr = format!("Line: {} - ", token.line);
         match token.token_type {
             TokenType::EOF => {
-                println!("{} at end of file", token.start)
+                println!("\x1b[31m[{}] {} but found EOF (end of file)\x1b[0m", ErrorCode::CompilerError, message);
             },
             TokenType::Error(loc) => {
-                println!("[{}] {} {} at `{}`", ErrorCode::SyntaxError, stderr, token.start, &self.scanner.get_lexeme(loc));
+                println!("\x1b[31m[{}] {} {} at `{}`\x1b[0m", ErrorCode::SyntaxError, stderr, token.start, &self.scanner.get_lexeme(loc));
+
             },
             _ => {
-                println!("[{}] {} {}  at `{}`", ErrorCode::CompilerError, stderr, message, token.start);
+                println!("\x1b[31m[{}] {} {} at `{}`\x1b[0m", ErrorCode::CompilerError, stderr, message, token.start);
+
             }
         }
+        eprintln!("\x1b[93mchai knocks out..\x1b[0m");
+        exit(1);
+        
+        
 
-        panic!()
+
 
     } 
     pub fn error_at_previous(&mut self, message: &str) {
@@ -152,14 +159,17 @@ impl<'a>Parser <'a>{
         while !self.match_current(TokenType::EOF) {
             declaration(self);   
         }
+        self.compilation += &llvm_main_close();
         for (_, entry) in &self.string_table {
             println!("{}",entry.codegen);
+            self.compilation += &entry.codegen;
         }
     }
     pub fn declaration_mode(&mut self) {
         while !self.match_current(TokenType::EOF) {
             declaration(self);   
         }
+        
         for (_, entry) in &self.string_table {
             println!("{}",entry.codegen);
         }

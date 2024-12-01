@@ -4,7 +4,7 @@ use super::{
     symbol::{create_new_symbol, get_symbol, set_symbol},
     parse_fn::{expression, convert_type_tag}
 };
-use crate::scanner::token::TokenType;
+use crate::{common::common::PARSE_DECLARATION_MODE, scanner::token::TokenType};
 
 // misleading title, will just 
 pub fn parse_variable_name(parser: &mut Parser, err_msg: &str) -> String {
@@ -36,8 +36,10 @@ pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
             DataType::String(_) => {
                 let codegen1 = format!("%{} = {}", parser.expr_count, print_val);
                 println!("{}", codegen1);
+                parser.compilation += &codegen1;
                 let codegen2 = format!("store i8* %{}, i8** %{}", parser.expr_count , var_name);
                 println!("{}", codegen2);
+                parser.compilation += &codegen2;
                 create_new_symbol(parser, String::from(var_name), value.data_type);
             }
         }
@@ -53,7 +55,7 @@ pub fn variable_declaration(parser: &mut Parser) {
     parser.consume(TokenType::Identifier, "Expected a type identifier when declaring variable");
     let type_tag = convert_type_tag(parser.previous.clone().unwrap().start);
     let codegen = format!("%{} = {}\n", global_name, type_tag);
-    println!("{}", codegen);
+    if PARSE_DECLARATION_MODE { println!("{}", codegen) }
     parser.compilation += &codegen;
     if parser.match_current(TokenType::Equal) {
         
@@ -72,7 +74,16 @@ pub fn parse_set_variable(parser: &mut Parser) {
     parser.consume(TokenType::Equal, "Expected assignment");
     expression(parser);
     parser.consume(TokenType::Semicolon, "");
-    let expr = parser.constant_stack.pop().unwrap().unwrap();
+    if let Some(expr) = parser.constant_stack.pop() {
+        match expr {
+            Some(new_value) => set_symbol(parser, String::from(identifier.start), new_value),
+            None => parser.error_at_previous("Expected an <expression> when setting variable to a new value"),
+        }
+    } else {
 
-    set_symbol(parser, String::from(identifier.start), expr);
+        parser.error_at(&identifier, "Unknown variable (set_variable)");
+    }
+
+
+
 }

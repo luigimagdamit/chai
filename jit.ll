@@ -7,10 +7,9 @@ define void @print_i32(i32 %value) {
 define i32 @main() {
 entry:
 
-%0 = mul i32 69, 420
-%1 = add i32 %0, 0
-call void @print_i32(i32 %1)
-
+getelementptr inbounds [7 x i8], [7 x i8]* @str0, i32 0, i32 0
+%1 = getelementptr inbounds [7 x i8], [7 x i8]* @str0, i32 0, i32 0
+call i32 (i8*, ...) @printf(i8* %1)
 
 ret i32 0
-}
+}@str0 = private unnamed_addr constant [7 x i8] c"hello\0A\00", align 1

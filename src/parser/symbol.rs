@@ -1,4 +1,6 @@
 use std::fmt::format;
+use crate::common::common::PARSE_DECLARATION_MODE;
+
 use super::{
     parser::{Parser, SymbolTableEntry},
 
@@ -31,7 +33,9 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
             
         },
         DataType::String(_) => {
-            println!("%{}_{} = load {}, {}* %{}", variable.name, variable.count, "i8*", "i8*", variable.name);
+            let codegen = format!("\n%{}_{} = load {}, {}* %{}\n", variable.name, variable.count, "i8*", "i8*", variable.name);
+            if PARSE_DECLARATION_MODE { println!("{}", codegen) }
+            parser.compilation += &codegen;
             parser.new_expr(Expr {
                 left: format!("%{}_{}", variable.name, variable.count),
                 right: String::from("<__var_string__>"),
@@ -51,7 +55,7 @@ pub fn set_symbol(parser: &mut Parser, name: String, value: Expr) {
 
     match variable.variable_type {
         DataType::Integer(_) => {
-            println!("store {}, i32* %{}", value.left , String::from(name));
+            println!("store {}, i32* %{}\n", value.left , String::from(name));
         },
         _ => ()
     }

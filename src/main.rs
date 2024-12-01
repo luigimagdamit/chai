@@ -3,15 +3,42 @@ mod scanner;  // Import the Scanner module
 mod parser;
 mod common;
 mod llvm;
+mod jit;
 
 use common::common::{PARSE_DECLARATION_MODE, PARSE_EXPRESSION_MODE};
-use llvm::llvm_print::{llvm_fmt_string_int, llvm_main_close, llvm_main_start, llvm_print_define, llvm_print_i32_define};
+
 use parser::parser::Parser;
 use std::io::{self, Write};
-use std::fs::{self, File};
-use std::process::{Command, exit};
-use std::time::{SystemTime, UNIX_EPOCH};
+use jit::compile::jit_compile;
+
+fn chai_title() -> String {
+    String::from(r#"
+
+
+                       .
+                        `:.
+                          `:.
+                  .:'     ,::
+                 .:'      ;:'
+                 ::      ;:'
+                  :    .:'
+                   `.  :.
+          _________________________
+         : _ _ _ _ _ _ _ _ _ _ _ _ :
+     ,---:".".".".".".".".".".".".":
+    : ,'"`::.:.:.:.:.:.:.:.:.:.:.::'
+    `.`.  `:-===-===-===-===-===-:'
+      `.`-._:                   :
+        `-.__`.               ,' met.
+    ,--------`"`-------------'--------.
+     `"--.__                   __.--"'
+            `""-------------""'
+"#)
+}
+
 fn repl() -> io::Result<()>{
+    println!("{}\nchai v0.00.1 REPL", chai_title());
+    println!("\x1b[93mtype something!\x1b[0m");
     loop {
         let mut input = String::new();
         print!("> ");
@@ -19,59 +46,12 @@ fn repl() -> io::Result<()>{
         io::stdin().read_line(&mut input).expect("Failed to read REPL");
         let source = input.trim();
         if source == "exit" {
-            ()
+            println!("\x1b[93mchai takes a nap...\x1b[0m");
+            std::process::exit(0);
         }
+        let _ = jit_compile(source);
         
-        let parser = &mut Parser::init_parser(source);
-        parser.compilation += &llvm_fmt_string_int();
-        parser.compilation += &llvm_print_define();
-        parser.compilation += &llvm_print_i32_define();
-        let compile_start = SystemTime::now();
-        parser.compilation += "\n";
-        parser.compilation += &llvm_main_start();
-        parser.compilation += "\n";
-        parser.compile(); // warmup
-        parser.compilation += &llvm_main_close();
-        io::stdout().flush().unwrap();
-        let mut file = File::create("jit.ll")?;
-        // println!("{}", parser.compilation);
-        file.write_all(parser.compilation.as_bytes())?;
         
-        let output = Command::new("clang")
-            .arg("jit.ll")
-            .arg("-w")
-            .arg("-o")
-            .arg("jit")
-            .output();
-        let compile_end = SystemTime::now();
-        match output {
-            Ok(output) => {
-                if output.status.success() {
-                    let stdout = String::from_utf8_lossy(&output.stdout);
-                    println!("\x1b[32mSuccessfully compiled!\x1b[0m{}", stdout);
-                    let compile_time = compile_end.duration_since(UNIX_EPOCH).unwrap().as_millis() - compile_start.duration_since(UNIX_EPOCH).unwrap().as_millis();
-                    println!("\x1b[33mJIT Compile Time: \x1b[0m{}ms\n", compile_time);
-                    let run_output = Command::new("./jit").output();
-                    match run_output {
-                        Ok(out) => {
-                            if out.status.success() {
-                                let stdout = String::from_utf8_lossy(&out.stdout);
-                                println!("\x1b[33mYou said: \x1b[0m{}", source);
-                                println!("\x1b[32mChai says: \x1b[0m{}", stdout);
-                            } else {
-                                panic!()
-                            }
-                        },
-                        _ => {}
-                    }
-                } else {
-                    let stderr = String::from_utf8_lossy(&output.stderr);
-                    eprintln!("{}", stderr);
-                    exit(1);
-                }
-            }
-            _ => ()
-        }
     }
 }
 fn main() {
@@ -85,7 +65,7 @@ fn main() {
 
             s if s.is_ascii()=> {
                 if !PARSE_DECLARATION_MODE { panic!("[DeclrModeError] PARSE_DECLARATION_MODE flag is not enabled")}
-                let contents = fs::read_to_string(s).unwrap();
+                let contents = std::fs::read_to_string(s).unwrap();
                 let parser = &mut Parser::init_parser(&contents);
                 parser.compile();
             }

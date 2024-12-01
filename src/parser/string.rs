@@ -8,10 +8,12 @@ pub fn parse_string(parser: &mut Parser) {
 
     
     let codegen = llvm_new_static_string(length, parser.string_table.len(), &value[1..length - 1]);
-
+    
     match parser.string_table.get(value) {
         Some(str) => {
-            parser.new_expr(string_expr(length - 1, str.index, value));
+            let retrieve_codegen = string_expr(length - 1, str.index, value);
+            parser.new_expr(retrieve_codegen.clone());
+            parser.compilation += &retrieve_codegen.left;
             parser.string_table.get_mut(value).unwrap().index += 1;
         },
         None => {
@@ -22,7 +24,9 @@ pub fn parse_string(parser: &mut Parser) {
             }); 
 
             let new_index = parser.string_table.len() - 1;
-            parser.new_expr(string_expr(length, new_index, value));
+            let new_str_codegen = string_expr(length, new_index, value);
+            parser.compilation += &String::from(new_str_codegen.clone().left);
+            parser.new_expr(new_str_codegen);
         }
     }
 }
