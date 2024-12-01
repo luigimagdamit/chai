@@ -40,29 +40,14 @@ define void @print_i32(i32 %value) {
 
 define i32 @main(){
 entry:
-%1 = getelementptr inbounds [14 x i8], [14 x i8]* @str0, i32 0, i32 0
-call i32 (i8*, ...) @printf(i8* %1)
-%4 = getelementptr inbounds [14 x i8], [14 x i8]* @str1, i32 0, i32 0
-call i32 (i8*, ...) @printf(i8* %4)
-%7 = getelementptr inbounds [33 x i8], [33 x i8]* @str2, i32 0, i32 0
-call i32 (i8*, ...) @printf(i8* %7)
-%i = alloca i32
-store i32 24, i32* %i
-%flag = alloca i1
-%10 = icmp ult i32 1, 2
-call void @print_i1(i1 %10)
+%age = alloca i32
+store i32 3005, i32* %age
+%2 = getelementptr inbounds [71 x i8], [71 x i8]* @str0, i32 0, i32 0
+call i32 (i8*, ...) @printf(i8* %2)
+%age_0 = load i32, i32* %age
+%5 = add i32 %age_0, 0
+call void @print_i32(i32 %5)
 
-%12 = icmp ugt i32 3, 1
-call void @print_i1(i1 %12)
-
-%14 = icmp eq i32 2, 3
-call void @print_i1(i1 %14)
-
-%17 = getelementptr inbounds [24 x i8], [24 x i8]* @str3, i32 0, i32 0
-call i32 (i8*, ...) @printf(i8* %17)
 ret i32 0
 }
-@str3 = private unnamed_addr constant [24 x i8] c"okay shutting down now\0A\00", align 1
-@str1 = private unnamed_addr constant [14 x i8] c"this is chai\0A\00", align 1
-@str2 = private unnamed_addr constant [33 x i8] c"here is me declaring a variable\0A\00", align 1
-@str0 = private unnamed_addr constant [14 x i8] c"hello world!\0A\00", align 1
+@str0 = private unnamed_addr constant [71 x i8] c"yo mama so old childish gambino wrote a song about her and its called\0A\00", align 1

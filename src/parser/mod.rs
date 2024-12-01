@@ -10,3 +10,4 @@ pub mod print;
 pub mod function;
 pub mod string;
 pub mod number;
+pub mod symbol;

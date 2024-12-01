@@ -1,6 +1,6 @@
 use crate::scanner::token::TokenType;
 use super::{
-    binary::parse_binary, function::parse_fn_declare, number::parse_number, literal::parse_literal, parse_fn::parse_grouping, parser::Parser, precedence::Precedence, string::parse_string
+    binary::parse_binary, function::parse_fn_declare, literal::parse_literal, number::parse_number, parse_fn::{parse_get_variable, parse_grouping}, parser::Parser, precedence::Precedence, string::parse_string
 };
 pub struct ParseRule<'a>{
     pub prefix: Option<ParseFn<'a>>,
@@ -97,6 +97,11 @@ pub fn get_rule<'a>(token_type: TokenType) -> ParseRule<'a> {
             prefix: Some(parse_string), 
             infix: None, 
             precedence: Precedence::PrecNone 
+        },
+        TokenType::Identifier => ParseRule {
+            prefix: Some(parse_get_variable),
+            infix: None,
+            precedence: Precedence::PrecNone
         },
         TokenType::EOF => ParseRule {
             prefix: None, 

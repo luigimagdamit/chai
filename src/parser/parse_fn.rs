@@ -9,7 +9,8 @@ use super::{
         DataType
     },
     print::print_statement,
-    function::parse_fn_declare
+    function::parse_fn_declare,
+    symbol::{create_new_symbol, get_symbol, set_symbol}
 };
 use crate::{
     llvm::expr_mode::expr_mode,
@@ -38,6 +39,11 @@ pub fn convert_type_tag(tag: &str) -> String {
         _ => String::from("")
     }
 }
+// getters need to create a new expression since it is one
+pub fn parse_get_variable(parser: &mut Parser) {
+    let value = parser.previous.unwrap();
+    let symbol = get_symbol(parser, String::from(value.start));
+}
 pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
 
     expression(parser);
@@ -49,11 +55,7 @@ pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
             DataType::Boolean(_) => (),
             DataType::Integer(int) => {
                 println!("store i32 {}, i32* %{}", int , var_name);
-                // parser.new_expr(Expr {
-                //     left: format!("%{}", var_name),
-                //     right: format!("%{}", var_name),
-                //     data_type: DataType::Integer(*int)
-                // });
+                create_new_symbol(parser, String::from(var_name), value.data_type);
             },
             DataType::String(_) => ()
         }
@@ -72,7 +74,7 @@ pub fn variable_declaration(parser: &mut Parser) {
     if parser.match_current(TokenType::Equal) {
         
         variable_assignment(parser, &global_name);
-
+        
     } else {
         
     }
@@ -84,11 +86,21 @@ fn advance_then_declaration(parser: &mut Parser, declaration: fn(&mut Parser)) {
     parser.advance();
     declaration(parser);
 }
+pub fn parse_set_variable(parser: &mut Parser) {
+    let identifier = parser.previous.unwrap();
+    parser.consume(TokenType::Equal, "Expected assignment");
+    expression(parser);
+    parser.consume(TokenType::Semicolon, "");
+    let expr = parser.constant_stack.pop().unwrap().unwrap();
+
+    set_symbol(parser, String::from(identifier.start), expr);
+}
 pub fn declaration(parser: &mut Parser) {
     if let Some(curr) = parser.current {
         match curr.token_type {
             TokenType::Fun => advance_then_declaration(parser, parse_fn_declare),
             TokenType::Var => advance_then_declaration(parser, variable_declaration),
+            TokenType::Identifier => advance_then_declaration(parser, parse_set_variable),
             _ => statement(parser),
         }
     }

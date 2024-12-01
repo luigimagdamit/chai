@@ -1,5 +1,5 @@
 use std::fmt;
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 #[allow(unused)]
 pub enum DataType {
     Integer(i32),

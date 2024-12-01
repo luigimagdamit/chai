@@ -11,12 +11,18 @@ use crate::parser::expr::Expr;
 use crate::llvm::llvm_print::{llvm_fmt_string_int, llvm_print_bool_declare, llvm_print_define, llvm_print_i32_define};
 use crate::parser::parse_fn::declaration;
 
+use super::expr::DataType;
 use super::parse_fn::expression;
 
 pub struct StringEntry {
     pub codegen: String,
     pub length: usize,
     pub index: usize
+}
+pub struct SymbolTableEntry {
+    pub name: String,
+    pub count: usize,
+    pub variable_type: DataType
 }
 #[allow(unused)]
 pub struct Parser<'a>{
@@ -29,9 +35,11 @@ pub struct Parser<'a>{
     // pub right_hand: Option<Expr>
     pub constant_stack: Vec<Option<Expr>>,
     pub string_table: HashMap<String, StringEntry>,
+    pub symbol_table: HashMap<String, SymbolTableEntry>,
     pub expr_count: u32
 }
 impl<'a>Parser <'a>{
+
     pub fn new_expr(&mut self, expr: Expr) {
         self.constant_stack.push(Some(expr));
         self.expr_count += 1;
@@ -50,7 +58,7 @@ impl<'a>Parser <'a>{
                 println!("[{}] {} {}  at `{}`", ErrorCode::CompilerError, stderr, message, token.start);
             }
         }
-        print!("{}[2J", 27 as char);
+
         panic!()
 
     } 
@@ -119,6 +127,7 @@ impl<'a>Parser <'a>{
             // right_hand: None
             constant_stack: Vec::new(),
             string_table: HashMap::new(),
+            symbol_table: HashMap::new(),
             expr_count: 0
         }
     }
