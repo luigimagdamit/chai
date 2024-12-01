@@ -23,12 +23,13 @@ pub fn print_statement(parser: &mut Parser) {
             DataType::Boolean(_) => llvm_print_i1_local(parser.expr_count, print_val),
             DataType::Integer(_) => llvm_print_i32_local(parser.expr_count, print_val),
             DataType::String(_) => {
-                if value.right != "__var_string" {
+                if value.right != "<__var_string__>" {
                     llvm_print_str_local(parser.expr_count, print_val);
-                    parser.expr_count += 1;
+                    // does not place anything on the stack...
+                    //parser.expr_count += 1;
                 } else {
                     println!("call i32 (i8*, ...) @printf(i8* {})", print_val);
-                    parser.expr_count += 1;
+                    //parser.expr_count += 1;
                 }
                 
             }

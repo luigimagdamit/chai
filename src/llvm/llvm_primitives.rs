@@ -5,7 +5,7 @@ use super::llvm_string::llvm_new_static_string;
 
 
 pub fn llvm_top_level_expr(_value: &str, value_type: &DataType, index: u32) -> String{
-    if PARSE_EXPRESSION_MODE {println!("\nRead top-level expression:");}
+    // if PARSE_EXPRESSION_MODE {println!("\nRead top-level expression:");}
     
     match value_type {
         DataType::Integer(int) => {

@@ -1,19 +1,17 @@
 #[allow(unused)]
 pub fn llvm_main_start() -> String {
-    let codegen = "define i32 @main() {\n    entry:\n";
-    println!("{}", codegen);
-    return String::from(codegen)
+    let codegen = "define i32 @main() {\nentry:\n";
+    String::from(codegen)
 }#[allow(unused)]
 pub fn llvm_main_close() -> String {
-    let codegen = 
-    "    ret i32 0\n}";
-    println!("{}", codegen);
-    return String::from(codegen)
+    let codegen = "\nret i32 0\n}";
+
+    String::from(codegen)
 }
 pub fn llvm_print_define() -> String {
     let codegen = "declare i32 @printf(i8*, ...)";
     println!("{}", codegen);
-    return String::from(codegen)
+    String::from(codegen)
 }
 pub fn llvm_print_i32_define() -> String {
     let codegen =
@@ -42,16 +40,6 @@ pub fn llvm_call_print_local(index: u32, data_type: &str) {
 }
 pub fn llvm_fmt_string_int() {
     println!("@fmt = private constant [4 x i8] c\"%d\\0A\\00\"")
-}
-#[allow(unused)]
-pub fn llvm_print_no_main(index: u32) {
-    let codegen = format!(
-    "define i32 @main() {{\nentry:
-        %result = call i32 @{}()
-        call void @print_i32(i32 %result)
-        ret i32 0
-    }}", index);
-    println!("{}", codegen)
 }
 
 pub fn llvm_print_bool_declare() -> String {

@@ -27,15 +27,18 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
                 right: format!("%{}_{}", variable.name, variable.count),
                 data_type: variable.variable_type.clone()
             });
+            // decrement since we don't use a name / tmp variable register name
             
         },
         DataType::String(_) => {
             println!("%{}_{} = load {}, {}* %{}", variable.name, variable.count, "i8*", "i8*", variable.name);
             parser.new_expr(Expr {
                 left: format!("%{}_{}", variable.name, variable.count),
-                right: String::from("__var_string"),
+                right: String::from("<__var_string__>"),
                 data_type: variable.variable_type.clone()
             });
+            // decrement since we don't use a name / tmp variable register name
+            parser.expr_count -= 1;
         }
         _ => ()
     }

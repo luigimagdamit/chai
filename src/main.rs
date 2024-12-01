@@ -5,6 +5,7 @@ mod common;
 mod llvm;
 
 use common::common::{PARSE_DECLARATION_MODE, PARSE_EXPRESSION_MODE};
+use llvm::llvm_print::{llvm_main_close, llvm_main_start, llvm_print_define};
 use parser::parser::Parser;
 use std::io::{self, Write};
 use std::fs::{self};
@@ -19,10 +20,13 @@ fn repl() {
         if source == "exit" {
             break
         }
-
+        
         let parser = &mut Parser::init_parser(source);
+        parser.compilation += &llvm_print_define();
+        parser.compilation += &llvm_main_start();
         parser.compile(); // warmup
-
+        parser.compilation += &llvm_main_close();
+        println!("{}", parser.compilation);
 
     }
 }

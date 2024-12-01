@@ -1,5 +1,5 @@
 use super::{parse_fn::declaration, parser::Parser};
-use crate::{parser::parse_fn::convert_type_tag, scanner::token::TokenType};
+use crate::scanner::token::TokenType;
 
 pub fn parse_fn_declare(parser: &mut Parser) {
     print!("\ndefine ");

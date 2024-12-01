@@ -8,7 +8,7 @@ use crate::scanner::{
 
 use crate::common::error::ErrorCode;
 use crate::parser::expr::Expr;
-use crate::llvm::llvm_print::{llvm_fmt_string_int, llvm_print_bool_declare, llvm_print_define, llvm_print_i32_define};
+use crate::llvm::llvm_print::{llvm_fmt_string_int, llvm_main_close, llvm_main_start, llvm_print_bool_declare, llvm_print_define, llvm_print_i32_define};
 use crate::parser::parse_fn::declaration;
 
 use super::expr::DataType;
@@ -36,10 +36,10 @@ pub struct Parser<'a>{
     pub constant_stack: Vec<Option<Expr>>,
     pub string_table: HashMap<String, StringEntry>,
     pub symbol_table: HashMap<String, SymbolTableEntry>,
-    pub expr_count: u32
+    pub expr_count: u32,
+    pub compilation: String
 }
 impl<'a>Parser <'a>{
-
     pub fn new_expr(&mut self, expr: Expr) {
         self.constant_stack.push(Some(expr));
         self.expr_count += 1;
@@ -75,9 +75,8 @@ impl<'a>Parser <'a>{
             let token = self.get_token();
             
             match token.token_type {
-                TokenType::Error(_)=> {
-                    self.error_at(&token, token.start);
-                },
+                TokenType::Error(_) => 
+                    self.error_at(&token, token.start),
                 _ => {
                     self.current = Some(token);
                     if PARSE_TOKEN_OUTPUT { println!("[CompilerSuccess] {}", token)}
@@ -123,23 +122,20 @@ impl<'a>Parser <'a>{
             scanner: Scanner::init_scanner(&source),
             panic_mode: false,
             had_error: false,
-            // left_hand: None,
-            // right_hand: None
             constant_stack: Vec::new(),
             string_table: HashMap::new(),
             symbol_table: HashMap::new(),
-            expr_count: 0
+            expr_count: 0,
+            compilation: String::from("")
         }
     }
     #[allow(unused)]
     pub fn print_parser(&mut self) {
         if PARSE_FN_OUTPUT {
             println!("<Parser State> ");
-            
             println!("\n\tPrevious: {}\n\tCurrent {}", self.previous.unwrap(), self.current.unwrap());
             println!("</Parser State>")
         }
-        
     }
     // Should always be included
     fn llvm_stdlib(&self) {
@@ -153,8 +149,12 @@ impl<'a>Parser <'a>{
     }
     // debug purposes only
     pub fn expression_mode(&mut self) {
-        expression(self);
-        self.consume(TokenType::EOF, "Expect end of expression");
+        while !self.match_current(TokenType::EOF) {
+            declaration(self);   
+        }
+        for (_, entry) in &self.string_table {
+            println!("{}",entry.codegen);
+        }
     }
     pub fn declaration_mode(&mut self) {
         while !self.match_current(TokenType::EOF) {
@@ -165,20 +165,15 @@ impl<'a>Parser <'a>{
         }
     }
     pub fn compile(&mut self) {
-        
-        // llvm_main_start();
         self.advance();
         if !PARSE_EXPRESSION_MODE {
             self.llvm_stdlib();
             self.declaration_mode();
         } else {
-            self.expression_mode();
-        }
-        
-        // llvm_call_print_local(self.expr_count - 1, "i32");
-        // llvm_main_close();
-        
 
+            self.expression_mode();
+
+        }
     }
 }
 
