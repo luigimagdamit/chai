@@ -50,6 +50,7 @@ impl<'a>Parser <'a>{
                 println!("[{}] {} {}  at `{}`", ErrorCode::CompilerError, stderr, message, token.start);
             }
         }
+        print!("{}[2J", 27 as char);
         panic!()
 
     } 

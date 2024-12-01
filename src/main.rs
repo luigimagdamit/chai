@@ -4,7 +4,7 @@ mod parser;
 mod common;
 mod llvm;
 
-use common::common::PARSE_EXPRESSION_MODE;
+use common::common::{PARSE_DECLARATION_MODE, PARSE_EXPRESSION_MODE};
 use parser::parser::Parser;
 use std::io::{self, Write};
 use std::fs::{self};
@@ -34,12 +34,9 @@ fn main() {
         else { panic!("[ExprModeError] PARSE_EXPRESSION_MODE flag is not enabled") }
     } else {
         match &args[1] {
-            s if s == "cmd" => {
 
-                    let parser = &mut Parser::init_parser(&args[2]);
-                    parser.compile();
-            }
             s if s.is_ascii()=> {
+                if !PARSE_DECLARATION_MODE { panic!("[DeclrModeError] PARSE_DECLARATION_MODE flag is not enabled")}
                 let contents = fs::read_to_string(s).unwrap();
                 let parser = &mut Parser::init_parser(&contents);
                 parser.compile();
