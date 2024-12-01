@@ -4,6 +4,7 @@ fn main() i32 {
 
     print("here is me declaring a variable");
     var i: int = 24;
+
     var flag: bool;
 
     print(1 < 2);

@@ -1,5 +1,6 @@
 use crate::parser::expr::DataType;
 use crate::common::common::PARSE_EXPRESSION_MODE;
+use super::llvm_string::llvm_new_static_string;
 #[warn(unused_variables)]
 
 
@@ -19,7 +20,13 @@ pub fn llvm_top_level_expr(_value: &str, value_type: &DataType, index: u32) -> S
                 llvm_top_level_boolean("0", false, index)
             }
         }
-        _ => String::from("")
+
+        DataType::String(str) =>  {
+            let codegen = llvm_new_static_string(str.len(), index as usize, &str[1..str.len() - 1]);
+ 
+            println!("{}", codegen);
+            return String::from(codegen)
+        }
     }
     
 }

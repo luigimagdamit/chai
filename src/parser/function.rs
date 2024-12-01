@@ -1,5 +1,5 @@
 use super::{parse_fn::declaration, parser::Parser};
-use crate::scanner::token::TokenType;
+use crate::{parser::parse_fn::convert_type_tag, scanner::token::TokenType};
 
 pub fn parse_fn_declare(parser: &mut Parser) {
     print!("\ndefine ");
@@ -9,6 +9,7 @@ pub fn parse_fn_declare(parser: &mut Parser) {
     parser.consume(TokenType::RightParen, "Expected ) for function arguments");
     parser.consume(TokenType::Identifier, "");
     let fn_type = parser.previous.unwrap_or_else(|| panic!("Expected a function return type")).clone();
+
     parser.consume(TokenType::LeftBrace, "Expected {");
 
     print!("{}", fn_type.start);

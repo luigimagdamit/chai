@@ -4,6 +4,7 @@ mod parser;
 mod common;
 mod llvm;
 
+use common::common::PARSE_EXPRESSION_MODE;
 use parser::parser::Parser;
 use std::io::{self, Write};
 use std::fs::{self};
@@ -29,7 +30,8 @@ fn main() {
 
     let args: Vec<String> = std::env::args().collect();
     if args.len() <= 1 {
-        repl();
+        if PARSE_EXPRESSION_MODE { repl() }
+        else { panic!("[ExprModeError] PARSE_EXPRESSION_MODE flag is not enabled") }
     } else {
         match &args[1] {
             s if s == "cmd" => {

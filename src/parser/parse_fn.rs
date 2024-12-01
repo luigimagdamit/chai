@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use super::{
     parser::Parser,
     parse_rule::get_rule,
@@ -36,6 +38,30 @@ pub fn convert_type_tag(tag: &str) -> String {
         _ => String::from("")
     }
 }
+pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
+
+    expression(parser);
+    if let Some(expr) = parser.constant_stack.pop() {
+        let value = expr.unwrap_or_else(||panic!("Tried evaluation an expression in print_statement, but opened an empty Expr"));
+        let print_val = &value.left;
+        
+        match &value.data_type {
+            DataType::Boolean(_) => (),
+            DataType::Integer(int) => {
+                println!("store i32 {}, i32* %{}", int , var_name);
+                // parser.new_expr(Expr {
+                //     left: format!("%{}", var_name),
+                //     right: format!("%{}", var_name),
+                //     data_type: DataType::Integer(*int)
+                // });
+            },
+            DataType::String(_) => ()
+        }
+    }
+    
+    parser.expr_count += 1;
+    
+}
 pub fn variable_declaration(parser: &mut Parser) {
     // let name: type;
     let global_name = parse_variable(parser, "Expected a variable name");
@@ -44,7 +70,9 @@ pub fn variable_declaration(parser: &mut Parser) {
     let type_tag = convert_type_tag(parser.previous.clone().unwrap().start);
     println!("%{} = {}", global_name, type_tag);
     if parser.match_current(TokenType::Equal) {
-        expression(parser);
+        
+        variable_assignment(parser, &global_name);
+
     } else {
         
     }

@@ -76,7 +76,6 @@ impl<'a>Parser <'a>{
                 }
             }
         }
-
     }
     pub fn consume(&mut self, token_type: TokenType, message: &str) {
         if let Some(token) = self.current {
@@ -122,6 +121,7 @@ impl<'a>Parser <'a>{
             expr_count: 0
         }
     }
+    #[allow(unused)]
     pub fn print_parser(&mut self) {
         if PARSE_FN_OUTPUT {
             println!("<Parser State> ");
@@ -141,23 +141,28 @@ impl<'a>Parser <'a>{
         }
         
     }
+    // debug purposes only
+    pub fn expression_mode(&mut self) {
+        expression(self);
+        self.consume(TokenType::EOF, "Expect end of expression");
+    }
+    pub fn declaration_mode(&mut self) {
+        while !self.match_current(TokenType::EOF) {
+            declaration(self);   
+        }
+        for (_, entry) in &self.string_table {
+            println!("{}",entry.codegen);
+        }
+    }
     pub fn compile(&mut self) {
-        self.llvm_stdlib();
+        
         // llvm_main_start();
         self.advance();
-        
         if !PARSE_EXPRESSION_MODE {
-            while !self.match_current(TokenType::EOF) {
-                declaration(self);
-                
-            }
-            
-            for (str, entry) in &self.string_table {
-                println!("{}",entry.codegen);
-            }
+            self.llvm_stdlib();
+            self.declaration_mode();
         } else {
-            expression(self);
-            self.consume(TokenType::EOF, "Expect end of expression");
+            self.expression_mode();
         }
         
         // llvm_call_print_local(self.expr_count - 1, "i32");

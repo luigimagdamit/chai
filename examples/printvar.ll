@@ -48,6 +48,8 @@ call i32 (i8*, ...) @printf(i8* %4)
 call i32 (i8*, ...) @printf(i8* %7)
 %i = alloca i32
 store i32 24, i32* %i
+%i_val = load i32, i32* %i
+call void @print_i32(i32 %i_val)
 %flag = alloca i1
 %10 = icmp ult i32 1, 2
 call void @print_i1(i1 %10)
@@ -62,7 +64,7 @@ call void @print_i1(i1 %14)
 call i32 (i8*, ...) @printf(i8* %17)
 ret i32 0
 }
-@str0 = private unnamed_addr constant [14 x i8] c"hello world!\0A\00", align 1
-@str3 = private unnamed_addr constant [24 x i8] c"okay shutting down now\0A\00", align 1
-@str1 = private unnamed_addr constant [14 x i8] c"this is chai\0A\00", align 1
 @str2 = private unnamed_addr constant [33 x i8] c"here is me declaring a variable\0A\00", align 1
+@str0 = private unnamed_addr constant [14 x i8] c"hello world!\0A\00", align 1
+@str1 = private unnamed_addr constant [14 x i8] c"this is chai\0A\00", align 1
+@str3 = private unnamed_addr constant [24 x i8] c"okay shutting down now\0A\00", align 1
