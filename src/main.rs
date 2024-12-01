@@ -5,7 +5,7 @@ mod common;
 mod llvm;
 
 use common::common::{PARSE_DECLARATION_MODE, PARSE_EXPRESSION_MODE};
-use llvm::llvm_print::{llvm_main_close, llvm_main_start, llvm_print_define};
+use llvm::llvm_print::{llvm_fmt_string_int, llvm_main_close, llvm_main_start, llvm_print_define, llvm_print_i32_define};
 use parser::parser::Parser;
 use std::io::{self, Write};
 use std::fs::{self, File};
@@ -23,7 +23,9 @@ fn repl() -> io::Result<()>{
         }
         
         let parser = &mut Parser::init_parser(source);
-        // parser.compilation += &llvm_print_define();
+        parser.compilation += &llvm_fmt_string_int();
+        parser.compilation += &llvm_print_define();
+        parser.compilation += &llvm_print_i32_define();
         let compile_start = SystemTime::now();
         parser.compilation += "\n";
         parser.compilation += &llvm_main_start();
@@ -32,7 +34,7 @@ fn repl() -> io::Result<()>{
         parser.compilation += &llvm_main_close();
         io::stdout().flush().unwrap();
         let mut file = File::create("jit.ll")?;
-        println!("{}", parser.compilation);
+        // println!("{}", parser.compilation);
         file.write_all(parser.compilation.as_bytes())?;
         
         let output = Command::new("clang")
@@ -48,7 +50,20 @@ fn repl() -> io::Result<()>{
                     let stdout = String::from_utf8_lossy(&output.stdout);
                     println!("\x1b[32mSuccessfully compiled!\x1b[0m{}", stdout);
                     let compile_time = compile_end.duration_since(UNIX_EPOCH).unwrap().as_millis() - compile_start.duration_since(UNIX_EPOCH).unwrap().as_millis();
-                    println!("\x1b[33mJIT Compile Time: \x1b[0m{}ms", compile_time);
+                    println!("\x1b[33mJIT Compile Time: \x1b[0m{}ms\n", compile_time);
+                    let run_output = Command::new("./jit").output();
+                    match run_output {
+                        Ok(out) => {
+                            if out.status.success() {
+                                let stdout = String::from_utf8_lossy(&out.stdout);
+                                println!("\x1b[33mYou said: \x1b[0m{}", source);
+                                println!("\x1b[32mChai says: \x1b[0m{}", stdout);
+                            } else {
+                                panic!()
+                            }
+                        },
+                        _ => {}
+                    }
                 } else {
                     let stderr = String::from_utf8_lossy(&output.stderr);
                     eprintln!("{}", stderr);

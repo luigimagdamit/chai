@@ -32,14 +32,17 @@ pub fn llvm_call_print(index: u32, data_type: &str) {
 ", data_type, index, data_type, data_type);
     println!("{}", codegen);
 }
-pub fn llvm_call_print_local(index: u32, data_type: &str) {
+pub fn llvm_call_print_local(index: u32, data_type: &str) -> String {
     let codegen = format!(
         "call void @print_{}({} %{})
-", data_type, data_type, index);
+\n", data_type, data_type, index);
     println!("{}", codegen);
+    codegen
 }
-pub fn llvm_fmt_string_int() {
-    println!("@fmt = private constant [4 x i8] c\"%d\\0A\\00\"")
+pub fn llvm_fmt_string_int() -> String{
+    let codegen = format!("@fmt = private constant [4 x i8] c\"%d\\0A\\00\"");
+    println!("{}", codegen);
+    codegen
 }
 
 pub fn llvm_print_bool_declare() -> String {

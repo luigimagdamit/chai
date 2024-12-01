@@ -20,8 +20,13 @@ pub fn print_statement(parser: &mut Parser) {
         let print_val = &value.left;
         
         match &value.data_type {
-            DataType::Boolean(_) => llvm_print_i1_local(parser.expr_count, print_val),
-            DataType::Integer(_) => llvm_print_i32_local(parser.expr_count, print_val),
+            DataType::Boolean(_) => {
+                llvm_print_i1_local(parser.expr_count, print_val);
+            }
+            DataType::Integer(_) => {
+                let codegen = llvm_print_i32_local(parser.expr_count, print_val);
+                parser.compilation += &codegen;
+            },
             DataType::String(_) => {
                 if value.right != "<__var_string__>" {
                     llvm_print_str_local(parser.expr_count, print_val);
@@ -40,9 +45,12 @@ pub fn print_statement(parser: &mut Parser) {
     parser.consume(TokenType::Semicolon, "Expect semicolon after value");
 }
 
-fn llvm_print_i32_local(reg_name: u32, value: &String) {
-    println!("%{} = add {}, 0", reg_name , value);
-    llvm_call_print_local(reg_name, "i32")
+fn llvm_print_i32_local(reg_name: u32, value: &String) -> String{
+    let c1 = format!("%{} = add {}, 0\n", reg_name , value);
+    println!("{}", c1);
+    let c2 = llvm_call_print_local(reg_name, "i32");
+    println!("{}", c2);
+    c1 + &c2
 }
 fn llvm_print_str_local(reg_name: u32, value: &String) {
     println!("%{} = {}", reg_name, value);
@@ -50,5 +58,5 @@ fn llvm_print_str_local(reg_name: u32, value: &String) {
 }
 fn llvm_print_i1_local(reg_name: u32, value: &String) {
     println!("%{} = add {}, 0", reg_name , value);
-    llvm_call_print_local(reg_name, "i1")
+    llvm_call_print_local(reg_name, "i1");
 }
