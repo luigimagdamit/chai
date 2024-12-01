@@ -35,7 +35,7 @@ pub fn parse_binary(parser: &mut Parser) {
 fn binary_op(parser: &mut Parser, operator: fn(i32, i32) -> i32, instruction: &str) 
 {
     let operands = get_binary_operands(parser);
-    let codegen = format!("%{} = {} {}, {}", parser.expr_count, instruction, operands.0.left, operands.1.right);
+    let codegen = format!("%{} = {} {}, {}\n", parser.expr_count, instruction, operands.0.left, operands.1.right);
     if PARSE_DECLARATION_MODE{ println! ("{}", codegen)}
     parser.compilation += &codegen;
 

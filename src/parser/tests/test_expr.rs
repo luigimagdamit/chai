@@ -16,7 +16,10 @@ mod tests {
 
         if let Some(c) = &parser.constant_stack.pop().unwrap() {
             match c.data_type {
-                DataType::Integer(value) => assert_eq!(value, 3),
+                DataType::Integer(value) => {
+                    assert_eq!(value, 3);
+                    assert_eq!(parser.compilation, "%0 = add i32 1, 2\n");
+                },
                 _ => {}
             }
         } else {
@@ -28,6 +31,8 @@ mod tests {
     fn test_parse_multiple_operands() {
         let test_left = "i32 420";
         let test_right = "420";
+
+        let codegen_test = "%0 = mul i32 21, 10\n%1 = mul i32 21, 10\n%2 = add i32 %0, %1\n";
         let parser = &mut Parser::init_parser("21 * 10 + 21 * 10\0");
         parser.advance();
         parse_precedence(parser, Precedence::PrecAssignment);
@@ -38,7 +43,10 @@ mod tests {
                 assert_eq!(c.right, test_right);
             } else {
                 match c.data_type {
-                    DataType::Integer(value) => assert_eq!(value, 420),
+                    DataType::Integer(value) => {
+                        assert_eq!(parser.compilation, codegen_test);
+                        assert_eq!(value, 420);
+                    }
                     _ => {}
                 }
             }
@@ -52,6 +60,8 @@ mod tests {
     fn test_parse_multiple_operand2s() {
         let test_left = "i32 18";
         let test_right = "18";
+
+        let codegen_test = "%0 = mul i32 4, 3\n%1 = add i32 8, %0\n%2 = sub i32 %1, 2\n";
         let parser = &mut Parser::init_parser("8+4*3-2\0");
         parser.advance();
         parse_precedence(parser, Precedence::PrecAssignment);
@@ -70,11 +80,14 @@ mod tests {
         } else {
             panic!();
         }
+        assert_eq!(parser.compilation, codegen_test);
     }
     #[test]
     fn test_parse_grouping() {
         let test_left = "i32 66";
         let test_right = "66";
+
+        let codegen_test = "%0 = mul i32 800, 2\n%1 = add i32 4, 20\n%2 = div i32 %0, %1\n";
         let parser = &mut Parser::init_parser("(800 * 2) / (4 + 20)\0");
         parser.advance();
         parse_precedence(parser, Precedence::PrecAssignment);
@@ -93,6 +106,7 @@ mod tests {
         } else {
             panic!();
         }
+        assert_eq!(parser.compilation, codegen_test);
     }
    
 
