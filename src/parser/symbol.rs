@@ -29,6 +29,14 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
             });
             
         },
+        DataType::String(_) => {
+            println!("%{}_{} = load {}, {}* %{}", variable.name, variable.count, "i8*", "i8*", variable.name);
+            parser.new_expr(Expr {
+                left: format!("%{}_{}", variable.name, variable.count),
+                right: String::from("__var_string"),
+                data_type: variable.variable_type.clone()
+            });
+        }
         _ => ()
     }
     parser.symbol_table.get_mut(&name).unwrap().count += 1;

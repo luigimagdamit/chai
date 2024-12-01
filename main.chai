@@ -1,5 +1,18 @@
 fn main() i32 {
-    var age: int = 3005;
-    print("yo mama so old childish gambino wrote a song about her and its called");
-    print(age);
+    var greeting: str = "hello world!";
+    var intro: str = "this is chai";
+
+    print(greeting);
+    print(intro);
+
+    var a: int = 123;
+    var b: int = 69;
+
+    print(a > b);
+    print(a < b);
+    print(a == b);
+    print(a == (b + 54));
+
+    var seppuku: str = "ok shutting down now";
+    print(seppuku);
 }

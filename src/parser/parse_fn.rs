@@ -35,7 +35,7 @@ pub fn convert_type_tag(tag: &str) -> String {
     match tag {
         "int" => String::from("alloca i32"),
         "bool" => String::from("alloca i1"),
-        //"str" => String::from(format!("load i8*, i8** @{}, align 8", )),
+        "str" => String::from("alloca i8*"),
         _ => String::from("")
     }
 }
@@ -57,7 +57,11 @@ pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
                 println!("store i32 {}, i32* %{}", int , var_name);
                 create_new_symbol(parser, String::from(var_name), value.data_type);
             },
-            DataType::String(_) => ()
+            DataType::String(_) => {
+                println!("%{} = {}", parser.expr_count, print_val);
+                println!("store i8* %{}, i8** %{}", parser.expr_count , var_name);
+                create_new_symbol(parser, String::from(var_name), value.data_type);
+            }
         }
     }
     
