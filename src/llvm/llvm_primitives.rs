@@ -10,21 +10,13 @@ pub fn llvm_top_level_expr(_value: &str, value_type: &DataType, index: u32) -> S
         DataType::Integer(int) => {
             let codegen = format!("define i32 @{}() {{\nentry:\n    ret i32 {}\n}}", index, int);
             println!("{}", codegen);
-            return codegen;
+            codegen
         },
-        DataType::Boolean(bool) => {
-            if *bool {
-                llvm_top_level_boolean("1", true, index)
-            } else {
-                llvm_top_level_boolean("0", false, index)
-            }
-        }
-
+        DataType::Boolean(bool) => if *bool { llvm_top_level_boolean("1", true, index) } else { llvm_top_level_boolean("0", false, index) }
         DataType::String(str) =>  {
             let codegen = llvm_new_static_string(str.len(), index as usize, &str[1..str.len() - 1]);
- 
             println!("{}", codegen);
-            return String::from(codegen)
+            codegen
         }
     }
     
@@ -37,5 +29,5 @@ fn llvm_top_level_boolean(chars: &str, _value: bool, index: u32) -> String{
     ret i1 {}
 }}", index, chars);
     println!("{}", codegen);
-    return codegen
+    codegen
 }

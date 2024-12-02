@@ -2,7 +2,7 @@ mod tests {
     #![allow(unused_imports)]
     use core::panic;
    
-    use crate::common::common::PARSE_CONSTANT_FOLD;
+    use crate::common::flags::PARSE_CONSTANT_FOLD;
     use crate::parser::expression::expr::DataType;
     use crate::parser::parse_fn::parse_precedence;
     use crate::scanner::token::TokenType;

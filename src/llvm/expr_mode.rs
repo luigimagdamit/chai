@@ -5,7 +5,7 @@ use super::{
 use crate::{
     scanner::token::TokenType,
     parser::parser::Parser,
-    common::common::{PARSE_EXPRESSION_MODE, EXPR_ONLY}
+    common::flags::{PARSE_EXPRESSION_MODE, EXPR_ONLY}
 };
 
 pub fn expr_mode(parser: &mut Parser) {

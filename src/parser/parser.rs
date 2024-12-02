@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::process::exit;
 
-use crate::common::common::{PARSE_EXPRESSION_MODE, PARSE_FN_OUTPUT, PARSE_SUPRESS_PREDEFINES, PARSE_TOKEN_OUTPUT};
+use crate::common::flags::{PARSE_EXPRESSION_MODE, PARSE_FN_OUTPUT, PARSE_SUPRESS_PREDEFINES, PARSE_TOKEN_OUTPUT};
 use crate::scanner::{
     token::{Token, TokenType},
     scanner::Scanner
@@ -40,13 +40,20 @@ pub struct Parser<'a>{
     pub compilation: String
 }
 impl<'a>Parser <'a>{
-    pub fn emitInstruction(&mut self, inst: &String) {
+    pub fn emit_instruction(&mut self, inst: &String) {
         self.compilation += &inst;
         self.compilation += &String::from("\n");
     }
     pub fn new_expr(&mut self, expr: Expr) {
         self.constant_stack.push(Some(expr));
         self.expr_count += 1;
+    }
+    pub fn expr_pop(&mut self) -> Expr {
+        if let Some(popped) = self.constant_stack.pop() {
+            let expr = popped.unwrap();
+            return expr
+        }
+        panic!();
     }
     pub fn error_at(&self, token: &Token, message: &str) {
 

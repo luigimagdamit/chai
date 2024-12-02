@@ -1,5 +1,5 @@
 use crate::{
-    common::common::PARSE_CONSTANT_FOLD,
+    common::flags::PARSE_CONSTANT_FOLD,
     parser::expression::expr::{Expr, DataType}
 };
 pub fn llvm_binary_operands(value: i32, index: u32, type_tag: &str) -> Option<Expr>{
@@ -19,7 +19,7 @@ pub fn llvm_binary_operands(value: i32, index: u32, type_tag: &str) -> Option<Ex
                 })
             },
             "i1" => {
-                let val_bool = if value == 1 { true }  else {false }; 
+                let val_bool = value == 1; 
                 Some(Expr {
                     left: String::from(type_tag) + " %" + &(index).to_string(),
                     right: String::from("%") + &(index).to_string(),

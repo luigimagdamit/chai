@@ -1,4 +1,4 @@
-use crate::common::common::PARSE_DECLARATION_MODE;
+use crate::common::flags::PARSE_DECLARATION_MODE;
 
 use super::parser::{Parser, SymbolTableEntry};
 use crate::parser::expression::expr::{DataType, Expr};
@@ -36,7 +36,7 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
             });
             // decrement since we don't use a name / tmp variable register name
             parser.expr_count -= 1;
-            parser.emitInstruction(&codegen);
+            parser.emit_instruction(&codegen);
         }
         _ => ()
     }

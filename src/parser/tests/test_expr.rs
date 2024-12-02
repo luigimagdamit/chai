@@ -2,7 +2,7 @@ mod tests {
     #![allow(unused_imports)]
     use core::panic;
 
-    use crate::common::common::PARSE_CONSTANT_FOLD;
+    use crate::common::flags::PARSE_CONSTANT_FOLD;
     use crate::parser::expression::expr::DataType;
     use crate::parser::parse_fn::parse_precedence;
     use crate::scanner::token::TokenType;
@@ -25,6 +25,7 @@ mod tests {
         } else {
             panic!();
         }
+        assert_eq!(parser.constant_stack.len(), 0);
         
     }
     #[test]
@@ -54,6 +55,7 @@ mod tests {
         } else {
             panic!();
         }
+        assert_eq!(parser.constant_stack.len(), 0);
         
     }
     #[test]
@@ -81,6 +83,7 @@ mod tests {
             panic!();
         }
         assert_eq!(parser.compilation, codegen_test);
+        assert_eq!(parser.constant_stack.len(), 0);
     }
     #[test]
     fn test_parse_grouping() {
@@ -107,6 +110,7 @@ mod tests {
             panic!();
         }
         assert_eq!(parser.compilation, codegen_test);
+        assert_eq!(parser.constant_stack.len(), 0);
     }
    
 
@@ -116,7 +120,7 @@ mod boolean_equality_tests {
     #![allow(unused_imports)]
     use core::panic;
 
-    use crate::common::common::PARSE_CONSTANT_FOLD;
+    use crate::common::flags::PARSE_CONSTANT_FOLD;
     use crate::parser::expression::expr::DataType;
     use crate::parser::parse_fn::parse_precedence;
 
@@ -134,6 +138,8 @@ mod boolean_equality_tests {
                 _ => ()
             }
         }
+
+        assert_eq!(parser.constant_stack.len(), 0);
     }
     #[test]
     fn test_parse_bool_false() {
@@ -148,6 +154,7 @@ mod boolean_equality_tests {
                 _ => ()
             }
         }
+        assert_eq!(parser.constant_stack.len(), 0);
     }
     #[test]
     fn test_parse_bool_eq_tt() {
@@ -162,6 +169,7 @@ mod boolean_equality_tests {
                 _ => ()
             }
         }
+        assert_eq!(parser.constant_stack.len(), 0);
     }
     #[test]
     fn test_parse_bool_eq_tf() {
@@ -176,6 +184,7 @@ mod boolean_equality_tests {
                 _ => ()
             }
         }
+        assert_eq!(parser.constant_stack.len(), 0);
     }
     #[test]
     fn test_parse_bool_eq_ft() {
@@ -190,6 +199,7 @@ mod boolean_equality_tests {
                 _ => ()
             }
         }
+        assert_eq!(parser.constant_stack.len(), 0);
     }
     #[test]
     fn test_parse_bool_eq_ff() {
@@ -204,6 +214,7 @@ mod boolean_equality_tests {
                 _ => ()
             }
         }
+        assert_eq!(parser.constant_stack.len(), 0);
     }
 
     #[test]
@@ -219,6 +230,7 @@ mod boolean_equality_tests {
                 _ => ()
             }
         }
+        assert_eq!(parser.constant_stack.len(), 0);
     }
     #[test]
     fn test_parse_bool_neq_tf() {
@@ -268,7 +280,7 @@ mod value_comparison_tests {
     #![allow(unused_imports)]
     use core::panic;
 
-    use crate::common::common::PARSE_CONSTANT_FOLD;
+    use crate::common::flags::PARSE_CONSTANT_FOLD;
     use crate::parser::expression::expr::DataType;
     use crate::parser::parse_fn::parse_precedence;
 
@@ -287,6 +299,7 @@ mod value_comparison_tests {
                 _ => ()
             }
         }
+        assert_eq!(parser.constant_stack.len(), 0);
     }
 
     #[test]
@@ -302,6 +315,7 @@ mod value_comparison_tests {
                 _ => ()
             }
         }
+        assert_eq!(parser.constant_stack.len(), 0);
     }
 
     #[test]
@@ -317,6 +331,7 @@ mod value_comparison_tests {
                 _ => ()
             }
         }
+        assert_eq!(parser.constant_stack.len(), 0);
     }
     #[test]
     fn test_parse_numbers_neq_false() {
@@ -331,6 +346,7 @@ mod value_comparison_tests {
                 _ => ()
             }
         }
+        assert_eq!(parser.constant_stack.len(), 0);
     }
     #[test]
     fn test_parse_numbers_gt_true() {
@@ -345,6 +361,7 @@ mod value_comparison_tests {
                 _ => ()
             }
         }
+        assert_eq!(parser.constant_stack.len(), 0);
     }
     #[test]
     fn test_parse_numbers_gt_false() {
@@ -359,6 +376,7 @@ mod value_comparison_tests {
                 _ => ()
             }
         }
+        assert_eq!(parser.constant_stack.len(), 0);
     }
     #[test]
     fn test_parse_numbers_lt_true() {
@@ -373,6 +391,7 @@ mod value_comparison_tests {
                 _ => ()
             }
         }
+        assert_eq!(parser.constant_stack.len(), 0);
     }
     #[test]
     fn test_parse_numbers_lt_false() {
@@ -387,5 +406,6 @@ mod value_comparison_tests {
                 _ => ()
             }
         }
+        assert_eq!(parser.constant_stack.len(), 0);
     }
 }

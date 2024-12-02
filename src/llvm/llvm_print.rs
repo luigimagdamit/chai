@@ -22,7 +22,7 @@ pub fn llvm_print_i32_define() -> String {
     ret void
 }";
     println!("{}", codegen);
-    return String::from(codegen)
+    String::from(codegen)
 }
 #[allow(unused)]
 pub fn llvm_call_print(index: u32, data_type: &str) {
@@ -40,7 +40,7 @@ pub fn llvm_call_print_local(index: u32, data_type: &str) -> String {
     codegen
 }
 pub fn llvm_fmt_string_int() -> String{
-    let codegen = format!("@fmt = private constant [4 x i8] c\"%d\\0A\\00\"");
+    let codegen = ("@fmt = private constant [4 x i8] c\"%d\\0A\\00\"").to_string();
     println!("{}", codegen);
     codegen
 }

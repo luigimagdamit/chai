@@ -1,4 +1,4 @@
-use crate::common::common::PARSE_DECLARATION_MODE;
+use crate::common::flags::PARSE_DECLARATION_MODE;
 use super::{
     expr::{Expr, DataType},
     precedence::Precedence,
@@ -39,7 +39,7 @@ fn binary_op(parser: &mut Parser, operator: fn(i32, i32) -> i32, instruction: &s
     let operands = get_binary_operands(parser);
     let codegen = format!("%{} = {} {}, {}", parser.expr_count, instruction, operands.0.left, operands.1.right);
     if PARSE_DECLARATION_MODE{ println! ("{}", codegen)}
-    parser.emitInstruction(&codegen);
+    parser.emit_instruction(&codegen);
 
 
     

@@ -13,7 +13,7 @@ pub fn parse_string(parser: &mut Parser) {
         Some(str) => {
             let retrieve_codegen = string_expr(length - 1, str.index, value);
             parser.new_expr(retrieve_codegen.clone());
-            parser.emitInstruction(&retrieve_codegen.left);
+            parser.emit_instruction(&retrieve_codegen.left);
             parser.string_table.get_mut(value).unwrap().index += 1;
         },
         None => {
@@ -26,7 +26,7 @@ pub fn parse_string(parser: &mut Parser) {
             let new_index = parser.string_table.len() - 1;
 
             let new_str_codegen = string_expr(length, new_index, value);
-            parser.emitInstruction(&String::from(new_str_codegen.clone().left));
+            parser.emit_instruction(&String::from(new_str_codegen.clone().left));
             parser.new_expr(new_str_codegen);
         }
     }

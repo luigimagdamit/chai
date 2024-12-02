@@ -1,7 +1,7 @@
 use crate::parser::expression::expr::DataType;
 use crate::parser::parse_fn::expression;
 use crate::parser::parser::Parser;
-use crate::{common::common::PARSE_DECLARATION_MODE, llvm::llvm_print::llvm_call_print_local, scanner::token::TokenType};
+use crate::{common::flags::PARSE_DECLARATION_MODE, llvm::llvm_print::llvm_call_print_local, scanner::token::TokenType};
 
 
 
@@ -18,7 +18,7 @@ pub fn print_statement(parser: &mut Parser) {
             }
             DataType::Integer(_) => {
                 let codegen = llvm_print_i32_local(parser.expr_count, print_val);
-                parser.emitInstruction(&codegen);
+                parser.emit_instruction(&codegen);
 
             },
             DataType::String(_) => {
@@ -30,7 +30,7 @@ pub fn print_statement(parser: &mut Parser) {
                 } else {
                     let codegen = format!("call i32 (i8*, ...) @printf(i8* {})", print_val);
                     if PARSE_DECLARATION_MODE { println!("{}", codegen)}
-                    parser.emitInstruction(&codegen);
+                    parser.emit_instruction(&codegen);
                     //parser.expr_count += 1;
                 }
                 
@@ -52,7 +52,7 @@ fn llvm_print_i32_local(reg_name: u32, value: &String) -> String{
 fn llvm_print_str_local(reg_name: u32, value: &String) -> String {
     let c1 = format!("\n%{} = {}\n", reg_name, value);
     let c2 = format!("call i32 (i8*, ...) @printf(i8* %{})\n", reg_name);
-    let res = String::from(c1 + &c2);
+    let res = c1 + &c2;
 
     if PARSE_DECLARATION_MODE { println!("{}", &res)}
     res
