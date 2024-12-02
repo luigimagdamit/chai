@@ -36,6 +36,7 @@ fn chai_title() -> String {
 fn repl() -> io::Result<()>{
     println!("\x1b[93m{}\nchai v0.00.1 REPL", chai_title());
     println!("\x1b[93mtype something!\x1b[0m");
+    let mut body = "".to_string();
     loop {
         let mut input = String::new();
         print!("> ");
@@ -46,8 +47,9 @@ fn repl() -> io::Result<()>{
             println!("\x1b[93mchai takes a nap...\x1b[0m");
             std::process::exit(0);
         }
-        let _ = jit_compile(source);
-        
+        let jit = jit_compile(source);
+        body += &jit.unwrap();
+        println!("{}", body)
         
     }
 }

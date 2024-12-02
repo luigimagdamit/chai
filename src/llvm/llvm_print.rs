@@ -34,8 +34,7 @@ pub fn llvm_call_print(index: u32, data_type: &str) {
 }
 pub fn llvm_call_print_local(index: u32, data_type: &str) -> String {
     let codegen = format!(
-        "call void @print_{}({} %{})
-\n", data_type, data_type, index);
+        "call void @print_{}({} %{})", data_type, data_type, index);
     //println!("{}", codegen);
     codegen
 }

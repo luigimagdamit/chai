@@ -102,31 +102,35 @@ store i32 69, i32* %b
 %19 = add i32 %a_0, 0
 
 call void @print_i32(i32 %19)
-
-
 %b_0 = load i32, i32* %b
 %21 = add i32 %b_0, 0
 
 call void @print_i32(i32 %21)
-
-
 %a_1 = load i32, i32* %a
 %b_1 = load i32, i32* %b
 %24 = icmp ugt i32 %a_1, %b_1
 %25 = add i1 %24, 0
+
+call void @print_i1(i1 %25)
 %a_2 = load i32, i32* %a
 %b_2 = load i32, i32* %b
 %28 = icmp ult i32 %a_2, %b_2
 %29 = add i1 %28, 0
+
+call void @print_i1(i1 %29)
 %a_3 = load i32, i32* %a
 %b_3 = load i32, i32* %b
 %32 = icmp eq i32 %a_3, %b_3
 %33 = add i1 %32, 0
+
+call void @print_i1(i1 %33)
 %a_4 = load i32, i32* %a
 %b_4 = load i32, i32* %b
 %36 = add i32 %b_4, 54
 %37 = icmp eq i32 %a_4, %36
 %38 = add i1 %37, 0
+
+call void @print_i1(i1 %38)
 %40 = getelementptr inbounds [13 x i8], [13 x i8]* @str1, i32 0, i32 0
 ;LLVM Register for String @ ExprCount 40(variable.rs)
 
@@ -154,18 +158,26 @@ store i32 24, i32* %i
 %53 = add i32 %i_0, 0
 
 call void @print_i32(i32 %53)
-
-
 %flag = alloca i1
 
 %54 = icmp ult i32 1, 2
 %55 = add i1 %54, 0
+
+call void @print_i1(i1 %55)
 %56 = icmp ugt i32 3, 1
 %57 = add i1 %56, 0
+
+call void @print_i1(i1 %57)
 %58 = icmp eq i32 2, 3
 %59 = add i1 %58, 0
+
+call void @print_i1(i1 %59)
 %61 = add i1 1, 0
+
+call void @print_i1(i1 %61)
 %63 = add i1 0, 0
+
+call void @print_i1(i1 %63)
 %seppuku = alloca i8*
 
 %66 = getelementptr inbounds [21 x i8], [21 x i8]* @str4, i32 0, i32 0
@@ -185,5 +197,5 @@ ret i32 0
 @str0 = private unnamed_addr constant [14 x i8] c"hello world!\0A\00", align 1
 @str3 = private unnamed_addr constant [22 x i8] c"this is the variable\0A\00", align 1
 @str1 = private unnamed_addr constant [14 x i8] c"this is chai\0A\00", align 1
-@str4 = private unnamed_addr constant [22 x i8] c"ok shutting down now\0A\00", align 1
 @str2 = private unnamed_addr constant [33 x i8] c"here is me declaring a variable\0A\00", align 1
+@str4 = private unnamed_addr constant [22 x i8] c"ok shutting down now\0A\00", align 1
