@@ -17,13 +17,13 @@ pub enum LlvmNumberTag {
 impl LlvmNumberTag {
     pub fn left(&self) -> String {
         match self {
-            LlvmNumberTag::Integer(int) => format!("i32 {}", int)
+            LlvmNumberTag::Integer(int) => format!("i32 {}", int).to_string()
         }
         
     }
     pub fn right(&self) -> String {
         match self {
-            LlvmNumberTag::Integer(int) => format!("{}", int)
+            LlvmNumberTag::Integer(int) => int.to_string()
         }
         
     }

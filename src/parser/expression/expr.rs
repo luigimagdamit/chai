@@ -6,7 +6,7 @@ pub enum DataType {
     String(String),
     Boolean(bool)
 }
-impl<'a> fmt::Display for DataType {
+impl fmt::Display for DataType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             DataType::Integer(int) => write!(f, "int:{}", int),

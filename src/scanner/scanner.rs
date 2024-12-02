@@ -20,7 +20,7 @@ impl<'a> Scanner<'a> {
 
     pub fn is_at_end(&mut self) -> bool {
         match self.current_char() {
-            Some(c) if c == '\0' => true,
+            Some('\0') => true,
             None => true,
             _ => false,
         }
@@ -151,7 +151,7 @@ impl<'a> Scanner<'a> {
             },
             _ => return TokenType::Error((self.start, self.current))
         }
-        return TokenType::Identifier
+        TokenType::Identifier
     }
     fn identifier(&mut self) -> Token<'a> {
         while let Some(c) = self.current_char() {
@@ -160,7 +160,7 @@ impl<'a> Scanner<'a> {
                 self.advance(); 
             } else { break }
         }
-        return self.make_token(self.identifier_type());
+        self.make_token(self.identifier_type())
     }
 
     pub fn advance(&mut self) -> Option<char> {

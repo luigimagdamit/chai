@@ -41,7 +41,7 @@ pub struct Parser<'a>{
 }
 impl<'a>Parser <'a>{
     pub fn emit_instruction(&mut self, inst: &String) {
-        self.compilation += &inst;
+        self.compilation += inst;
         self.compilation += &String::from("\n");
     }
     pub fn new_expr(&mut self, expr: Expr) {
@@ -115,9 +115,9 @@ impl<'a>Parser <'a>{
     }
     pub fn check_current(&mut self, token_type: TokenType) -> bool {
         if let Some(current) = self.current {
-            return current.token_type == token_type
+            current.token_type == token_type
         } else {
-            return false
+            false
         }
     }
     pub fn match_current(&mut self, token_type: TokenType) -> bool {
@@ -125,17 +125,17 @@ impl<'a>Parser <'a>{
             return false
         } else {
             self.advance();
-            return true
+            true
         }
     }
     fn get_token(&mut self) -> Token<'a> {
-        return self.scanner.scan_token().clone()
+        return self.scanner.scan_token()
     }
     pub fn init_parser(source: &'a str) -> Parser<'_> {
         Parser {
             current: None,
             previous: None,
-            scanner: Scanner::init_scanner(&source),
+            scanner: Scanner::init_scanner(source),
             panic_mode: false,
             had_error: false,
             constant_stack: Vec::new(),
@@ -169,7 +169,7 @@ impl<'a>Parser <'a>{
             declaration(self);   
         }
         self.compilation += &llvm_main_close();
-        for (_, entry) in &self.string_table {
+        for entry in self.string_table.values() {
             println!("{}",entry.codegen);
             self.compilation += &entry.codegen;
         }
@@ -179,7 +179,7 @@ impl<'a>Parser <'a>{
             declaration(self);   
         }
         
-        for (_, entry) in &self.string_table {
+        for entry in self.string_table.values() {
             println!("{}",entry.codegen);
         }
     }

@@ -5,11 +5,11 @@ use crate::scanner::token::TokenType;
 pub fn parse_fn_declare(parser: &mut Parser) {
     print!("\ndefine ");
     parser.consume(TokenType::Identifier, "Expected function name");
-    let fn_name = parser.previous.unwrap().clone();
+    let fn_name = parser.previous.unwrap();
     parser.consume(TokenType::LeftParen, "Expected ( for function arguments");
     parser.consume(TokenType::RightParen, "Expected ) for function arguments");
     parser.consume(TokenType::Identifier, "");
-    let fn_type = parser.previous.unwrap_or_else(|| panic!("Expected a function return type")).clone();
+    let fn_type = parser.previous.unwrap_or_else(|| panic!("Expected a function return type"));
 
     parser.consume(TokenType::LeftBrace, "Expected {");
 

@@ -116,7 +116,7 @@ fn get_binary_operands(parser: &mut Parser) -> (Expr, Expr) {
     
     let left = local_left.clone().unwrap();
     let right = local_right.clone().unwrap();
-    return (left, right)
+    (left, right)
 }
 
 const ADD: &str = "add";
@@ -130,4 +130,4 @@ const GT: &str = "icmp ugt";
 const GTE: &str = "icmp uge";
 const LT: &str = "icmp ult";
 const LTE: &str = "icmp ule";
-const BOOL_OPS: [&'static str; 6] = [EQL, NEQ, GT, GTE, LT, LTE];
+const BOOL_OPS: [&str; 6] = [EQL, NEQ, GT, GTE, LT, LTE];

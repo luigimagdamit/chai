@@ -47,15 +47,11 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
 pub fn set_symbol(parser: &mut Parser, name: String, value: Expr) {
     let variable = parser.symbol_table.get(&name).unwrap();
 
-    match variable.variable_type {
-        DataType::Integer(_) => {
-            println!("store {}, i32* %{}\n", value.left , String::from(name));
-        },
-        _ => ()
+    if let DataType::Integer(_) = variable.variable_type {
+        println!("store {}, i32* %{}\n", value.left , name);
     }
-    match std::mem::discriminant(&variable.variable_type) != std::mem::discriminant(&value.data_type) {
-        true => parser.error_at(&parser.current.unwrap(), "incompatibe variable assignment types"),
-        false => ()
+    if std::mem::discriminant(&variable.variable_type) != std::mem::discriminant(&value.data_type) {
+        parser.error_at(&parser.current.unwrap(), "incompatibe variable assignment types")
     }
     // add more
 }

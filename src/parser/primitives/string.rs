@@ -20,13 +20,13 @@ pub fn parse_string(parser: &mut Parser) {
             parser.string_table.insert(String::from(value), StringEntry {
                 codegen: codegen,
                 length: length - 1,
-                index: parser.string_table.len() as usize
+                index: parser.string_table.len()
             }); 
 
             let new_index = parser.string_table.len() - 1;
 
             let new_str_codegen = string_expr(length, new_index, value);
-            parser.emit_instruction(&String::from(new_str_codegen.clone().left));
+            parser.emit_instruction(&new_str_codegen.clone().left);
             parser.new_expr(new_str_codegen);
         }
     }
