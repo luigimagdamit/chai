@@ -1,4 +1,40 @@
 fn main() i32 {
-    var a: int = 23;
+    var greeting: str = "hello world!";
+    var intro: str = "this is chai";
+
+    print(greeting);
+    print(greeting);
+    print(intro);
+    print(intro);
+    print(greeting);
+
+    var a: int = 123;
+    var b: int = 69;
+
     print(a);
+    print(b);
+    print(a > b);
+    print(a < b);
+    print(a == b);
+    print(a == (b + 54));
+
+    
+
+    print("hello world!");
+    print("this is chai");
+
+    print("here is me declaring a variable");
+    print("this is the variable");
+    var i: int = 24;
+    print(i);
+    var flag: bool;
+
+    print(1 < 2);
+    print(3 > 1);
+    print(2 == 3);
+    print(true);
+    print(false);
+
+    var seppuku: str = "ok shutting down now";
+    print(seppuku);
 }

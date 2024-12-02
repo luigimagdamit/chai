@@ -8,8 +8,15 @@ define i32 @main() {
 entry:
 
 %greeting = alloca i8*
-getelementptr inbounds [14 x i8], [14 x i8]* @str0, i32 0, i32 0%1 = getelementptr inbounds [14 x i8], [14 x i8]* @str0, i32 0, i32 0store i8* %1, i8** %greeting
+
+getelementptr inbounds [14 x i8], [14 x i8]* @str0, i32 0, i32 0
+%1 = getelementptr inbounds [14 x i8], [14 x i8]* @str0, i32 0, i32 0
+store i8* %1, i8** %greeting%intro = alloca i8*
+
+getelementptr inbounds [14 x i8], [14 x i8]* @str1, i32 0, i32 0
+%2 = getelementptr inbounds [14 x i8], [14 x i8]* @str1, i32 0, i32 0
+store i8* %2, i8** %intro
 %greeting_0 = load i8*, i8** %greeting
 call i32 (i8*, ...) @printf(i8* %greeting_0)
-ret i32 0
-}@str0 = private unnamed_addr constant [14 x i8] c"hello world!\0A\00", align 1
+%greeting_1 = load i8*, i8** %greeting
+call i32 (i8*, ...) @printf(i8* %greeting_1)

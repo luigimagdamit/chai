@@ -56,7 +56,7 @@ fn llvm_print_str_local(reg_name: u32, value: &String) -> String {
     let c1 = format!("\n%{} = {}\n", reg_name, value);
     let c2 = format!("call i32 (i8*, ...) @printf(i8* %{})\n", reg_name);
     let res = String::from(c1 + &c2);
-    println!("HHH{}", res);
+
     if PARSE_DECLARATION_MODE { println!("{}", &res)}
     res
 }

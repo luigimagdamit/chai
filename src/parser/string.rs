@@ -24,6 +24,7 @@ pub fn parse_string(parser: &mut Parser) {
             }); 
 
             let new_index = parser.string_table.len() - 1;
+            parser.compilation += "\n";
             let new_str_codegen = string_expr(length, new_index, value);
             parser.compilation += &String::from(new_str_codegen.clone().left);
             parser.new_expr(new_str_codegen);
