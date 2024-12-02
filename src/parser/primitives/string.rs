@@ -11,9 +11,11 @@ pub fn parse_string(parser: &mut Parser) {
     
     match parser.string_table.get(value) {
         Some(str) => {
-            let retrieve_codegen = string_expr(length - 1, str.index, value);
+            //let register_codegen = format!("%{} = ", parser.expr_count);
+            let retrieve_codegen = string_expr(length - 1, str.index, value, parser.expr_count);
+
             parser.new_expr(retrieve_codegen.clone());
-            parser.emit_instruction(&retrieve_codegen.left);
+            //parser.emit_instruction(&retrieve_codegen.left);
             parser.string_table.get_mut(value).unwrap().index += 1;
         },
         None => {
@@ -24,15 +26,17 @@ pub fn parse_string(parser: &mut Parser) {
             }); 
 
             let new_index = parser.string_table.len() - 1;
+            //let register_codegen = format!("%{} = ", parser.expr_count);
+            let new_str_codegen = string_expr(length, new_index, value, parser.expr_count);
 
-            let new_str_codegen = string_expr(length, new_index, value);
             parser.emit_instruction(&new_str_codegen.clone().left);
             parser.new_expr(new_str_codegen);
         }
     }
 }
-fn string_expr(str_length: usize, str_index: usize, str_value: &str) -> Expr {
+fn string_expr(str_length: usize, str_index: usize, str_value: &str, register: u32) -> Expr {
     let codegen = llvm_retrieve_static_string(str_length, str_index);
+
     Expr {
         left: String::from(&codegen),
         right: String::from(&codegen),

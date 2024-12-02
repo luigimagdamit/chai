@@ -44,13 +44,21 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
     
 }
 // be for setting it after initial assignment
-pub fn set_symbol(parser: &mut Parser, name: String, value: Expr) {
-    let variable = parser.symbol_table.get(&name).unwrap();
+pub fn set_symbol(parser: &mut Parser, name: String, new_value: Expr) {
+    //panic!("Need to fix how the setting of string variables work; when you want to change values. Check examples.");
+    let variable = parser.symbol_table.get(&name).clone().unwrap();
 
-    if let DataType::Integer(_) = variable.variable_type {
-        println!("store {}, i32* %{}\n", value.left , name);
+    match &variable.variable_type {
+        DataType::Integer(_) => {
+            println!("store {}, i32* %{}\n", new_value.left , name);
+        }
+        DataType::String(str_value) => {
+            panic!("set_symbol() not impl for strings");
+        },
+        _ => panic!("set symbol not added for this data type")
     }
-    if std::mem::discriminant(&variable.variable_type) != std::mem::discriminant(&value.data_type) {
+
+    if std::mem::discriminant(&variable.variable_type) != std::mem::discriminant(&new_value.data_type) {
         parser.error_at(&parser.current.unwrap(), "incompatibe variable assignment types")
     }
     // add more
