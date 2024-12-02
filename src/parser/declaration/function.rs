@@ -1,4 +1,5 @@
-use super::{parse_fn::declaration, parser::Parser};
+use crate::parser::parser::Parser;
+use crate::parser::parse_fn::declaration;
 use crate::scanner::token::TokenType;
 
 pub fn parse_fn_declare(parser: &mut Parser) {

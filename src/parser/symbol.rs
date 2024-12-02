@@ -1,15 +1,7 @@
-use std::fmt::format;
 use crate::common::common::PARSE_DECLARATION_MODE;
 
-use super::{
-    parser::{Parser, SymbolTableEntry},
-
-    expr::{
-        Expr,
-        DataType
-    },
-
-};
+use super::parser::{Parser, SymbolTableEntry};
+use crate::parser::expression::expr::{DataType, Expr};
 
 pub fn create_new_symbol(parser: &mut Parser, name: String, variable_type: DataType) {
     parser.symbol_table.insert(name.clone(), SymbolTableEntry {
@@ -35,7 +27,8 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
         DataType::String(_) => {
             let codegen = format!("\n%{}_{} = load {}, {}* %{}\n", variable.name, variable.count, "i8*", "i8*", variable.name);
             if PARSE_DECLARATION_MODE { println!("{}", codegen) }
-            parser.compilation += &codegen;
+
+            
             parser.new_expr(Expr {
                 left: format!("%{}_{}", variable.name, variable.count),
                 right: String::from("<__var_string__>"),
@@ -43,6 +36,7 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
             });
             // decrement since we don't use a name / tmp variable register name
             parser.expr_count -= 1;
+            parser.emitInstruction(&codegen);
         }
         _ => ()
     }

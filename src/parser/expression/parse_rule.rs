@@ -1,7 +1,10 @@
 use crate::scanner::token::TokenType;
-use super::{
-    binary::parse_binary, function::parse_fn_declare, literal::parse_literal, number::parse_number, parse_fn::parse_grouping, variable::parse_get_variable, parser::Parser, precedence::Precedence, string::parse_string
+use crate::parser::{
+    declaration::function::parse_fn_declare, parse_fn::parse_grouping, declaration::variable::parse_get_variable, parser::Parser,
+    primitives::{literal::parse_literal, number::parse_number, string::parse_string},
+    expression::{binary::parse_binary, precedence::Precedence}
 };
+
 pub struct ParseRule<'a>{
     pub prefix: Option<ParseFn<'a>>,
     pub infix: Option<ParseFn<'a>>,

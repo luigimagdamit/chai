@@ -91,24 +91,19 @@ call void @print_i32(i32 %10)
 %a_1 = load i32, i32* %a
 %b_1 = load i32, i32* %b
 %13 = icmp ugt i32 %a_1, %b_1
-
 %14 = add i1 %13, 0
 %a_2 = load i32, i32* %a
 %b_2 = load i32, i32* %b
 %17 = icmp ult i32 %a_2, %b_2
-
 %18 = add i1 %17, 0
 %a_3 = load i32, i32* %a
 %b_3 = load i32, i32* %b
 %21 = icmp eq i32 %a_3, %b_3
-
 %22 = add i1 %21, 0
 %a_4 = load i32, i32* %a
 %b_4 = load i32, i32* %b
 %25 = add i32 %b_4, 54
-
 %26 = icmp eq i32 %a_4, %25
-
 %27 = add i1 %26, 0
 
 %29 = getelementptr inbounds [13 x i8], [13 x i8]* @str0, i32 0, i32 0
@@ -142,13 +137,10 @@ call void @print_i32(i32 %37)
 %flag = alloca i1
 
 %38 = icmp ult i32 1, 2
-
 %39 = add i1 %38, 0
 %40 = icmp ugt i32 3, 1
-
 %41 = add i1 %40, 0
 %42 = icmp eq i32 2, 3
-
 %43 = add i1 %42, 0
 %45 = add i1 1, 0
 %47 = add i1 0, 0
@@ -163,8 +155,8 @@ store i8* %49, i8** %seppuku
 call i32 (i8*, ...) @printf(i8* %seppuku_0)
 ret i32 0
 }
-@str2 = private unnamed_addr constant [33 x i8] c"here is me declaring a variable\0A\00", align 1
-@str1 = private unnamed_addr constant [14 x i8] c"this is chai\0A\00", align 1
-@str0 = private unnamed_addr constant [14 x i8] c"hello world!\0A\00", align 1
 @str4 = private unnamed_addr constant [22 x i8] c"ok shutting down now\0A\00", align 1
+@str0 = private unnamed_addr constant [14 x i8] c"hello world!\0A\00", align 1
+@str1 = private unnamed_addr constant [14 x i8] c"this is chai\0A\00", align 1
+@str2 = private unnamed_addr constant [33 x i8] c"here is me declaring a variable\0A\00", align 1
 @str3 = private unnamed_addr constant [22 x i8] c"this is the variable\0A\00", align 1

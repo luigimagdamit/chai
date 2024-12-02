@@ -1,6 +1,6 @@
 use crate::{
     common::common::PARSE_CONSTANT_FOLD,
-    parser::expr::{Expr, DataType}
+    parser::expression::expr::{Expr, DataType}
 };
 pub fn llvm_binary_operands(value: i32, index: u32, type_tag: &str) -> Option<Expr>{
     if PARSE_CONSTANT_FOLD {

@@ -1,11 +1,11 @@
-use super::{
-    parser::Parser,
-    parse_rule::get_rule,
-    precedence::Precedence,
-    print::print_statement,
-    function::parse_fn_declare,
 
-    variable::{variable_declaration, parse_set_variable}
+use crate::parser::{
+    parser::Parser,
+    expression::parse_rule::get_rule,
+    expression::precedence::Precedence,
+    declaration::print::print_statement,
+    declaration::function::parse_fn_declare,
+    declaration::variable::{variable_declaration, parse_set_variable}
 };
 use crate::{
     llvm::expr_mode::expr_mode,

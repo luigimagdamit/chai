@@ -1,9 +1,7 @@
-use super::{
-    parser::Parser,
-    expr::DataType,
-    symbol::{create_new_symbol, get_symbol, set_symbol},
-    parse_fn::{expression, convert_type_tag}
-};
+use crate::parser::parser::Parser;
+use crate::parser::symbol::{create_new_symbol, get_symbol, set_symbol};
+use crate::parser::parse_fn::{expression, convert_type_tag};
+use crate::parser::expression::expr::DataType;
 use crate::{common::common::PARSE_DECLARATION_MODE, scanner::token::TokenType};
 
 // misleading title, will just 
@@ -15,7 +13,7 @@ pub fn parse_variable_name(parser: &mut Parser, err_msg: &str) -> String {
 
 pub fn parse_get_variable(parser: &mut Parser) {
     let value = parser.previous.unwrap();
-    let symbol = get_symbol(parser, String::from(value.start));
+    let _symbol = get_symbol(parser, String::from(value.start));
 }
 
 // evaluate an expression, then assign the expression at the location of the local variable with store
@@ -30,16 +28,16 @@ pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
             DataType::Integer(int) => {
                 let codegen = format!("store i32 {}, i32* %{}", int , var_name);
                 println!("{}", codegen);
-                parser.compilation += &codegen;
+                parser.emitInstruction(&codegen);
                 create_new_symbol(parser, String::from(var_name), value.data_type);
             },
             DataType::String(_) => {
                 let codegen1 = format!("%{} = {}", parser.expr_count, print_val);
                 println!("{}", codegen1);
-                parser.compilation += &codegen1;
+                parser.emitInstruction(&codegen1);
                 let codegen2 = format!("store i8* %{}, i8** %{}", parser.expr_count , var_name);
                 println!("{}", codegen2);
-                parser.compilation += &codegen2;
+                parser.emitInstruction(&codegen2);
                 create_new_symbol(parser, String::from(var_name), value.data_type);
             }
         }

@@ -59,7 +59,6 @@ fn main() {
         else { panic!("[ExprModeError] PARSE_EXPRESSION_MODE flag is not enabled") }
     } else {
         match &args[1] {
-
             s if s.is_ascii()=> {
                 if !PARSE_DECLARATION_MODE { panic!("[DeclrModeError] PARSE_DECLARATION_MODE flag is not enabled")}
                 let contents = std::fs::read_to_string(s).unwrap();

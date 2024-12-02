@@ -8,13 +8,12 @@ use crate::scanner::{
 };
 
 use crate::common::error::ErrorCode;
-use crate::parser::expr::Expr;
-use crate::llvm::llvm_print::{llvm_fmt_string_int, llvm_main_close, llvm_main_start, llvm_print_bool_declare, llvm_print_define, llvm_print_i32_define};
+use crate::parser::expression::expr::Expr;
+use crate::llvm::llvm_print::{llvm_fmt_string_int, llvm_main_close, llvm_print_bool_declare, llvm_print_define, llvm_print_i32_define};
 use crate::parser::parse_fn::declaration;
 
-use super::expr::DataType;
-use super::parse_fn::expression;
-
+use super::expression::expr::DataType;
+#[allow(unused)]
 pub struct StringEntry {
     pub codegen: String,
     pub length: usize,
@@ -41,6 +40,10 @@ pub struct Parser<'a>{
     pub compilation: String
 }
 impl<'a>Parser <'a>{
+    pub fn emitInstruction(&mut self, inst: &String) {
+        self.compilation += &inst;
+        self.compilation += &String::from("\n");
+    }
     pub fn new_expr(&mut self, expr: Expr) {
         self.constant_stack.push(Some(expr));
         self.expr_count += 1;

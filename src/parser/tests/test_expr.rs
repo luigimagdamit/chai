@@ -3,11 +3,11 @@ mod tests {
     use core::panic;
 
     use crate::common::common::PARSE_CONSTANT_FOLD;
-    use crate::parser::expr::DataType;
+    use crate::parser::expression::expr::DataType;
     use crate::parser::parse_fn::parse_precedence;
     use crate::scanner::token::TokenType;
     use crate::parser::parser::Parser;
-    use crate::parser::precedence::Precedence;
+    use crate::parser::expression::precedence::Precedence;
     #[test] 
     fn test_parse_one_plus_two() {
         let parser = &mut Parser::init_parser("1+2\0");
@@ -117,11 +117,11 @@ mod boolean_equality_tests {
     use core::panic;
 
     use crate::common::common::PARSE_CONSTANT_FOLD;
-    use crate::parser::expr::DataType;
+    use crate::parser::expression::expr::DataType;
     use crate::parser::parse_fn::parse_precedence;
 
     use crate::parser::parser::Parser;
-    use crate::parser::precedence::Precedence;
+    use crate::parser::expression::precedence::Precedence;
     #[test]
     fn test_parse_bool_true() {
         let parser = &mut Parser::init_parser("true\0");
@@ -269,11 +269,11 @@ mod value_comparison_tests {
     use core::panic;
 
     use crate::common::common::PARSE_CONSTANT_FOLD;
-    use crate::parser::expr::DataType;
+    use crate::parser::expression::expr::DataType;
     use crate::parser::parse_fn::parse_precedence;
 
     use crate::parser::parser::Parser;
-    use crate::parser::precedence::Precedence;
+    use crate::parser::expression::precedence::Precedence;
     #[test]
     fn test_parse_numbers_eq_true() {
         let parser = &mut Parser::init_parser("1 == 1\0");

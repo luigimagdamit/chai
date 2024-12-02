@@ -1,12 +1,13 @@
 mod tests {
+    #![allow(unused_imports)]
     use core::panic;
-
+   
     use crate::common::common::PARSE_CONSTANT_FOLD;
-    use crate::parser::expr::DataType;
+    use crate::parser::expression::expr::DataType;
     use crate::parser::parse_fn::parse_precedence;
     use crate::scanner::token::TokenType;
     use crate::parser::parser::Parser;
-    use crate::parser::precedence::Precedence;
+    use crate::parser::expression::precedence::Precedence;
 
     #[test]
     fn test_scan_eof() {

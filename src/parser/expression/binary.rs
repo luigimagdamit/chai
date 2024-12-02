@@ -1,8 +1,10 @@
 use crate::common::common::PARSE_DECLARATION_MODE;
 use super::{
     expr::{Expr, DataType},
-    parse_fn::parse_precedence, parse_rule::get_rule, parser::Parser, precedence::Precedence
+    precedence::Precedence,
+    super::{parse_fn::parse_precedence, parser::Parser}
 };
+use crate::parser::expression::parse_rule::get_rule;
 use crate::scanner::token::TokenType;
 use crate::llvm::llvm_binary::llvm_binary_operands;
 
@@ -35,9 +37,9 @@ pub fn parse_binary(parser: &mut Parser) {
 fn binary_op(parser: &mut Parser, operator: fn(i32, i32) -> i32, instruction: &str) 
 {
     let operands = get_binary_operands(parser);
-    let codegen = format!("%{} = {} {}, {}\n", parser.expr_count, instruction, operands.0.left, operands.1.right);
+    let codegen = format!("%{} = {} {}, {}", parser.expr_count, instruction, operands.0.left, operands.1.right);
     if PARSE_DECLARATION_MODE{ println! ("{}", codegen)}
-    parser.compilation += &codegen;
+    parser.emitInstruction(&codegen);
 
 
     
