@@ -15,7 +15,7 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
     
     match variable.variable_type {
         DataType::Integer(_) => {
-            println!("%{}_{} = load {}, {}* %{}", variable.name, variable.count, "i32", "i32", variable.name);
+            println!("\t%{}_{} = load {}, {}* %{}", variable.name, variable.count, "i32", "i32", variable.name);
             parser.new_expr(Expr {
                 left: format!("i32 %{}_{}", variable.name, variable.count),
                 right: format!("%{}_{}", variable.name, variable.count),
@@ -25,7 +25,7 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
             
         },
         DataType::String(_) => {
-            let codegen = format!("\n%{}_{} = load {}, {}* %{}\n", variable.name, variable.count, "i8*", "i8*", variable.name);
+            let codegen = format!("\t%{}_{} = load {}, {}* %{}", variable.name, variable.count, "i8*", "i8*", variable.name);
             if PARSE_DECLARATION_MODE { println!("{}", codegen) }
 
             

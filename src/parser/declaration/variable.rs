@@ -25,7 +25,7 @@ impl LlvmTempRegister {
     pub fn new_register(&self, lookup: &StringEntry) -> String {
         match self {
             Self::StaticString(register) => {
-                format!("%{} = {};LLVM Register for String @ ExprCount {}(variable.rs)\n", register, llvm_retrieve_static_string(lookup.length, lookup.index), register)
+                format!("\t%{} = {}\t\t;LLVM Register for String @ ExprCount {}(variable.rs) ", register, llvm_retrieve_static_string(lookup.length, lookup.index), register)
             },
             LlvmTempRegister::Number => {
                 panic!()
@@ -35,7 +35,7 @@ impl LlvmTempRegister {
     pub fn store_in_alloca(&self, target: &str) -> String {
         match self {
             Self::StaticString(register) => {
-                format!("store i8* %{}, i8** %{}", register , target)
+                format!("\tstore i8* %{register}, i8** %{target}")
             },
             LlvmTempRegister::Number => panic!()
         }
@@ -51,7 +51,7 @@ pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
         match &value.data_type {
             DataType::Boolean(_) => (),
             DataType::Integer(int) => {
-                let codegen = format!("store i32 {}, i32* %{}", int , var_name);
+                let codegen = format!("\tstore i32 {}, i32* %{}\t\t\t; int variable assignment (variable.rs)\n", int , var_name);
                 println!("{}", codegen);
                 parser.emit_instruction(&codegen);
                 create_new_symbol(parser, String::from(var_name), value.data_type);
@@ -94,7 +94,7 @@ pub fn variable_declaration(parser: &mut Parser) {
     parser.consume(TokenType::Colon, "Expected : when declaring variable");
     parser.consume(TokenType::Identifier, "Expected a type identifier when declaring variable");
     let type_tag = convert_type_tag(parser.previous.unwrap().start);
-    let codegen = format!("%{} = {}\n", global_name, type_tag);
+    let codegen = format!("\t%{} = {}", global_name, type_tag);
     if PARSE_DECLARATION_MODE { println!("{}", codegen) }
     parser.compilation += &codegen;
     if parser.match_current(TokenType::Equal) {

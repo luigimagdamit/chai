@@ -26,7 +26,7 @@ pub fn parse_fn_declare(parser: &mut Parser) {
         declaration(parser);
     }
 
-    println!("ret i32 0\n}}");
+    println!("\tret i32 0\n}}");
 
     
 }

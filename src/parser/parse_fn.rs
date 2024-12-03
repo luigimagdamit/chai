@@ -57,33 +57,33 @@ pub fn if_statement(parser: &mut Parser) {
         let value = expr.unwrap_or_else(||panic!("Tried evaluation an expression in print_statement, but opened an empty Expr"));
         match &value.data_type {
             DataType::Boolean(_) => {
-                let c1 = format!("%{} = add {}, 0\n", parser.expr_count , &value.left);
+                let c1 = format!("\t%{} = add {}, 0", parser.expr_count , &value.left);
                 println!("{c1}");
                 parser.emit_instruction(&c1);
-                let branch = format!("br i1 %{}, label %{}, label %{}", parser.expr_count, "then0", "else0");
+                let branch = format!("\tbr i1 %{}, label %{}, label %{}", parser.expr_count, "then0", "else0");
                 parser.expr_count += 1;
                 println!("{branch}");
                 parser.consume(TokenType::LeftBrace, "message");
-                println!("then0:\n");
+                println!("\nthen0:");
                 while !parser.match_current(TokenType::RightBrace) {
                     declaration(parser);
                 }
                 
-                println!("br label %end");
+                println!("\tbr label %end");
 
-                println!("else0:\n");
+                println!("\nelse0:");
                 if parser.match_current(TokenType::Else) {
                     parser.consume(TokenType::LeftBrace, "message");
                     
                     while !parser.match_current(TokenType::RightBrace) {
                         statement(parser);
                     }
-                    println!("br label %end\n");
-                    println!("end:\n")
+                    println!("\tbr label %end");
+                    println!("\nend:")
                     
                 } else {
-                    println!("br label %end\n");
-                    println!("end:\n")
+                    println!("\tbr label %end");
+                    println!("\nend:")
                     
                 }
                 
