@@ -71,6 +71,43 @@ fn binary_op(parser: &mut Parser, operator: fn(i32, i32) -> i32, instruction: &s
     }
     parser.expr_count += 1;
 }
+fn binary_op_headless(parser: &mut Parser, operator: fn(i32, i32) -> i32, instruction: &str) 
+{
+    let operands = get_binary_operands(parser);
+    let codegen = format!("{} {}, {}", instruction, operands.0.left, operands.1.right);
+    if PARSE_DECLARATION_MODE{ println! ("{}", codegen)}
+    parser.emit_instruction(&codegen);
+
+
+    
+    // (left, right)
+    match (operands.0.data_type, operands.1.data_type) {
+        (DataType::Integer(a), DataType::Integer(b)) => {
+            let calculation = operator(a, b);
+            if BOOL_OPS.contains(&instruction) {
+                parser.constant_stack.push(llvm_binary_operands(calculation, parser.expr_count, "i1"));
+            } else {
+                parser.constant_stack.push(llvm_binary_operands(calculation, parser.expr_count, "i32"));
+            }
+        },
+        (DataType::Boolean(a), DataType::Boolean(b)) => {
+            let a_int = match a {
+                true => 1,
+                false=> 0
+            };
+            let b_int = match b {
+                true => 1,
+                false=> 0
+            };
+
+            let bool_op = operator(a_int, b_int);
+            parser.constant_stack.push(llvm_binary_operands(bool_op, parser.expr_count, "i1"));
+        },
+        (_, _) => parser.error_at(&parser.current.unwrap(), "Invalid binary operands while trying to parse in binary_op()")
+
+    }
+    parser.expr_count += 1;
+}
 
 fn add_op(a: i32, b: i32) -> i32 {
     a + b

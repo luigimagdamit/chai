@@ -1,6 +1,7 @@
 
 use crate::parser::{
     parser::Parser,
+    expression::expr::{DataType, Expr},
     expression::parse_rule::get_rule,
     expression::precedence::Precedence,
     declaration::print::print_statement,
@@ -48,11 +49,58 @@ pub fn declaration(parser: &mut Parser) {
     }
 
 }
+pub fn if_statement(parser: &mut Parser) {
+    // if keyworld already consumed
+    // parse expression
+    expression(parser);
+    if let Some(expr) = parser.constant_stack.pop() {
+        let value = expr.unwrap_or_else(||panic!("Tried evaluation an expression in print_statement, but opened an empty Expr"));
+        match &value.data_type {
+            DataType::Boolean(_) => {
+                let c1 = format!("%{} = add {}, 0\n", parser.expr_count , &value.left);
+                println!("{c1}");
+                parser.emit_instruction(&c1);
+                let branch = format!("br i1 %{}, label %{}, label %{}", parser.expr_count, "then0", "else0");
+                parser.expr_count += 1;
+                println!("{branch}");
+                parser.consume(TokenType::LeftBrace, "message");
+                println!("then0:\n");
+                while !parser.match_current(TokenType::RightBrace) {
+                    declaration(parser);
+                }
+                
+                println!("br label %end");
+
+                println!("else0:\n");
+                if parser.match_current(TokenType::Else) {
+                    parser.consume(TokenType::LeftBrace, "message");
+                    
+                    while !parser.match_current(TokenType::RightBrace) {
+                        statement(parser);
+                    }
+                    println!("br label %end\n");
+                    println!("end:\n")
+                    
+                } else {
+                    println!("br label %end\n");
+                    println!("end:\n")
+                    
+                }
+                
+
+            }
+            _ => ()
+        }
+    }
+}
 pub fn statement(parser: &mut Parser) {
 
     if parser.match_current(TokenType::Print) {
         print_statement(parser);
-    } else {
+    } else if parser.match_current(TokenType::If) {
+        if_statement(parser);
+    } 
+    else {
         expression_statement(parser);
     }
 }
