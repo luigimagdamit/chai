@@ -26,7 +26,6 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
     let variable = parser.symbol_table.get(&name).unwrap();
     match variable.variable_type {
         DataType::Integer(_) => {
-            //println!("\t%{}_{} = load {}, {}* %{}", variable.name, variable.count, "i32", "i32", variable.name);
             let codegen = &LlvmLoad::load_i32(&variable.name, variable.count);
             
             parser.new_expr(Expr {
@@ -45,7 +44,7 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
                 data_type: variable.variable_type.clone()
             });
             // decrement since we don't use a name / tmp variable register name
-            parser.expr_count -= 1;
+
             parser.emit_instruction(&codegen);
         }
         _ => ()
@@ -60,7 +59,7 @@ pub fn set_symbol(parser: &mut Parser, name: String, new_value: Expr) {
 
     match &variable.variable_type {
         DataType::Integer(_) => {
-            println!("store {}, i32* %{}\n", new_value.left , name);
+            println!("\tstore {}, i32* %{}\t\t ; set symbol (symbol.rs)\n", new_value.left , name);
         }
         DataType::String(str_value) => {
             panic!("set_symbol() not impl for strings");

@@ -27,7 +27,10 @@ fn main() i32 {
     print("this is the variable");
     var i: int = 24;
     print(i);
+    i = i * 30;
     var flag: bool;
+    print(i);
+
 
     print(1 < 2);
     print(3 > 1);

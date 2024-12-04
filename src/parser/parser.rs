@@ -47,7 +47,7 @@ impl<'a>Parser <'a>{
     }
     pub fn new_expr(&mut self, expr: Expr) {
         self.constant_stack.push(Some(expr));
-        self.expr_count += 1;
+
     }
     pub fn expr_pop(&mut self) -> Expr {
         if let Some(popped) = self.constant_stack.pop() {
@@ -55,10 +55,12 @@ impl<'a>Parser <'a>{
             match expr.clone().data_type {
                 DataType::Boolean(bool) => {
                     let c1 = format!("\t%{} = add {}, 0\t\t\t\t; expr_pop", self.expr_count , expr.left);
-                    println!("{c1}");
+                    self.emit_instruction(&c1);
+                    self.expr_count += 1;
                 }
                 DataType::Integer(int) => {
-                    println!("\t%{} = add {}, 0\t\t\t\t; expr_pop", self.expr_count, expr.left);
+                    let c1 = format!("\t%{} = add {}, 0\t\t\t\t; expr_pop", self.expr_count, expr.left);
+                    self.emit_instruction(&c1);
                     self.expr_count += 1;
                 }, 
                 DataType::String(str) => {

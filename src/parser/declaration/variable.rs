@@ -45,41 +45,21 @@ impl LlvmTempRegister {
 pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
     expression(parser);
     let expr = parser.expr_pop();
-    if let expr = expr {
-        let value = expr;
-        let print_val = &value.left;
-        // parser.expr_count += 1;
-        match &value.data_type {
-            DataType::Boolean(_) => (),
-            DataType::Integer(int) => {
-                let codegen = format!("\tstore i32 %{}, i32* %{}\t\t\t; int variable assignment (variable.rs)\n", parser.expr_top() , var_name);
+    match &expr.data_type {
+        DataType::Boolean(_) => (),
+        DataType::Integer(_) => {
+            let codegen = format!("\tstore i32 %{}, i32* %{}\t\t\t; int variable assignment (variable.rs)\n", parser.expr_top() , var_name);
 
-                parser.emit_instruction(&codegen);
-                create_new_symbol(parser, String::from(var_name), value.data_type);
-            },
-            DataType::String(str_value) => {
-                // pop off the stack
-
-                    
-                    // look up the string value within the Expr, do lookup, then get the constant index
-                    // within StringEntry in order to retrieve appropariate value in LLVM Constants
-
-                    // %2 = getelementptr inbounds [13 x i8], [13 x i8]* @str0, i32 0, i32 0
-                let tmp_register = LlvmTempRegister::StaticString(parser.expr_top());
-
-
-                    // store i8* %2, i8** %b
-                let store_codegen = tmp_register.store_in_alloca(var_name);
-
-                parser.emit_instruction(&store_codegen);
+            parser.emit_instruction(&codegen);
+            create_new_symbol(parser, String::from(var_name), expr.data_type);
+        },
+        DataType::String(_) => {
+            let tmp_register = LlvmTempRegister::StaticString(parser.expr_top());
+            let store_codegen = tmp_register.store_in_alloca(var_name);
+            parser.emit_instruction(&store_codegen);
                 
-
-
-                
-
-                create_new_symbol(parser, String::from(var_name), value.data_type);
-                parser.expr_count += 1; // we used a tmp register
-            }
+            create_new_symbol(parser, String::from(var_name), expr.data_type);
+            // parser.expr_count += 1;
         }
     }
     
@@ -87,41 +67,42 @@ pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
     
 }
 pub fn variable_declaration(parser: &mut Parser) {
-    // let name: type;
     let global_name = parse_variable_name(parser, "Expected a variable name");
     parser.consume(TokenType::Colon, "Expected : when declaring variable");
     parser.consume(TokenType::Identifier, "Expected a type identifier when declaring variable");
     let type_tag = convert_type_tag(parser.previous.unwrap().start);
     let codegen = format!("\t%{} = {}", global_name, type_tag);
-    if PARSE_DECLARATION_MODE { println!("{}", codegen) }
-    parser.compilation += &codegen;
-    if parser.match_current(TokenType::Equal) {
 
-        variable_assignment(parser, &global_name);
-        
-    } else {
-        
-    }
-
+    parser.emit_instruction(&codegen);
+    if parser.match_current(TokenType::Equal) { variable_assignment(parser, &global_name) } else {}
 
     parser.consume(TokenType::Semicolon, "Expected a semicolon after variable declaration");
 }
 
 pub fn parse_set_variable(parser: &mut Parser) {
     let identifier = parser.previous.unwrap();
-    parser.consume(TokenType::Equal, "Expected assignment");
-    expression(parser);
-    parser.consume(TokenType::Semicolon, "");
+    if parser.match_current(TokenType::Equal) {
+        expression(parser);
+        parser.consume(TokenType::Semicolon, "");
+
+        if let Some(expr) = parser.constant_stack.pop() {
+            match expr {
+                Some(new_value) => set_symbol(parser, String::from(identifier.start), new_value),
+                None => parser.error_at_previous("Expected an <expression> when setting variable to a new value"),
+            }
+        } else {
     
-    if let Some(expr) = parser.constant_stack.pop() {
-        match expr {
-            Some(new_value) => set_symbol(parser, String::from(identifier.start), new_value),
-            None => parser.error_at_previous("Expected an <expression> when setting variable to a new value"),
+            parser.error_at(&identifier, "Unknown variable (set_variable)");
         }
     } else {
-
-        parser.error_at(&identifier, "Unknown variable (set_variable)");
+        panic!("neeed a identigfier expression in parse rule");
+        expression(parser);
     }
+    // parser.consume(TokenType::Equal, "Expected assignment");
+    
+
+    
+
 
 
 
