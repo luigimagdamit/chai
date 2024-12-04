@@ -7,7 +7,7 @@ fn main() i32 {
     print(intro);
     print(intro);
     print(greeting);
-
+    greeting = 3;
     var a: int = 123;
     var b: int = 69;
 
@@ -27,6 +27,7 @@ fn main() i32 {
     print("this is the variable");
     var i: int = 24;
     print(i);
+    i = "24";
     var flag: bool;
 
     print(1 < 2);

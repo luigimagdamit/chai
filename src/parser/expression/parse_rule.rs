@@ -1,8 +1,8 @@
 use crate::scanner::token::TokenType;
 use crate::parser::{
-    declaration::function::parse_fn_declare, parse_fn::parse_grouping, declaration::variable::parse_get_variable, parser::Parser,
+    declaration::function::parse_fn_declare, declaration::variable::parse_get_variable, parser::Parser,
     primitives::{literal::parse_literal, number::parse_number, string::parse_string},
-    expression::{binary::parse_binary, precedence::Precedence}
+    expression::{binary::parse_binary, precedence::Precedence, expression::parse_grouping}
 };
 
 pub struct ParseRule<'a>{

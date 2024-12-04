@@ -1,30 +1,15 @@
-use crate::parser::expression::expr::{DataType, Expr};
-use crate::parser::parse_fn::expression;
+use crate::parser::expression::expr::DataType;
+use crate::parser::expression::expression::expression;
 use crate::parser::parser::Parser;
-use crate::{common::flags::PARSE_DECLARATION_MODE, llvm::llvm_print::llvm_call_print_local, scanner::token::TokenType};
-
-use super::variable::LlvmTempRegister;
-
-
-// all printed items should pass through this!
+use crate::{llvm::llvm_print::llvm_call_print_local, scanner::token::TokenType};
 
 pub fn print_statement(parser: &mut Parser) {
     expression(parser);
     let expr = parser.expr_pop();
     match &expr.data_type {
-        DataType::Boolean(_) => {
-            let codegen = LlvmCallPrint::Integer(parser.expr_top()).print_i1();
-            parser.emit_instruction(&codegen);
-        }
-        DataType::Integer(_) => {
-            let codegen = LlvmCallPrint::Integer(parser.expr_top()).print_i32();
-            parser.emit_instruction(&codegen);
-        },
-        DataType::String(_) => {
-                let print_inst = LlvmCallPrint::String(parser.expr_top()).call_print();
-                parser.emit_instruction(&print_inst);
-
-        }
+        DataType::Boolean(_) => parser.emit_instruction(&LlvmCallPrint::Integer(parser.expr_top()).print_i1()),
+        DataType::Integer(_) => parser.emit_instruction(&LlvmCallPrint::Integer(parser.expr_top()).print_i32()),
+        DataType::String (_) => parser.emit_instruction(&LlvmCallPrint::String(parser.expr_top()).call_print())
     }
     parser.expr_count += 1;
     parser.consume(TokenType::Semicolon, "Expect semicolon after value");
@@ -49,11 +34,7 @@ impl LlvmCallPrint {
     }
     pub fn print_i1(&self) -> String {
         match self {
-            Self::Integer(register) => {
-                let c2 = llvm_call_print_local(register.clone(), "i1");
-
-                c2
-            }
+            Self::Integer(register) => llvm_call_print_local(register.clone(), "i1"),
             _ => panic!("Not a i32")
         }
     }

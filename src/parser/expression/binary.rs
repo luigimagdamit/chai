@@ -2,7 +2,7 @@ use crate::common::flags::PARSE_DECLARATION_MODE;
 use super::{
     expr::{Expr, DataType},
     precedence::Precedence,
-    super::{parse_fn::parse_precedence, parser::Parser}
+    super::{expression::expression::parse_precedence, parser::Parser}
 };
 use crate::parser::expression::parse_rule::get_rule;
 use crate::scanner::token::TokenType;
@@ -71,6 +71,8 @@ fn binary_op(parser: &mut Parser, operator: fn(i32, i32) -> i32, instruction: &s
     }
     parser.expr_count += 1;
 }
+
+#[allow(unused)]
 fn binary_op_headless(parser: &mut Parser, operator: fn(i32, i32) -> i32, instruction: &str) 
 {
     let operands = get_binary_operands(parser);

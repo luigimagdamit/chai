@@ -1,22 +1,10 @@
 use crate::llvm::llvm_string::llvm_retrieve_static_string;
 use crate::parser::parser::{Parser, StringEntry};
 use crate::parser::symbol::{create_new_symbol, get_symbol, set_symbol};
-use crate::parser::parse_fn::{expression, convert_type_tag};
-use crate::parser::expression::expr::{self, DataType};
-use crate::{common::flags::PARSE_DECLARATION_MODE, scanner::token::TokenType};
-
-// misleading title, will just 
-pub fn parse_variable_name(parser: &mut Parser, err_msg: &str) -> String {
-    parser.consume(TokenType::Identifier, err_msg);
-    String::from(parser.previous.unwrap().start)
-    // store this in the hash table
-}
-
-pub fn parse_get_variable(parser: &mut Parser) {
-    let value = parser.previous.unwrap();
-    get_symbol(parser, String::from(value.start));
-}
-
+use crate::parser::parse_fn::convert_type_tag;
+use crate::parser::expression::expression::expression;
+use crate::parser::expression::expr::DataType;
+use crate::scanner::token::TokenType;
 
 // evaluate an expression, then assign the expression at the location of the local variable with store
 pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
@@ -71,12 +59,12 @@ pub fn parse_set_variable(parser: &mut Parser) {
         }
     } else {
         panic!("neeed a identigfier expression in parse rule");
-        expression(parser);
+        //expression(parser);
     }
     // parser.consume(TokenType::Equal, "Expected assignment");
 }
 
-
+#[allow(unused)]
 pub enum LlvmTempRegister {
     StaticString(u32), // holds string value for lookup
     Number
@@ -100,4 +88,14 @@ impl LlvmTempRegister {
             LlvmTempRegister::Number => panic!()
         }
     }
+}
+
+pub fn parse_variable_name(parser: &mut Parser, err_msg: &str) -> String {
+    parser.consume(TokenType::Identifier, err_msg);
+    String::from(parser.previous.unwrap().start)
+}
+
+pub fn parse_get_variable(parser: &mut Parser) {
+    let value = parser.previous.unwrap();
+    get_symbol(parser, String::from(value.start));
 }

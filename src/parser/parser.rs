@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::process::exit;
 
-use crate::common::flags::{PARSE_EXPRESSION_MODE, PARSE_FN_OUTPUT, PARSE_SUPRESS_PREDEFINES, PARSE_TOKEN_OUTPUT};
+use crate::common::flags::{EMIT_VERBOSE, PARSE_EXPRESSION_MODE, PARSE_FN_OUTPUT, PARSE_SUPRESS_PREDEFINES, PARSE_TOKEN_OUTPUT};
 use crate::scanner::{
     token::{Token, TokenType},
     scanner::Scanner
@@ -41,7 +41,7 @@ pub struct Parser<'a>{
 }
 impl<'a>Parser <'a>{
     pub fn emit_instruction(&mut self, inst: &String) {
-        println!("{inst}");
+        if EMIT_VERBOSE { println!("{inst}") }
         self.compilation += inst;
         self.compilation += &String::from("\n");
     }
@@ -53,12 +53,12 @@ impl<'a>Parser <'a>{
         if let Some(popped) = self.constant_stack.pop() {
             let expr = popped.unwrap();
             match expr.clone().data_type {
-                DataType::Boolean(bool) => {
+                DataType::Boolean(_) => {
                     let c1 = format!("\t%{} = add {}, 0\t\t\t\t; expr_pop", self.expr_count , expr.left);
                     self.emit_instruction(&c1);
                     self.expr_count += 1;
                 }
-                DataType::Integer(int) => {
+                DataType::Integer(_) => {
                     let c1 = format!("\t%{} = add {}, 0\t\t\t\t; expr_pop", self.expr_count, expr.left);
                     self.emit_instruction(&c1);
                     self.expr_count += 1;
@@ -71,10 +71,8 @@ impl<'a>Parser <'a>{
                         let cg = format!("{}\t\t\t\t; Printing a string type (expr_pop - register increment by LlvmTempRegister)", load_string_codegen);
                         self.emit_instruction(&cg);
                         self.expr_count += 1;
-
                     }
                 },
-                _ => ()
             }
             return expr
         }
@@ -183,7 +181,7 @@ impl<'a>Parser <'a>{
     }
     // Should always be included
     fn llvm_stdlib(&self) {
-        if !PARSE_SUPRESS_PREDEFINES {
+        if !PARSE_SUPRESS_PREDEFINES && EMIT_VERBOSE {
             llvm_print_define();
             llvm_print_bool_declare();
             llvm_fmt_string_int();
@@ -206,10 +204,12 @@ impl<'a>Parser <'a>{
         while !self.match_current(TokenType::EOF) {
             declaration(self);   
         }
-        
-        for entry in self.string_table.values() {
-            println!("{}",entry.codegen);
+        if EMIT_VERBOSE {
+            for entry in self.string_table.values() {
+                println!("{}",entry.codegen);
+            }
         }
+
     }
     pub fn compile(&mut self) {
         self.advance();

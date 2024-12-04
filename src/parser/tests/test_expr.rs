@@ -4,7 +4,7 @@ mod tests {
 
     use crate::common::flags::PARSE_CONSTANT_FOLD;
     use crate::parser::expression::expr::DataType;
-    use crate::parser::parse_fn::parse_precedence;
+    use crate::parser::expression::expression::parse_precedence;
     use crate::scanner::token::TokenType;
     use crate::parser::parser::Parser;
     use crate::parser::expression::precedence::Precedence;
@@ -122,7 +122,7 @@ mod boolean_equality_tests {
 
     use crate::common::flags::PARSE_CONSTANT_FOLD;
     use crate::parser::expression::expr::DataType;
-    use crate::parser::parse_fn::parse_precedence;
+    use crate::parser::expression::expression::parse_precedence;
 
     use crate::parser::parser::Parser;
     use crate::parser::expression::precedence::Precedence;
@@ -282,7 +282,7 @@ mod value_comparison_tests {
 
     use crate::common::flags::PARSE_CONSTANT_FOLD;
     use crate::parser::expression::expr::DataType;
-    use crate::parser::parse_fn::parse_precedence;
+    use crate::parser::expression::expression::parse_precedence;
 
     use crate::parser::parser::Parser;
     use crate::parser::expression::precedence::Precedence;

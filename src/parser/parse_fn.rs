@@ -1,23 +1,15 @@
 
 use crate::parser::{
     parser::Parser,
-    expression::expr::{DataType, Expr},
-    expression::parse_rule::get_rule,
-    expression::precedence::Precedence,
+    expression::expr::DataType,
+    expression::expression::expression,
     declaration::print::print_statement,
     declaration::function::parse_fn_declare,
     declaration::variable::{variable_declaration, parse_set_variable}
 };
-use crate::{
-    llvm::expr_mode::expr_mode,
-    scanner::token::TokenType
-};
+use crate::scanner::token::TokenType;
 
-pub fn expression(parser: &mut Parser) {
-    parse_precedence(parser, Precedence::PrecAssignment);
-    // assume this is just a high level expression
-    expr_mode(parser);
-}
+
 pub fn expression_statement(parser: &mut Parser) {
     expression(parser);
     parser.consume(TokenType::Semicolon, "Expect ; after expression");
@@ -112,26 +104,5 @@ pub fn parse_block(parser: &mut Parser) {
 
 
 
-pub fn parse_precedence(parser: &mut Parser, precedence: Precedence) {
-    parser.advance();
-    if let Some(prefix_fn) = get_rule(parser.previous.unwrap().token_type).prefix {
-        prefix_fn(parser);
-    } else {
-        let err_msg = format!("Expected a prefix rule or valid expression but found <{}>", parser.previous.unwrap());
-        parser.error_at(&parser.previous.unwrap(), &err_msg);
-    }
-    while precedence.to_u32() <= get_rule(parser.current.unwrap_or_else(||panic!("Current token not present for parse_precedence()")).token_type).precedence.to_u32() {
-        parser.advance();
-        if let Some(infix_rule) = get_rule(parser.previous.unwrap().token_type).infix {
-            infix_rule(parser);
-        } else {
-            break
-        }
-    }
-}
 
-pub fn parse_grouping(parser: &mut Parser) {
-    expression(parser);
-    parser.consume(TokenType::RightParen, "Expect ')' after expression, found something else at");
-}
 
