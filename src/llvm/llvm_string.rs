@@ -1,5 +1,5 @@
 pub fn llvm_retrieve_static_string(str_length: usize, str_index: usize) -> String {
-    let codegen = format!("getelementptr inbounds [{} x i8], [{} x i8]* @str{}, i32 0, i32 0 ", str_length , str_length, str_index);
+    let codegen = format!("getelementptr inbounds [{} x i8], [{} x i8]* @str{}, i32 0, i32 0 ; llvm_retrieve_static_string", str_length , str_length, str_index);
     codegen
 }
 pub fn llvm_new_static_string(str_length: usize, str_index: usize, str_value: &str) -> String {

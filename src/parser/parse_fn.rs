@@ -58,7 +58,7 @@ pub fn if_statement(parser: &mut Parser) {
         match &value.data_type {
             DataType::Boolean(_) => {
                 let c1 = format!("\t%{} = add {}, 0", parser.expr_count , &value.left);
-                println!("{c1}");
+
                 parser.emit_instruction(&c1);
                 let branch = format!("\tbr i1 %{}, label %{}, label %{}", parser.expr_count, "then0", "else0");
                 parser.expr_count += 1;

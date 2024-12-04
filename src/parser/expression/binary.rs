@@ -38,7 +38,7 @@ fn binary_op(parser: &mut Parser, operator: fn(i32, i32) -> i32, instruction: &s
 {
     let operands = get_binary_operands(parser);
     let codegen = format!("\t%{} = {} {}, {}", parser.expr_count, instruction, operands.0.left, operands.1.right);
-    if PARSE_DECLARATION_MODE{ println! ("{}", codegen)}
+
     parser.emit_instruction(&codegen);
 
 
@@ -75,8 +75,7 @@ fn binary_op_headless(parser: &mut Parser, operator: fn(i32, i32) -> i32, instru
 {
     let operands = get_binary_operands(parser);
     let codegen = format!("\t{} {}, {}", instruction, operands.0.left, operands.1.right);
-    if PARSE_DECLARATION_MODE{ println! ("{}", codegen)}
-    parser.emit_instruction(&codegen);
+    if PARSE_DECLARATION_MODE{ println! ("{}", codegen)}    parser.emit_instruction(&codegen);
 
 
     

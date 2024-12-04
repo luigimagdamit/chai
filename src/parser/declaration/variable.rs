@@ -2,7 +2,7 @@ use crate::llvm::llvm_string::llvm_retrieve_static_string;
 use crate::parser::parser::{Parser, StringEntry};
 use crate::parser::symbol::{create_new_symbol, get_symbol, set_symbol};
 use crate::parser::parse_fn::{expression, convert_type_tag};
-use crate::parser::expression::expr::DataType;
+use crate::parser::expression::expr::{self, DataType};
 use crate::{common::flags::PARSE_DECLARATION_MODE, scanner::token::TokenType};
 
 // misleading title, will just 
@@ -35,7 +35,7 @@ impl LlvmTempRegister {
     pub fn store_in_alloca(&self, target: &str) -> String {
         match self {
             Self::StaticString(register) => {
-                format!("\tstore i8* %{register}, i8** %{target}")
+                format!("\tstore i8* %{register}, i8** %{target}\t\t\t\t ; storing item in a stack variable\n")
             },
             LlvmTempRegister::Number => panic!()
         }
@@ -44,37 +44,35 @@ impl LlvmTempRegister {
 // evaluate an expression, then assign the expression at the location of the local variable with store
 pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
     expression(parser);
-    if let Some(expr) = parser.constant_stack.pop() {
-        let value = expr.unwrap_or_else(||panic!("Tried evaluation an expression in print_statement, but opened an empty Expr"));
+    let expr = parser.expr_pop();
+    if let expr = expr {
+        let value = expr;
         let print_val = &value.left;
-        parser.expr_count += 1;
+        // parser.expr_count += 1;
         match &value.data_type {
             DataType::Boolean(_) => (),
             DataType::Integer(int) => {
-                let codegen = format!("\tstore i32 {}, i32* %{}\t\t\t; int variable assignment (variable.rs)\n", int , var_name);
-                println!("{}", codegen);
+                let codegen = format!("\tstore i32 %{}, i32* %{}\t\t\t; int variable assignment (variable.rs)\n", parser.expr_top() , var_name);
+
                 parser.emit_instruction(&codegen);
                 create_new_symbol(parser, String::from(var_name), value.data_type);
             },
             DataType::String(str_value) => {
                 // pop off the stack
-                let str_lookup = parser.string_table.get(str_value).clone();
-                if let Some(lookup_result) = str_lookup {
+
                     
                     // look up the string value within the Expr, do lookup, then get the constant index
                     // within StringEntry in order to retrieve appropariate value in LLVM Constants
 
                     // %2 = getelementptr inbounds [13 x i8], [13 x i8]* @str0, i32 0, i32 0
-                    let tmp_register = LlvmTempRegister::StaticString(parser.expr_count);
-                    let load_string_codegen = tmp_register.new_register(lookup_result);
-                    println!("{}", load_string_codegen);
-                    parser.emit_instruction(&load_string_codegen);
+                let tmp_register = LlvmTempRegister::StaticString(parser.expr_top());
+
 
                     // store i8* %2, i8** %b
-                    let store_codegen = tmp_register.store_in_alloca(var_name);
-                    println!("{}", store_codegen);
-                    parser.emit_instruction(&store_codegen);
-                }
+                let store_codegen = tmp_register.store_in_alloca(var_name);
+
+                parser.emit_instruction(&store_codegen);
+                
 
 
                 

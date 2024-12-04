@@ -11,7 +11,7 @@ use crate::common::error::ErrorCode;
 use crate::parser::expression::expr::Expr;
 use crate::llvm::llvm_print::{llvm_fmt_string_int, llvm_main_close, llvm_print_bool_declare, llvm_print_define, llvm_print_i32_define};
 use crate::parser::parse_fn::declaration;
-
+use crate::parser::declaration::variable::LlvmTempRegister;
 use super::expression::expr::DataType;
 #[allow(unused)]
 pub struct StringEntry {
@@ -41,6 +41,7 @@ pub struct Parser<'a>{
 }
 impl<'a>Parser <'a>{
     pub fn emit_instruction(&mut self, inst: &String) {
+        println!("{inst}");
         self.compilation += inst;
         self.compilation += &String::from("\n");
     }
@@ -51,9 +52,35 @@ impl<'a>Parser <'a>{
     pub fn expr_pop(&mut self) -> Expr {
         if let Some(popped) = self.constant_stack.pop() {
             let expr = popped.unwrap();
+            match expr.clone().data_type {
+                DataType::Boolean(bool) => {
+                    let c1 = format!("\t%{} = add {}, 0\t\t\t\t; expr_pop", self.expr_count , expr.left);
+                    println!("{c1}");
+                }
+                DataType::Integer(int) => {
+                    println!("\t%{} = add {}, 0\t\t\t\t; expr_pop", self.expr_count, expr.left);
+                    self.expr_count += 1;
+                }, 
+                DataType::String(str) => {
+                    let str_lookup = self.string_table.get(&str).clone();
+                    if let Some(lookup_result) = str_lookup {
+                    
+                        let tmp_register = LlvmTempRegister::StaticString(self.expr_count);
+                        let load_string_codegen = tmp_register.new_register(lookup_result);
+                        let cg = format!("{}\t\t\t\t; Printing a string type (expr_pop - register increment by LlvmTempRegister)", load_string_codegen);
+                        self.emit_instruction(&cg);
+                        self.expr_count += 1;
+
+                    }
+                },
+                _ => ()
+            }
             return expr
         }
         panic!();
+    }
+    pub fn expr_top(&self) -> u32 {
+        self.expr_count - 1
     }
     pub fn error_at(&self, token: &Token, message: &str) {
 

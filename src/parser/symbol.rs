@@ -10,25 +10,35 @@ pub fn create_new_symbol(parser: &mut Parser, name: String, variable_type: DataT
         variable_type: variable_type
     });
 }
+
+pub enum LlvmLoad {
+    Integer(u32),
+}
+impl LlvmLoad {
+    pub fn load_i32(var_name: &str, var_count: usize) -> String {
+        format!("\t%{var_name}_{var_count} = load i32, i32* %{var_name} \t\t\t ; LlvmLoad load_i32")
+    } 
+    pub fn load_string(var_name: &str, var_count: usize) -> String {
+        format!("\t%{}_{} = load {}, {}* %{} ; \t\t\t Llvm Load String", var_name, var_count, "i8*", "i8*", var_name)
+    }
+}
 pub fn get_symbol(parser: &mut Parser, name: String) {
     let variable = parser.symbol_table.get(&name).unwrap();
-    
     match variable.variable_type {
         DataType::Integer(_) => {
-            println!("\t%{}_{} = load {}, {}* %{}", variable.name, variable.count, "i32", "i32", variable.name);
+            //println!("\t%{}_{} = load {}, {}* %{}", variable.name, variable.count, "i32", "i32", variable.name);
+            let codegen = &LlvmLoad::load_i32(&variable.name, variable.count);
+            
             parser.new_expr(Expr {
                 left: format!("i32 %{}_{}", variable.name, variable.count),
                 right: format!("%{}_{}", variable.name, variable.count),
                 data_type: variable.variable_type.clone()
             });
             // decrement since we don't use a name / tmp variable register name
-            
+            parser.emit_instruction(codegen);
         },
         DataType::String(_) => {
-            let codegen = format!("\t%{}_{} = load {}, {}* %{}", variable.name, variable.count, "i8*", "i8*", variable.name);
-            if PARSE_DECLARATION_MODE { println!("{}", codegen) }
-
-            
+            let codegen = &LlvmLoad::load_string(&variable.name, variable.count);
             parser.new_expr(Expr {
                 left: format!("%{}_{}", variable.name, variable.count),
                 right: String::from("<__var_string__>"),

@@ -29,7 +29,8 @@ pub fn parse_string(parser: &mut Parser) {
             //let register_codegen = format!("%{} = ", parser.expr_count);
             let new_str_codegen = string_expr(length, new_index, value, parser.expr_count);
 
-            parser.emit_instruction(&new_str_codegen.clone().left);
+            // parser.emit_instruction(&new_str_codegen.clone().left);
+            parser.emit_instruction(&"\t; pushing a new string on the stack ...".to_string());
             parser.new_expr(new_str_codegen);
         }
     }
