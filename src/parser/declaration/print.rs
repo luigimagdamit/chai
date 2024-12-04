@@ -5,11 +5,12 @@ use crate::{llvm::llvm_print::llvm_call_print_local, scanner::token::TokenType};
 
 pub fn print_statement(parser: &mut Parser) {
     expression(parser);
-    let expr = parser.expr_pop();
+
+    let (expr, top) = parser.expr_pop();
     match &expr.data_type {
-        DataType::Boolean(_) => parser.emit_instruction(&LlvmCallPrint::Integer(parser.expr_top()).print_i1()),
-        DataType::Integer(_) => parser.emit_instruction(&LlvmCallPrint::Integer(parser.expr_top()).print_i32()),
-        DataType::String (_) => parser.emit_instruction(&LlvmCallPrint::String(parser.expr_top()).call_print())
+        DataType::Boolean(_) => parser.emit_instruction(&LlvmCallPrint::Integer(top).print_i1()),
+        DataType::Integer(_) => parser.emit_instruction(&LlvmCallPrint::Integer(top).print_i32()),
+        DataType::String (_) => parser.emit_instruction(&LlvmCallPrint::String(top).call_print())
     }
     parser.expr_count += 1;
     parser.consume(TokenType::Semicolon, "Expect semicolon after value");

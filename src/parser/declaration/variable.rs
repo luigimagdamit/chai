@@ -9,20 +9,20 @@ use crate::scanner::token::TokenType;
 // evaluate an expression, then assign the expression at the location of the local variable with store
 pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
     expression(parser);
-    let expr = parser.expr_pop();
+    let (expr, _) = parser.expr_pop();
     match &expr.data_type {
         DataType::Boolean(_) => (),
         DataType::Integer(_) => {
             let codegen = format!("\tstore i32 %{}, i32* %{}\t\t\t; int variable assignment (variable.rs)\n", parser.expr_top() , var_name);
             parser.emit_instruction(&codegen);
-            create_new_symbol(parser, String::from(var_name), expr.data_type);
+            create_new_symbol(parser, var_name.to_string(), expr.data_type);
         },
         DataType::String(_) => {
             let tmp_register = LlvmTempRegister::StaticString(parser.expr_top());
             let store_codegen = tmp_register.store_in_alloca(var_name);
             parser.emit_instruction(&store_codegen);
                 
-            create_new_symbol(parser, String::from(var_name), expr.data_type);
+            create_new_symbol(parser, var_name.to_string(), expr.data_type);
         }
     }
     
@@ -48,15 +48,10 @@ pub fn parse_set_variable(parser: &mut Parser) {
         expression(parser);
         parser.consume(TokenType::Semicolon, "");
 
-        if let Some(expr) = parser.constant_stack.pop() {
-            match expr {
-                Some(new_value) => set_symbol(parser, String::from(identifier.start), new_value),
-                None => parser.error_at_previous("Expected an <expression> when setting variable to a new value"),
-            }
-        } else {
-    
-            parser.error_at(&identifier, "Unknown variable (set_variable)");
-        }
+        let expr = parser.expr_pop();
+
+        set_symbol(parser, String::from(identifier.start), expr.0);
+        parser.emit_instruction(&"\t\t\t\t\t; parse_set_variable".to_string());
     } else {
         panic!("neeed a identigfier expression in parse rule");
         //expression(parser);

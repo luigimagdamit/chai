@@ -49,7 +49,7 @@ impl<'a>Parser <'a>{
         self.constant_stack.push(Some(expr));
 
     }
-    pub fn expr_pop(&mut self) -> Expr {
+    pub fn expr_pop(&mut self) -> (Expr, u32) {
         if let Some(popped) = self.constant_stack.pop() {
             let expr = popped.unwrap();
             match expr.clone().data_type {
@@ -74,7 +74,7 @@ impl<'a>Parser <'a>{
                     }
                 },
             }
-            return expr
+            return (expr, self.expr_top())
         }
         panic!();
     }

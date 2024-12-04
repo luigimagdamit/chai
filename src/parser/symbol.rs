@@ -1,25 +1,39 @@
-use super::parser::{Parser, SymbolTableEntry};
+use super::{expression::expr, parser::{Parser, SymbolTableEntry}, primitives::number::LlvmNumberTag};
 use crate::parser::expression::expr::{DataType, Expr};
 
+pub enum LlvmGetVariable {
+    Integer((String, usize)) // name of string
+}
+impl LlvmGetVariable {
+    pub fn create_tags(&self) -> (String, String) {
+        match self {
+            Self::Integer(name) => (format!("i32 %{}_{}", name.0, name.1), format!("%{}_{}", name.0, name.1))
+        }
+    }
+}
 
 pub fn get_symbol(parser: &mut Parser, name: String) {
     let variable = parser.symbol_table.get(&name).unwrap();
-    match variable.variable_type {
+    let SymbolTableEntry { name: _, count, variable_type } = variable;
+   
+   match variable.variable_type {
         DataType::Integer(_) => {
-            let codegen = &LlvmLoad::load_i32(&variable.name, variable.count);
+            let codegen = &LlvmLoad::load_i32(&variable.name, *count);
+            let expr_tags = LlvmGetVariable::Integer((variable.name.clone(), *count)).create_tags();
+            
             parser.new_expr(Expr {
-                left: format!("i32 %{}_{}", variable.name, variable.count),
-                right: format!("%{}_{}", variable.name, variable.count),
-                data_type: variable.variable_type.clone()
+                left: expr_tags.0,
+                right: expr_tags.1,
+                data_type: variable_type.clone()
             });
             parser.emit_instruction(codegen);
         },
         DataType::String(_) => {
-            let codegen = &LlvmLoad::load_string(&variable.name, variable.count);
+            let codegen = &LlvmLoad::load_string(&variable.name, *count);
             parser.new_expr(Expr {
-                left: format!("%{}_{}", variable.name, variable.count),
+                left: format!("%{}_{}", variable.name, count),
                 right: String::from("<__var_string__>"),
-                data_type: variable.variable_type.clone()
+                data_type: variable_type.clone()
             });
             parser.emit_instruction(&codegen);
         }
@@ -51,9 +65,9 @@ pub fn types_equal(a: &DataType, b: &DataType) -> bool {
 }
 pub fn create_new_symbol(parser: &mut Parser, name: String, variable_type: DataType) {
     parser.symbol_table.insert(name.clone(), SymbolTableEntry {
-        name: name.clone(),
+        name,
         count: 0,
-        variable_type: variable_type
+        variable_type
     });
 }
 pub enum LlvmLoad {
