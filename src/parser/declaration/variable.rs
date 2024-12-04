@@ -17,30 +17,7 @@ pub fn parse_get_variable(parser: &mut Parser) {
     get_symbol(parser, String::from(value.start));
 }
 
-pub enum LlvmTempRegister {
-    StaticString(u32), // holds string value for lookup
-    Number
-}
-impl LlvmTempRegister {
-    pub fn new_register(&self, lookup: &StringEntry) -> String {
-        match self {
-            Self::StaticString(register) => {
-                format!("\t%{} = {}\t\t;LLVM Register for String @ ExprCount {}(variable.rs) ", register, llvm_retrieve_static_string(lookup.length, lookup.index), register)
-            },
-            LlvmTempRegister::Number => {
-                panic!()
-            }
-        }
-    }
-    pub fn store_in_alloca(&self, target: &str) -> String {
-        match self {
-            Self::StaticString(register) => {
-                format!("\tstore i8* %{register}, i8** %{target}\t\t\t\t ; storing item in a stack variable\n")
-            },
-            LlvmTempRegister::Number => panic!()
-        }
-    }
-}
+
 // evaluate an expression, then assign the expression at the location of the local variable with store
 pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
     expression(parser);
@@ -49,7 +26,6 @@ pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
         DataType::Boolean(_) => (),
         DataType::Integer(_) => {
             let codegen = format!("\tstore i32 %{}, i32* %{}\t\t\t; int variable assignment (variable.rs)\n", parser.expr_top() , var_name);
-
             parser.emit_instruction(&codegen);
             create_new_symbol(parser, String::from(var_name), expr.data_type);
         },
@@ -59,7 +35,6 @@ pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
             parser.emit_instruction(&store_codegen);
                 
             create_new_symbol(parser, String::from(var_name), expr.data_type);
-            // parser.expr_count += 1;
         }
     }
     
@@ -99,11 +74,30 @@ pub fn parse_set_variable(parser: &mut Parser) {
         expression(parser);
     }
     // parser.consume(TokenType::Equal, "Expected assignment");
-    
-
-    
+}
 
 
-
-
+pub enum LlvmTempRegister {
+    StaticString(u32), // holds string value for lookup
+    Number
+}
+impl LlvmTempRegister {
+    pub fn new_register(&self, lookup: &StringEntry) -> String {
+        match self {
+            Self::StaticString(register) => {
+                format!("\t%{} = {}\t\t;LLVM Register for String @ ExprCount {}(variable.rs) ", register, llvm_retrieve_static_string(lookup.length, lookup.index), register)
+            },
+            LlvmTempRegister::Number => {
+                panic!()
+            }
+        }
+    }
+    pub fn store_in_alloca(&self, target: &str) -> String {
+        match self {
+            Self::StaticString(register) => {
+                format!("\tstore i8* %{register}, i8** %{target}\t\t\t\t ; storing item in a stack variable\n")
+            },
+            LlvmTempRegister::Number => panic!()
+        }
+    }
 }

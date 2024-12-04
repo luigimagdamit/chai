@@ -66,7 +66,6 @@ impl<'a>Parser <'a>{
                 DataType::String(str) => {
                     let str_lookup = self.string_table.get(&str).clone();
                     if let Some(lookup_result) = str_lookup {
-                    
                         let tmp_register = LlvmTempRegister::StaticString(self.expr_count);
                         let load_string_codegen = tmp_register.new_register(lookup_result);
                         let cg = format!("{}\t\t\t\t; Printing a string type (expr_pop - register increment by LlvmTempRegister)", load_string_codegen);

@@ -7,6 +7,29 @@ use super::variable::LlvmTempRegister;
 
 
 // all printed items should pass through this!
+
+pub fn print_statement(parser: &mut Parser) {
+    expression(parser);
+    let expr = parser.expr_pop();
+    match &expr.data_type {
+        DataType::Boolean(_) => {
+            let codegen = LlvmCallPrint::Integer(parser.expr_top()).print_i1();
+            parser.emit_instruction(&codegen);
+        }
+        DataType::Integer(_) => {
+            let codegen = LlvmCallPrint::Integer(parser.expr_top()).print_i32();
+            parser.emit_instruction(&codegen);
+        },
+        DataType::String(_) => {
+                let print_inst = LlvmCallPrint::String(parser.expr_top()).call_print();
+                parser.emit_instruction(&print_inst);
+
+        }
+    }
+    parser.expr_count += 1;
+    parser.consume(TokenType::Semicolon, "Expect semicolon after value");
+}
+
 pub enum LlvmCallPrint {
     String(u32), //register value
     Integer(u32),
@@ -35,25 +58,3 @@ impl LlvmCallPrint {
         }
     }
 }
-pub fn print_statement(parser: &mut Parser) {
-    expression(parser);
-    let expr = parser.expr_pop();
-    match &expr.data_type {
-        DataType::Boolean(_) => {
-            let codegen = LlvmCallPrint::Integer(parser.expr_top()).print_i1();
-            parser.emit_instruction(&codegen);
-        }
-        DataType::Integer(_) => {
-            let codegen = LlvmCallPrint::Integer(parser.expr_top()).print_i32();
-            parser.emit_instruction(&codegen);
-        },
-        DataType::String(_) => {
-                let print_inst = LlvmCallPrint::String(parser.expr_top()).call_print();
-                parser.emit_instruction(&print_inst);
-
-        }
-    }
-    parser.expr_count += 1;
-    parser.consume(TokenType::Semicolon, "Expect semicolon after value");
-}
-
