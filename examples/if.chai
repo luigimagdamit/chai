@@ -1,0 +1,21 @@
+fn main() i32 {
+    var a: int = 23;
+    var b: int = 23;
+
+    if (a == b) {
+        print("yuh");
+        if (true) {
+            print("duh");
+            if false {
+                print("hhhh");
+            } else {
+                print("999");
+                print(a);
+                a = 0;
+            }
+        } else {
+            print(9);
+        }
+    }
+    print(a);
+}

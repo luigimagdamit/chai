@@ -1,3 +1,5 @@
+use std::process::id;
+
 use crate::llvm::llvm_string::llvm_retrieve_static_string;
 use crate::parser::parser::{Parser, StringEntry};
 use crate::parser::symbol::{create_new_symbol, get_symbol, set_symbol};
@@ -44,16 +46,16 @@ pub fn variable_declaration(parser: &mut Parser) {
 
 pub fn parse_set_variable(parser: &mut Parser) {
     let identifier = parser.previous.unwrap();
+    println!("{identifier}");
     if parser.match_current(TokenType::Equal) {
-        expression(parser);
-        parser.consume(TokenType::Semicolon, "");
-
+        expression(parser);        
         let expr = parser.expr_pop();
 
         set_symbol(parser, String::from(identifier.start), expr.0);
-        parser.emit_instruction(&"\t\t\t\t\t; parse_set_variable".to_string());
+        
+        parser.consume(TokenType::Semicolon, "");
     } else {
-        panic!("neeed a identigfier expression in parse rule");
+        panic!("uuu");
         //expression(parser);
     }
     // parser.consume(TokenType::Equal, "Expected assignment");

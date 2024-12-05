@@ -1,13 +1,16 @@
 
 use crate::parser::{
     parser::Parser,
-    expression::expr::DataType,
+    conditional::if_statement::if_statement,
     expression::expression::expression,
     declaration::print::print_statement,
     declaration::function::parse_fn_declare,
-    declaration::variable::{variable_declaration, parse_set_variable}
+    declaration::variable::{variable_declaration, parse_set_variable},
+    conditional::while_statement::while_statement
 };
 use crate::scanner::token::TokenType;
+
+use super::declaration::variable::parse_get_variable;
 
 
 pub fn expression_statement(parser: &mut Parser) {
@@ -41,57 +44,18 @@ pub fn declaration(parser: &mut Parser) {
     }
 
 }
-pub fn if_statement(parser: &mut Parser) {
-    // if keyworld already consumed
-    // parse expression
-    expression(parser);
-    if let Some(expr) = parser.constant_stack.pop() {
-        let value = expr.unwrap_or_else(||panic!("Tried evaluation an expression in print_statement, but opened an empty Expr"));
-        match &value.data_type {
-            DataType::Boolean(_) => {
-                let c1 = format!("\t%{} = add {}, 0", parser.expr_count , &value.left);
 
-                parser.emit_instruction(&c1);
-                let branch = format!("\tbr i1 %{}, label %{}, label %{}", parser.expr_count, "then0", "else0");
-                parser.expr_count += 1;
-                println!("{branch}");
-                parser.consume(TokenType::LeftBrace, "message");
-                println!("\nthen0:");
-                while !parser.match_current(TokenType::RightBrace) {
-                    declaration(parser);
-                }
-                
-                println!("\tbr label %end");
-
-                println!("\nelse0:");
-                if parser.match_current(TokenType::Else) {
-                    parser.consume(TokenType::LeftBrace, "message");
-                    
-                    while !parser.match_current(TokenType::RightBrace) {
-                        statement(parser);
-                    }
-                    println!("\tbr label %end");
-                    println!("\nend:")
-                    
-                } else {
-                    println!("\tbr label %end");
-                    println!("\nend:")
-                    
-                }
-                
-
-            }
-            _ => ()
-        }
-    }
-}
 pub fn statement(parser: &mut Parser) {
 
     if parser.match_current(TokenType::Print) {
         print_statement(parser);
     } else if parser.match_current(TokenType::If) {
         if_statement(parser);
-    } 
+    } else if parser.match_current(TokenType::While) {
+        while_statement(parser);
+    } else if parser.match_current(TokenType::Identifier) {
+        parse_get_variable(parser);
+    }
     else {
         expression_statement(parser);
     }

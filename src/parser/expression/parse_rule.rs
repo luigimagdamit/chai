@@ -16,6 +16,7 @@ pub fn get_rule<'a>(token_type: TokenType) -> ParseRule<'a> {
     // println!("GetRule: {}", token_type);
     match token_type {
         // Parentheses 
+
         TokenType::LeftParen => ParseRule {
             prefix: Some(parse_grouping),
             infix: None,

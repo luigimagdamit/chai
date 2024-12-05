@@ -37,9 +37,25 @@ pub struct Parser<'a>{
     pub string_table: HashMap<String, StringEntry>,
     pub symbol_table: HashMap<String, SymbolTableEntry>,
     pub expr_count: u32,
-    pub compilation: String
+    pub compilation: String,
+    pub depth: u32,
 }
 impl<'a>Parser <'a>{
+    pub fn init_parser(source: &'a str) -> Parser<'_> {
+        Parser {
+            current: None,
+            previous: None,
+            scanner: Scanner::init_scanner(source),
+            panic_mode: false,
+            had_error: false,
+            constant_stack: Vec::new(),
+            string_table: HashMap::new(),
+            symbol_table: HashMap::new(),
+            expr_count: 0,
+            compilation: String::from(""),
+            depth: 0
+        }
+    }
     pub fn emit_instruction(&mut self, inst: &String) {
         if EMIT_VERBOSE { println!("{inst}") }
         self.compilation += inst;
@@ -81,7 +97,7 @@ impl<'a>Parser <'a>{
             }
             return (expr, self.expr_top())
         }
-        panic!();
+        panic!("{}", self.current.unwrap().token_type);
     }
     pub fn expr_top(&self) -> u32 {
         self.expr_count - 1
@@ -162,20 +178,7 @@ impl<'a>Parser <'a>{
     fn get_token(&mut self) -> Token<'a> {
         return self.scanner.scan_token()
     }
-    pub fn init_parser(source: &'a str) -> Parser<'_> {
-        Parser {
-            current: None,
-            previous: None,
-            scanner: Scanner::init_scanner(source),
-            panic_mode: false,
-            had_error: false,
-            constant_stack: Vec::new(),
-            string_table: HashMap::new(),
-            symbol_table: HashMap::new(),
-            expr_count: 0,
-            compilation: String::from("")
-        }
-    }
+    
     #[allow(unused)]
     pub fn print_parser(&mut self) {
         if PARSE_FN_OUTPUT {

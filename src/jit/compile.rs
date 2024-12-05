@@ -4,6 +4,27 @@ use std::process::{Command, exit};
 use std::time::{SystemTime, UNIX_EPOCH};
 use crate::llvm::llvm_print::{llvm_fmt_string_int, llvm_main_close, llvm_main_start, llvm_print_bool_declare, llvm_print_define, llvm_print_i32_define};
 use crate::parser::parser::Parser;
+fn chai_title() -> String {
+    String::from(r#"
+⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠿⠿⠿⢿⣿⣿⣽⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠿⣿⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠁⠀⣠⣄⡀⠀⠙⢿⣿⣿⣿⣿⣿⣿⣿⡿⠋⠁⠀⠀⠀⠈⠻⣿⣻⣿⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣟⣿⣿⡿⠁⠀⣰⣾⣿⣿⣿⣦⡀⠀⠛⠛⠛⠛⠛⠛⠁⠀⠀⣰⣿⣿⣿⣦⠀⠀⠺⣿⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣿⡿⠀⠀⣼⣿⣿⣿⣿⣿⣿⣿⣤⣤⢤⢰⢠⡄⡄⣤⣴⣿⣿⣿⣿⣿⣿⣷⡄⠀⢹⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⠿⠧⠄⠸⠿⠿⠿⠿⠿⠿⢿⣿⣿⣿⣿⣿⡿⡷⢟⠿⠿⠿⠿⠿⠿⠿⠿⠿⣿⣤⣼⣿⣿⣿⣿⣿⣿
+⣿⠛⠻⠿⣿⠀⢀⣀⣀⣤⣤⣄⣀⣀⣀⣠⡍⠈⣿⣿⣿⣿⣿⣿⡟⠀⣀⣀⣀⣀⣀⣀⣀⣀⣀⡀⠀⣹⣿⡿⠟⠻⣿
+⣿⣦⣤⣀⣀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠿⠿⠿⠿⠻⠟⠇⠀⢹⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠋⠉⠀⣀⣴⣿
+⠋⠉⠀⠀⢹⠀⢸⣿⣿⠟⠻⣿⣿⣿⣿⣿⡇⠀⣠⣤⣤⣤⣤⣤⣤⠀⢸⣿⣿⣿⣿⡿⠛⢿⣿⣿⠀⠀⠀⠙⠛⠛⢿
+⣷⣾⣿⣿⣿⠀⠘⠿⠿⠤⠤⠿⠛⠛⠛⠛⠁⠀⣿⣻⣿⣿⣿⣿⣿⠀⠈⠛⠛⠛⠿⠧⠤⠼⠿⠇⠀⣼⣶⣶⣶⣤⣼
+⣿⣿⣿⣿⣿⡆⠀⠀⣔⣯⡵⣠⣤⣤⣤⣤⣤⡀⠉⠉⠉⠉⡀⠀⠈⢠⣤⣤⣤⣤⣤⣤⣤⣤⣤⡀⠀⣿⣿⣿⣿⣿⣿
+⣿⣿⡿⣫⣥⣲⣤⣴⣼⣿⣇⣏⠟⠻⠿⠿⢿⣿⠀⠀⠂⠀⠛⠀⢠⣿⣿⣿⣿⣿⣿⣿⡿⠿⠋⠀⣠⣿⣿⣿⣿⣿⣿
+⣿⣟⠀⢿⣿⣿⣿⣿⣼⣿⣿⣿⠇⢤⣤⣀⣠⣿⣦⣤⣤⣶⣤⣤⣾⣿⣿⣿⣿⣿⡁⠀⢀⡀⠀⠀⣿⣿⣿⣿⣿⣿⣿
+⣿⣿⣇⠈⢿⣿⣿⣿⣷⣿⣿⣿⠄⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠛⠁⢀⣴⣿⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣤⡙⢻⡿⣿⠿⢛⠁⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣽⣿⣿⣿⣿⣿⣿⣿⣿⡀⠀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣷⣶⣶⣶⣶⣿⠀⠸⡿⠛⠿⠛⠛⠛⠃⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⣿⠇⠀⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡆⠀⠁⢀⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣴⣦⡀⠀⠀⣠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣯⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+"#)
+}
 
 pub fn jit_compile(source: &str) -> io::Result<String>{
     let parser = &mut Parser::init_parser(source);
@@ -44,7 +65,9 @@ pub fn jit_compile(source: &str) -> io::Result<String>{
                             if out.status.success() {
                                 let stdout = String::from_utf8_lossy(&out.stdout);
                                 let res = stdout.to_string();
+                                
                                 println!("\x1b[33mYou said: \x1b[0m{}", source);
+                                println!("\x1b[32m{} \x1b[0m", chai_title());
                                 println!("\x1b[32mchai says: \x1b[0m{}", &stdout);
                                 Ok(res)
                             } else {
