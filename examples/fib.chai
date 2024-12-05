@@ -1,0 +1,17 @@
+fn main() i32 {
+    var a: int = 0;
+    var b: int = 1;
+
+    var i: int = 0;
+    
+    print(a);
+
+
+    while  (i < 50) {
+        var tmp: int = b;
+        b = a + b;
+        a = tmp;
+        print(tmp);
+        i = i + 1;
+    }
+}
