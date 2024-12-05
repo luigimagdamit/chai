@@ -14,7 +14,7 @@ pub fn while_statement(parser: &mut Parser) {
     // if keyworld already consumed
     // parse expression
     
-    let depth = parser.depth;
+    let depth = parser.expr_count;
     let branch = LlvmConditional::If(depth);
     
     parser.emit_instruction(&branch.while_check_cond(0));

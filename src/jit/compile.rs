@@ -56,6 +56,7 @@ pub fn jit_compile(source: &str) -> io::Result<String>{
                 if output.status.success() {
                     let stdout = String::from_utf8_lossy(&output.stdout);
                     let out_clone = stdout.clone();
+                    println!("\x1b[33mYou said: \x1b[0m{}", source);
                     println!("\x1b[32mSuccessfully compiled!\x1b[0m{}", stdout);
                     let compile_time = compile_end.duration_since(UNIX_EPOCH).unwrap().as_millis() - compile_start.duration_since(UNIX_EPOCH).unwrap().as_millis();
                     println!("\x1b[33mJIT Compile Time: \x1b[0m{}ms\n", compile_time);
@@ -66,7 +67,7 @@ pub fn jit_compile(source: &str) -> io::Result<String>{
                                 let stdout = String::from_utf8_lossy(&out.stdout);
                                 let res = stdout.to_string();
                                 
-                                println!("\x1b[33mYou said: \x1b[0m{}", source);
+                                
                                 println!("\x1b[32m{} \x1b[0m", chai_title());
                                 println!("\x1b[32mchai says: \x1b[0m{}", &stdout);
                                 Ok(res)
