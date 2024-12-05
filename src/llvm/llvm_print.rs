@@ -4,7 +4,7 @@ pub fn llvm_main_start() -> String {
     String::from(codegen)
 }#[allow(unused)]
 pub fn llvm_main_close() -> String {
-    let codegen = "\nret i32 0 ; llvm_main_close\n}";
+    let codegen = "\n\tret i32 0 ; llvm_main_close\n}\n\n";
 
     String::from(codegen)
 }
@@ -20,7 +20,7 @@ pub fn llvm_print_i32_define() -> String {
     %fmt_ptr = getelementptr [4 x i8], [4 x i8]* @fmt, i32 0, i32 0
     call i32 (i8*, ...) @printf(i8* %fmt_ptr, i32 %value)
     ret void
-}";
+}\n";
     println!("{}", codegen);
     String::from(codegen)
 }
@@ -39,12 +39,13 @@ pub fn llvm_call_print_local(index: u32, data_type: &str) -> String {
     codegen
 }
 pub fn llvm_fmt_string_int() -> String{
-    let codegen = ("@fmt = private constant [4 x i8] c\"%d\\0A\\00\"").to_string();
+    let codegen = ("\n\n@fmt = private constant [4 x i8] c\"%d\\0A\\00\"\n").to_string();
     println!("{}", codegen);
     codegen
 }
 
 pub fn llvm_print_bool_declare() -> String {
+    println!("");
     let codegen = r#"define void @print_i1(i1 %b) {
 entry:
     ; Format string to print "true" or "false"

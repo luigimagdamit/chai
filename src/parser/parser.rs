@@ -47,7 +47,7 @@ impl<'a>Parser <'a>{
     }
     pub fn comment(&mut self, comment: &str) {
         if EMIT_VERBOSE { println!("{comment}") }
-        self.compilation += comment;
+        self.compilation += &(";".to_string() + comment);
         self.compilation += &String::from("\n");
     }
     pub fn new_expr(&mut self, expr: Expr) {
@@ -220,6 +220,7 @@ impl<'a>Parser <'a>{
             self.llvm_stdlib();
             self.declaration_mode();
             self.compilation += &llvm_main_close();
+            self.comment("String Constants");
             let strings = self.string_table.values().clone();
             for entry in strings {
                 self.compilation += &(entry.codegen.clone() + &"\n");

@@ -7,16 +7,16 @@ use crate::parser::parser::Parser;
 
 pub fn jit_compile(source: &str) -> io::Result<String>{
     let parser = &mut Parser::init_parser(source);
-        parser.compilation += &llvm_fmt_string_int();
-        parser.compilation += &llvm_print_define();
-        parser.compilation += &llvm_print_i32_define();
-        parser.compilation += &llvm_print_bool_declare();
+
         let compile_start = SystemTime::now();
         parser.compilation += "\n";
         parser.compilation += &llvm_main_start();
         parser.compilation += "\n";
         parser.compile(); // warmup
-
+        parser.compilation += &llvm_fmt_string_int();
+        parser.compilation += &llvm_print_define();
+        parser.compilation += &llvm_print_i32_define();
+        parser.compilation += &llvm_print_bool_declare();
         
         io::stdout().flush().unwrap();
         let mut file = File::create("jit.ll")?;
