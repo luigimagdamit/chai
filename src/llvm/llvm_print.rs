@@ -4,7 +4,7 @@ pub fn llvm_main_start() -> String {
     String::from(codegen)
 }#[allow(unused)]
 pub fn llvm_main_close() -> String {
-    let codegen = "\nret i32 0\n}";
+    let codegen = "\nret i32 0 ; llvm_main_close\n}";
 
     String::from(codegen)
 }

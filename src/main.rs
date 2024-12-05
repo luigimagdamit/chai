@@ -5,7 +5,7 @@ mod common;
 mod llvm;
 mod jit;
 
-use common::flags::{PARSE_DECLARATION_MODE, PARSE_EXPRESSION_MODE};
+use common::flags::{PARSE_DECLARATION_MODE, PARSE_EXPRESSION_MODE, EMIT_VERBOSE};
 
 use parser::parser::Parser;
 use std::io::{self, Write};
@@ -66,6 +66,8 @@ fn main() {
                 let contents = std::fs::read_to_string(s).unwrap();
                 let parser = &mut Parser::init_parser(&contents);
                 parser.compile();
+
+                jit_compile(&contents);
             }
             _ => {}
         }

@@ -199,21 +199,19 @@ impl<'a>Parser <'a>{
         while !self.match_current(TokenType::EOF) {
             declaration(self);   
         }
-        self.compilation += &llvm_main_close();
+        
         for entry in self.string_table.values() {
             println!("{}",entry.codegen);
             self.compilation += &entry.codegen;
         }
+
     }
     pub fn declaration_mode(&mut self) {
         while !self.match_current(TokenType::EOF) {
             declaration(self);   
         }
-        if EMIT_VERBOSE {
-            for entry in self.string_table.values() {
-                println!("{}",entry.codegen);
-            }
-        }
+        
+        
 
     }
     pub fn compile(&mut self) {
@@ -221,11 +219,22 @@ impl<'a>Parser <'a>{
         if !PARSE_EXPRESSION_MODE {
             self.llvm_stdlib();
             self.declaration_mode();
+            self.compilation += &llvm_main_close();
+            let strings = self.string_table.values().clone();
+            for entry in strings {
+                self.compilation += &(entry.codegen.clone() + &"\n");
+                if EMIT_VERBOSE {
+                    println!("{}",entry.codegen);
+                }
+
+            }
+            
         } else {
 
             self.expression_mode();
 
         }
+
     }
 }
 

@@ -16,7 +16,7 @@ pub fn jit_compile(source: &str) -> io::Result<String>{
         parser.compilation += &llvm_main_start();
         parser.compilation += "\n";
         parser.compile(); // warmup
-        // parser.compilation += &llvm_main_close();
+
         
         io::stdout().flush().unwrap();
         let mut file = File::create("jit.ll")?;
