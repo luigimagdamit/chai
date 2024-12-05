@@ -24,8 +24,8 @@ pub fn parse_string(parser: &mut Parser) {
 
             let new_index = parser.string_table.len() - 1;
             let new_str_codegen = string_expr(length, new_index, value, parser.expr_count);
+            parser.comment(&("\t; pushing a new string on the stack ...".to_string() + value));
 
-            parser.emit_instruction(&"\t; pushing a new string on the stack ...".to_string());
             parser.new_expr(new_str_codegen);
         }
     }

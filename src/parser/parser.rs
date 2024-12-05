@@ -45,6 +45,11 @@ impl<'a>Parser <'a>{
         self.compilation += inst;
         self.compilation += &String::from("\n");
     }
+    pub fn comment(&mut self, comment: &str) {
+        if EMIT_VERBOSE { println!("{comment}") }
+        self.compilation += comment;
+        self.compilation += &String::from("\n");
+    }
     pub fn new_expr(&mut self, expr: Expr) {
         self.constant_stack.push(Some(expr));
 
