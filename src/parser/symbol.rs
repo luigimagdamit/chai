@@ -1,4 +1,4 @@
-use super::{expression::expr, parser::{Parser, SymbolTableEntry}, primitives::number::LlvmNumberTag};
+use super::parser::{Parser, SymbolTableEntry};
 use crate::parser::expression::expr::{DataType, Expr};
 
 pub enum LlvmGetVariable {
@@ -46,7 +46,7 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
 // be for setting it after initial assignment
 pub fn set_symbol(parser: &mut Parser, name: String, new_value: Expr) {
     let variable = parser.symbol_table.get(&name).clone().unwrap();
-    println!("set symbol");
+
     let a_type = &variable.variable_type;
     let b_type = &new_value.data_type;
 

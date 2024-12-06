@@ -7,7 +7,7 @@ fn main() i32 {
     print(a);
 
 
-    while  (i < 50) {
+    while  (i < 9) {
         var tmp: int = b;
         b = a + b;
         a = tmp;

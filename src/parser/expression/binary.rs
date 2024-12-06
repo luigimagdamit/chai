@@ -164,8 +164,8 @@ const DIV: &str = "div";
 
 const EQL: &str = "icmp eq";
 const NEQ: &str = "icmp ne";
-const GT: &str = "icmp ugt";
-const GTE: &str = "icmp uge";
-const LT: &str = "icmp ult";
-const LTE: &str = "icmp ule";
+const GT: &str = "icmp sgt";
+const GTE: &str = "icmp sge";
+const LT: &str = "icmp slt";
+const LTE: &str = "icmp sle";
 const BOOL_OPS: [&str; 6] = [EQL, NEQ, GT, GTE, LT, LTE];

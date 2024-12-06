@@ -70,7 +70,7 @@ pub fn jit_compile(source: &str) -> io::Result<String>{
                                 
                                 println!("\x1b[32m{} \x1b[0m", chai_title());
                                 println!("\x1b[32mchai says: \x1b[0m{}", &stdout);
-                                Ok(res)
+                                Ok(stdout.to_string())
                             } else {
                                 panic!()
                             }

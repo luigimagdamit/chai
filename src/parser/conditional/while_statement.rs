@@ -35,17 +35,6 @@ pub fn while_statement(parser: &mut Parser) {
     }
     parser.emit_instruction(&branch.while_check_cond(expr.1));
     parser.emit_instruction(&branch.while_exit());
-    // parser.emit_instruction(&&branch.to_end());
-    // parser.emit_instruction(&branch.else_branch());
-    
-    // if parser.match_current(TokenType::Else) {
-    //     parser.consume(TokenType::LeftBrace, "message");
-    //     while !parser.match_current(TokenType::RightBrace) {
-    //         declaration(parser);
-    //     }
-    // }
-    // parser.emit_instruction(&&branch.to_end());
-    // parser.emit_instruction(&branch.end_branch());
-    // parser.depth -= 1;
+
 
 }

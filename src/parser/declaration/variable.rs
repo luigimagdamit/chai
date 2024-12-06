@@ -1,5 +1,3 @@
-use std::process::id;
-
 use crate::llvm::llvm_string::llvm_retrieve_static_string;
 use crate::parser::parser::{Parser, StringEntry};
 use crate::parser::symbol::{create_new_symbol, get_symbol, set_symbol};
@@ -15,8 +13,8 @@ pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
     match &expr.data_type {
         DataType::Boolean(_) => (),
         DataType::Integer(_) => {
-            let codegen = format!("\tstore i32 %{}, i32* %{}\t\t\t; int variable assignment (variable.rs)\n", parser.expr_top() , var_name);
-            parser.emit_instruction(&codegen);
+            let tmp_register = LlvmTempRegister::Integer(parser.expr_top());
+            parser.emit_instruction(&tmp_register.store_in_alloca(var_name));
             create_new_symbol(parser, var_name.to_string(), expr.data_type);
         },
         DataType::String(_) => {
@@ -46,25 +44,20 @@ pub fn variable_declaration(parser: &mut Parser) {
 
 pub fn parse_set_variable(parser: &mut Parser) {
     let identifier = parser.previous.unwrap();
-    println!("{identifier}");
     if parser.match_current(TokenType::Equal) {
-        expression(parser);        
+        expression(parser);
         let expr = parser.expr_pop();
-
         set_symbol(parser, String::from(identifier.start), expr.0);
-        
         parser.consume(TokenType::Semicolon, "");
     } else {
-        panic!("uuu");
-        //expression(parser);
+        parse_get_variable(parser);
     }
-    // parser.consume(TokenType::Equal, "Expected assignment");
 }
 
 #[allow(unused)]
 pub enum LlvmTempRegister {
     StaticString(u32), // holds string value for lookup
-    Number
+    Integer(u32) // register from exprtop
 }
 impl LlvmTempRegister {
     pub fn new_register(&self, lookup: &StringEntry) -> String {
@@ -72,17 +65,18 @@ impl LlvmTempRegister {
             Self::StaticString(register) => {
                 format!("\t%{} = {}\t\t;LLVM Register for String @ ExprCount {}(variable.rs) ", register, llvm_retrieve_static_string(lookup.length, lookup.index), register)
             },
-            LlvmTempRegister::Number => {
-                panic!()
-            }
+            _ => panic!()
         }
     }
+
     pub fn store_in_alloca(&self, target: &str) -> String {
         match self {
             Self::StaticString(register) => {
                 format!("\tstore i8* %{register}, i8** %{target}\t\t\t\t ; storing item in a stack variable\n")
             },
-            LlvmTempRegister::Number => panic!()
+            LlvmTempRegister::Integer(register) => {
+                format!("\tstore i32 %{}, i32* %{}\t\t\t; int variable assignment (variable.rs)\n", register , target)
+            }
         }
     }
 }
