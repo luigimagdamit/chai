@@ -13,52 +13,62 @@ impl LlvmGetVariable {
 }
 
 pub fn get_symbol(parser: &mut Parser, name: String) {
-    let variable = parser.symbol_table.get(&name).unwrap();
-    let SymbolTableEntry { name: _, count, variable_type } = variable;
+
+    if let Some(variable) = parser.symbol_table.get(&name) {
+        let SymbolTableEntry { name: _, count, variable_type } = variable;
    
-   match variable.variable_type {
-        DataType::Integer(_) => {
-    
-            let codegen = &LlvmLoad::load_i32(&variable.name, *count);
-            let expr_tags = LlvmGetVariable::Integer((variable.name.clone(), *count)).create_tags();
-            
-            parser.new_expr(Expr {
-                left: expr_tags.0,
-                right: expr_tags.1,
-                data_type: variable_type.clone()
-            });
-            parser.emit_instruction(codegen);
-        },
-        DataType::String(_) => {
-            let codegen = &LlvmLoad::load_string(&variable.name, *count);
-            parser.new_expr(Expr {
-                left: format!("%{}_{}", variable.name, count),
-                right: String::from("<__var_string__>"),
-                data_type: variable_type.clone()
-            });
-            parser.emit_instruction(&codegen);
-        }
-        _ => ()
+        match variable.variable_type {
+             DataType::Integer(_) => {
+         
+                 let codegen = &LlvmLoad::load_i32(&variable.name, *count);
+                 let expr_tags = LlvmGetVariable::Integer((variable.name.clone(), *count)).create_tags();
+                 
+                 parser.new_expr(Expr {
+                     left: expr_tags.0,
+                     right: expr_tags.1,
+                     data_type: variable_type.clone()
+                 });
+                 parser.emit_instruction(codegen);
+             },
+             DataType::String(_) => {
+                 let codegen = &LlvmLoad::load_string(&variable.name, *count);
+                 parser.new_expr(Expr {
+                     left: format!("%{}_{}", variable.name, count),
+                     right: String::from("<__var_string__>"),
+                     data_type: variable_type.clone()
+                 });
+                 parser.emit_instruction(&codegen);
+             }
+             _ => ()
+         }
+         parser.symbol_table.get_mut(&name).unwrap().count += 1;
+    } else {
+        parser.error_at_previous("Variable was not declared -");
     }
-    parser.symbol_table.get_mut(&name).unwrap().count += 1;
+
     
 }
 // be for setting it after initial assignment
 pub fn set_symbol(parser: &mut Parser, name: String, new_value: Expr) {
-    let variable = parser.symbol_table.get(&name).clone().unwrap();
 
-    let a_type = &variable.variable_type;
-    let b_type = &new_value.data_type;
+    if let Some(variable) = parser.symbol_table.get(&name).clone() {
+        let a_type = &variable.variable_type;
+        let b_type = &new_value.data_type;
+    
+        if types_equal(&variable.variable_type, &new_value.data_type) {
+            let error_msg = format!("Incompatible variable assignment types - Failed to assign variable {}'s value to an item of type {}", a_type, b_type);
+            parser.error_at(&parser.current.unwrap(), &error_msg)
+        }
+        match &variable.variable_type {
+            DataType::Integer(_) => parser.emit_instruction(&format!("\tstore {}, i32* %{}\t\t ; set symbol (symbol.rs)\n", new_value.left , name)),
+            DataType::String(_) => panic!("set_symbol() not impl for strings"),
+            _ => panic!("set symbol not added for this data type")
+        }
+    } else {
 
-    if types_equal(&variable.variable_type, &new_value.data_type) {
-        let error_msg = format!("Incompatible variable assignment types - Failed to assign variable {}'s value to an item of type {}", a_type, b_type);
-        parser.error_at(&parser.current.unwrap(), &error_msg)
+        parser.error_at_previous(&format!("Variable was not declared when setting {name} to "));
     }
-    match &variable.variable_type {
-        DataType::Integer(_) => parser.emit_instruction(&format!("\tstore {}, i32* %{}\t\t ; set symbol (symbol.rs)\n", new_value.left , name)),
-        DataType::String(_) => panic!("set_symbol() not impl for strings"),
-        _ => panic!("set symbol not added for this data type")
-    }
+
 }
 
 pub fn types_equal(a: &DataType, b: &DataType) -> bool {
