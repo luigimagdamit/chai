@@ -1,17 +1,32 @@
-use crate::parser::expression::expr::{DataType, Expression};
+use crate::parser::expression::expr::{Binary, DataType, Expression};
 use crate::parser::expression::expression::expression;
 use crate::parser::parser::{AstNode, Parser};
 use crate::{llvm::llvm_print::llvm_call_print_local, scanner::token::TokenType};
 use crate::parser::declaration::declaration::{Statement, Declaration};
 use std::fmt;
 
+use super::declaration::PrintStatement;
+
 pub fn print_statement(parser: &mut Parser) {
     expression(parser);
     let expr_ast = parser.ast_stack.pop();
-    if let Some(ast_node) = expr_ast { 
 
-        let stmt = Statement::new_print_statement(ast_node.unpack_expression());
-        println!("{stmt}");
+
+    if let Some(ast_node) = expr_ast { 
+        match ast_node.unpack_expression() {
+            Expression::Binary(b) => {
+                b.llvm_print();
+                let print_statement = Declaration::new_statement(Statement::PrintStatement(PrintStatement {
+                    expression: Expression::Binary(b)
+                }));
+                parser.ast_stack.push(AstNode::Declaration(print_statement));
+            },
+            Expression::Literal(l) => {
+                l.llvm_print(parser.expr_count);
+            }
+            _ => ()
+        }
+
     }
     
     let (expr, top) = parser.expr_pop();
