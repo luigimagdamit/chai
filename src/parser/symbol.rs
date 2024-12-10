@@ -1,5 +1,5 @@
-use super::parser::{Parser, SymbolTableEntry};
-use crate::parser::expression::expr::{DataType, Expr};
+use super::parser::{Parser, SymbolTableEntry, AstNode};
+use crate::parser::expression::expr::{DataType, Expr, Expression};
 
 pub enum LlvmGetVariable {
     Integer((String, usize)) // name of string
@@ -22,12 +22,13 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
          
                  let codegen = &LlvmLoad::load_i32(&variable.name, *count);
                  let expr_tags = LlvmGetVariable::Integer((variable.name.clone(), *count)).create_tags();
-                 
+                 parser.ast_stack.push(AstNode::new_expression(Expression::Literal(variable_type.clone())));
                  parser.new_expr(Expr {
                      left: expr_tags.0,
                      right: expr_tags.1,
                      data_type: variable_type.clone()
                  });
+                 
                  parser.emit_instruction(codegen);
              },
              DataType::String(_) => {

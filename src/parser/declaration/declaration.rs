@@ -17,7 +17,7 @@ impl Statement {
 impl fmt::Display for Statement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Statement::PrintStatement(expr) => write!(f, "Print Statement => \n  | {}", expr.expression)
+            Statement::PrintStatement(expr) => write!(f, "\nPrint Statement => \n  | {}", expr.expression)
         }
     }
 }

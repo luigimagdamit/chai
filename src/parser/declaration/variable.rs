@@ -1,5 +1,5 @@
 use crate::llvm::llvm_string::llvm_retrieve_static_string;
-use crate::parser::parser::{Parser, StringEntry};
+use crate::parser::parser::{AstNode, Parser, StringEntry};
 use crate::parser::symbol::{create_new_symbol, get_symbol, set_symbol};
 use crate::parser::parse_fn::convert_type_tag;
 use crate::parser::expression::expression::expression;
@@ -16,6 +16,7 @@ pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
         DataType::Integer(_) => {
             let tmp_register = LlvmTempRegister::Integer(parser.expr_top());
             parser.emit_instruction(&tmp_register.store_in_alloca(var_name));
+            
             create_new_symbol(parser, var_name.to_string(), expr.data_type);
         },
         DataType::String(_) => {

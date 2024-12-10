@@ -39,19 +39,19 @@ impl fmt::Display for Operation {
 }
 #[derive(Clone)]
 pub struct Binary {
-    left: DataType,
-    right: DataType,
+    left: Box<Expression>,
+    right: Box<Expression>,
     operator: Operation
 
 }
 impl Binary {
-    pub fn new(left: DataType, right: DataType, operator: Operation) -> Binary {
-        Binary {left, right, operator}
+    pub fn new(left: Expression, right: Expression, operator: Operation) -> Binary {
+        Binary {left: Box::new(left), right: Box::new(right), operator}
     }
 }
 impl fmt::Display for Binary {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "left: {}, right: {}, operation: {}", self.left, self.right, self.operator)
+        write!(f, "<{} {} {}>", self.left, self.right, self.operator)
     }
 }
 #[derive(Clone)]
@@ -63,18 +63,24 @@ pub enum Expression {
 }
 
 impl Expression {
-    pub fn new_binary(left: DataType, right: DataType, operator: Operation) -> Expression {
+    pub fn new_binary(left: Expression, right: Expression, operator: Operation) -> Expression {
         Expression::Binary(Binary::new(left, right, operator))
     }
     pub fn new_literal(literal: DataType) -> Expression{
         Expression::Literal(literal)
     }
+    pub fn unwrap_literal(&self) -> &DataType {
+        match self {
+            Expression::Literal(datatype) => datatype,
+            _ => panic!()
+        }
+    }
 }
 impl fmt::Display for Expression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Expression::Binary(b) => write!(f, "Binary AST: {b}"),
-            Expression::Literal(l) => write!(f, "Literal AST: {l}"),
+            Expression::Binary(b) => write!(f, "\n{b}"),
+            Expression::Literal(l) => write!(f, "{l}"),
             _ => write!(f, "")
         }
     }
