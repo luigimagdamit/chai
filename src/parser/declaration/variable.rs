@@ -3,13 +3,14 @@ use crate::parser::parser::{Parser, StringEntry};
 use crate::parser::symbol::{create_new_symbol, get_symbol, set_symbol};
 use crate::parser::parse_fn::convert_type_tag;
 use crate::parser::expression::expression::expression;
-use crate::parser::expression::expr::DataType;
+use crate::parser::expression::expr::{DataType, Expression, ParseError};
 use crate::scanner::token::TokenType;
 
 // evaluate an expression, then assign the expression at the location of the local variable with store
 pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
     expression(parser);
     let (expr, _) = parser.expr_pop();
+    parser.ast_stack.pop();
     match &expr.data_type {
         DataType::Boolean(_) => (),
         DataType::Integer(_) => {
@@ -86,7 +87,8 @@ pub fn parse_variable_name(parser: &mut Parser, err_msg: &str) -> String {
     String::from(parser.previous.unwrap().start)
 }
 
-pub fn parse_get_variable(parser: &mut Parser) {
+pub fn parse_get_variable(parser: &mut Parser) -> Result<Expression, ParseError>{
     let value = parser.previous.unwrap();
     get_symbol(parser, String::from(value.start));
+    Ok(Expression::Empty)
 }

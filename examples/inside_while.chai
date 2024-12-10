@@ -1,4 +1,4 @@
-fn main() i32 {
+
     var a: int = 0;
     var b: int = 0;
 
@@ -12,4 +12,3 @@ fn main() i32 {
         b = 0;
         print("yup");
     }
-}

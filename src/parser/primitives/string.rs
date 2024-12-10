@@ -1,8 +1,9 @@
 use super::super::parser::{Parser, StringEntry};
 use super::super::expression::expr::{DataType, Expr};
 use crate::llvm::llvm_string::*;
+use crate::parser::expression::expr::{Expression, ParseError};
 
-pub fn parse_string(parser: &mut Parser) {
+pub fn parse_string(parser: &mut Parser) -> Result<Expression, ParseError> {
     let value = parser.previous.unwrap().start;
     let length = value.len() ;
 
@@ -29,6 +30,7 @@ pub fn parse_string(parser: &mut Parser) {
             parser.new_expr(new_str_codegen);
         }
     }
+    Ok(Expression::Literal(DataType::String("()".to_string())))
 }
 fn string_expr(str_length: usize, str_index: usize, str_value: &str, _register: u32) -> Expr {
     let codegen = llvm_retrieve_static_string(str_length, str_index);

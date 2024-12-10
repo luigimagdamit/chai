@@ -1,4 +1,4 @@
-fn main() {
+
     print(true);
     print(false);
 
@@ -13,4 +13,3 @@ fn main() {
     
     print(false != true);
     print(false != false);
-}

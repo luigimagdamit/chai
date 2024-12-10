@@ -1,7 +1,10 @@
+
+
 use super::super::parser::Parser;
-use crate::parser::expression::expr::{Expr, DataType};
+use crate::parser::expression::expr::{DataType, Expr, Expression, ParseError};
 
 
+use crate::parser::parser::AstNode;
 use crate::scanner::token::TokenType;
 fn create_boolean(parser: &mut Parser, token_type: TokenType) {
     match token_type {
@@ -10,14 +13,30 @@ fn create_boolean(parser: &mut Parser, token_type: TokenType) {
         _ => ()
     }
 }
-pub fn parse_literal(parser: &mut Parser) {
+pub fn parse_literal(parser: &mut Parser) -> Result<Expression, ParseError> {
     if let Some(prev) = parser.previous {
         match prev.token_type {
-            TokenType::False => create_boolean(parser, TokenType::False),
-            TokenType::True => create_boolean(parser, TokenType::True),
-            _ => parser.error_at_previous(LITERAL_ERROR),
+            TokenType::False => {
+                create_boolean(parser, TokenType::False);
+                let false_expr = Expression::new_literal(DataType::Boolean(false));
+                parser.ast_stack.push(AstNode::new_expression(false_expr.clone()));
+                Ok(false_expr)
+            },
+            TokenType::True => {
+                create_boolean(parser, TokenType::True);
+                let true_expr = Expression::new_literal(DataType::Boolean(true));
+                parser.ast_stack.push(AstNode::new_expression(true_expr.clone()));
+                Ok(true_expr)
+            },
+            _ => {
+                parser.error_at_previous(LITERAL_ERROR);
+                Err(ParseError::Generic)
+            },
         }
+    } else {
+        Err(ParseError::Generic)
     }
+    
 }
 
 // Helper functions

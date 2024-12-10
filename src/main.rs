@@ -64,7 +64,7 @@ fn main() {
 
                 let contents = std::fs::read_to_string(s).unwrap();
                 let parser = &mut Parser::init_parser(&contents);
-                parser.compile();
+
 
                 jit_compile(&contents);
             }

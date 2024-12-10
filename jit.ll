@@ -2,59 +2,44 @@
 define i32 @main() {
 entry:
 
-	%a = alloca i32
-	%0 = add i32 0, 0				; expr_pop
-	store i32 %0, i32* %a			; int variable assignment (variable.rs)
+	%0 = add i1 1, 0				; expr_pop
+	call void @print_i1(i1 %0)
 
-	%b = alloca i32
-	%1 = add i32 1, 0				; expr_pop
-	store i32 %1, i32* %b			; int variable assignment (variable.rs)
+	%2 = add i1 0, 0				; expr_pop
+	call void @print_i1(i1 %2)
 
-	%i = alloca i32
-	%2 = add i32 0, 0				; expr_pop
-	store i32 %2, i32* %i			; int variable assignment (variable.rs)
+	%4 = icmp eq i1 1, 1
+	%5 = add i1 %4, 0				; expr_pop
+	call void @print_i1(i1 %5)
 
-	%a_0 = load i32, i32* %a 			 ; LlvmLoad load_i32
-	%3 = add i32 %a_0, 0				; expr_pop
-	call void @print_i32(i32 %3)
+	%7 = icmp eq i1 0, 0
+	%8 = add i1 %7, 0				; expr_pop
+	call void @print_i1(i1 %8)
 
-	br label %cond5
+	%10 = icmp eq i1 1, 0
+	%11 = add i1 %10, 0				; expr_pop
+	call void @print_i1(i1 %11)
 
-cond5:
-	%i_0 = load i32, i32* %i 			 ; LlvmLoad load_i32
-	%5 = icmp slt i32 %i_0, 9
-;depth: 5
-	%6 = add i1 %5, 0				; expr_pop
-	br i1 %6, label %body5, label %exit5
+	%13 = icmp eq i1 0, 1
+	%14 = add i1 %13, 0				; expr_pop
+	call void @print_i1(i1 %14)
 
-body5:
-	%tmp = alloca i32
-	%b_0 = load i32, i32* %b 			 ; LlvmLoad load_i32
-	%7 = add i32 %b_0, 0				; expr_pop
-	store i32 %7, i32* %tmp			; int variable assignment (variable.rs)
+	%16 = icmp ne i1 1, 0
+	%17 = add i1 %16, 0				; expr_pop
+	call void @print_i1(i1 %17)
 
-	%a_1 = load i32, i32* %a 			 ; LlvmLoad load_i32
-	%b_1 = load i32, i32* %b 			 ; LlvmLoad load_i32
-	%8 = add i32 %a_1, %b_1
-	%9 = add i32 %8, 0				; expr_pop
-	store i32 %8, i32* %b		 ; set symbol (symbol.rs)
+	%19 = icmp ne i1 1, 1
+	%20 = add i1 %19, 0				; expr_pop
+	call void @print_i1(i1 %20)
 
-	%tmp_0 = load i32, i32* %tmp 			 ; LlvmLoad load_i32
-	%10 = add i32 %tmp_0, 0				; expr_pop
-	store i32 %tmp_0, i32* %a		 ; set symbol (symbol.rs)
+	%22 = icmp ne i1 0, 1
+	%23 = add i1 %22, 0				; expr_pop
+	call void @print_i1(i1 %23)
 
-	%tmp_1 = load i32, i32* %tmp 			 ; LlvmLoad load_i32
-	%11 = add i32 %tmp_1, 0				; expr_pop
-	call void @print_i32(i32 %11)
+	%25 = icmp ne i1 0, 0
+	%26 = add i1 %25, 0				; expr_pop
+	call void @print_i1(i1 %26)
 
-	%i_1 = load i32, i32* %i 			 ; LlvmLoad load_i32
-	%13 = add i32 %i_1, 1
-	%14 = add i32 %13, 0				; expr_pop
-	store i32 %13, i32* %i		 ; set symbol (symbol.rs)
-
-	br label %cond5
-
-exit5:
 
 	ret i32 0 ; llvm_main_close
 }

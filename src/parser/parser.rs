@@ -1,18 +1,19 @@
 use std::collections::HashMap;
 use std::process::exit;
-
+use std::fmt;
 use crate::common::flags::{EMIT_VERBOSE, PARSE_EXPRESSION_MODE, PARSE_FN_OUTPUT, PARSE_SUPRESS_PREDEFINES, PARSE_TOKEN_OUTPUT};
 use crate::scanner::{
     token::{Token, TokenType},
     scanner::Scanner
 };
-
+use crate::parser::declaration::declaration::{Statement, Declaration};
 use crate::common::error::ErrorCode;
 use crate::parser::expression::expr::Expr;
 use crate::llvm::llvm_print::{llvm_fmt_string_int, llvm_main_close, llvm_print_bool_declare, llvm_print_define, llvm_print_i32_define};
 use crate::parser::parse_fn::declaration;
 use crate::parser::declaration::variable::LlvmTempRegister;
-use super::expression::expr::DataType;
+
+use super::expression::expr::{DataType, Expression};
 #[allow(unused)]
 pub struct StringEntry {
     pub codegen: String,
@@ -24,6 +25,30 @@ pub struct SymbolTableEntry {
     pub count: usize,
     pub variable_type: DataType
 }
+pub enum AstNode {
+    Declaration(Declaration),
+    Expression(Expression)
+}
+impl AstNode {
+    pub fn new_expression(expression: Expression) -> AstNode {
+        AstNode::Expression(expression)
+    }
+    pub fn unpack_expression(self) -> Expression {
+        match self {
+            AstNode::Expression(expr) => expr,
+            _ => Expression::Empty
+        }
+    }
+
+}
+impl fmt::Display for AstNode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            AstNode::Declaration(_) => write!(f, "todo: declaration ast"),
+            AstNode::Expression(e) => write!(f, "AstNode: Expression => {e}")
+        }
+    }
+}
 #[allow(unused)]
 pub struct Parser<'a>{
     pub current: Option<Token<'a>>,
@@ -34,6 +59,7 @@ pub struct Parser<'a>{
     // pub left_hand: Option<Expr>,
     // pub right_hand: Option<Expr>
     pub constant_stack: Vec<Option<Expr>>,
+    pub ast_stack: Vec<AstNode>,
     pub string_table: HashMap<String, StringEntry>,
     pub symbol_table: HashMap<String, SymbolTableEntry>,
     pub expr_count: u32,
@@ -49,6 +75,7 @@ impl<'a>Parser <'a>{
             panic_mode: false,
             had_error: false,
             constant_stack: Vec::new(),
+            ast_stack: Vec::new(),
             string_table: HashMap::new(),
             symbol_table: HashMap::new(),
             expr_count: 0,

@@ -21,7 +21,7 @@ pub fn llvm_print_i32_define() -> String {
     call i32 (i8*, ...) @printf(i8* %fmt_ptr, i32 %value)
     ret void
 }\n";
-    println!("{}", codegen);
+
     String::from(codegen)
 }
 #[allow(unused)]
@@ -30,7 +30,7 @@ pub fn llvm_call_print(index: u32, data_type: &str) {
         "    %result = call {} @{}()
     call void @print_{}({} %result)
 ", data_type, index, data_type, data_type);
-    println!("{}", codegen);
+
 }
 pub fn llvm_call_print_local(index: u32, data_type: &str) -> String {
     let codegen = format!(
@@ -40,7 +40,7 @@ pub fn llvm_call_print_local(index: u32, data_type: &str) -> String {
 }
 pub fn llvm_fmt_string_int() -> String{
     let codegen = ("\n\n@fmt = private constant [4 x i8] c\"%d\\0A\\00\"\n").to_string();
-    println!("{}", codegen);
+
     codegen
 }
 
@@ -78,6 +78,6 @@ done:
     ret void
 }"#;
 
-    println!("{}", codegen);
+
     String::from(codegen)
 }

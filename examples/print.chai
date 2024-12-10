@@ -1,4 +1,4 @@
-fn main() i32 {
+
     print("hello world!");
     print("this is chai");
 
@@ -11,4 +11,3 @@ fn main() i32 {
     print(2 == 3);
 
     print("okay shutting down now");
-}
