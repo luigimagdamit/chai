@@ -10,6 +10,22 @@ pub enum DataType {
     String(String),
     Boolean(bool)
 }
+// Turn an i32 integer into a DataType::Integer
+impl From<i32> for DataType {
+    fn from(item: i32) -> DataType {
+        DataType::Integer(item)
+    } 
+}
+impl From<String> for DataType {
+    fn from(item: String) -> DataType {
+        DataType::String(item)
+    }
+}
+impl From<bool> for DataType {
+    fn from(item: bool) -> DataType {
+        DataType::Boolean(item)
+    }
+}
 impl DataType {
     pub fn llvm_print(&self, expr_count: u32) {
         match self {
@@ -96,7 +112,7 @@ pub fn resolve_operand(expression: Expression) -> String {
     }
 }
 pub fn resolve_binary(binary: &Binary) -> String {
-    let tag = if is_boolean_op(binary.clone().operator) {"i1" } else {"i32"};
+    let tag = if is_boolean_op(binary.clone().operator) {"needs to detect type of operands" } else {"i32"};
     let mut codegen = format!("{} {tag} ", binary.operator);
     codegen += &resolve_operand(*binary.clone().left);
     codegen += &(", ".to_string() + &resolve_operand(*binary.clone().right));

@@ -35,7 +35,7 @@ pub fn print_statement(parser: &mut Parser) {
         DataType::Integer(_) => parser.emit_instruction(&LlvmCallPrint::Integer(top).print_i32()),
         DataType::String (_) => parser.emit_instruction(&LlvmCallPrint::String(top).call_print())
     }
-    parser.expr_count += 1;
+
     parser.consume(TokenType::Semicolon, "Expect semicolon after value");
 }
 
