@@ -19,10 +19,9 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
    
         match variable.variable_type {
              DataType::Integer(_) => {
-         
                  let codegen = &LlvmLoad::load_i32(&variable.name, *count);
                  let expr_tags = LlvmGetVariable::Integer((variable.name.clone(), *count)).create_tags();
-                 parser.ast_stack.push(AstNode::new_expression(Expression::Literal(variable_type.clone())));
+                 parser.ast_stack.push(AstNode::from_expression(Expression::Literal(variable_type.clone())));
                  parser.new_expr(Expr {
                      left: expr_tags.0,
                      right: expr_tags.1,

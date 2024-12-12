@@ -3,9 +3,7 @@ use crate::parser::expression::expression::expression;
 use crate::parser::parser::{AstNode, Parser};
 use crate::{llvm::llvm_print::llvm_call_print_local, scanner::token::TokenType};
 use crate::parser::declaration::declaration::{Statement, Declaration};
-use std::fmt;
 
-use super::declaration::PrintStatement;
 
 pub fn print_statement(parser: &mut Parser) {
     expression(parser);
@@ -13,28 +11,27 @@ pub fn print_statement(parser: &mut Parser) {
 
 
     if let Some(ast_node) = expr_ast { 
-        match ast_node.unpack_expression() {
+        match ast_node.to_expression() {
             Expression::Binary(b) => {
-                b.llvm_print();
-                let print_statement = Declaration::new_statement(Statement::PrintStatement(PrintStatement {
-                    expression: Expression::Binary(b)
-                }));
-                parser.ast_stack.push(AstNode::Declaration(print_statement));
+                parser.emit_instruction(&b.llvm_print());
+                parser.ast_stack.push(AstNode::from(Statement::new_print_statement(Expression::from(b))));
             },
             Expression::Literal(l) => {
-                l.llvm_print(parser.expr_count);
+                parser.emit_instruction(&l.llvm_print(parser.expr_count));
+                parser.ast_stack.push(AstNode::from(Statement::new_print_statement(Expression::from(l))));
             }
             _ => ()
         }
 
     }
-    
-    let (expr, top) = parser.expr_pop();
-    match &expr.data_type {
-        DataType::Boolean(_) => parser.emit_instruction(&LlvmCallPrint::Integer(top).print_i1()),
-        DataType::Integer(_) => parser.emit_instruction(&LlvmCallPrint::Integer(top).print_i32()),
-        DataType::String (_) => parser.emit_instruction(&LlvmCallPrint::String(top).call_print())
-    }
+    parser.expr_count += 1;
+
+    // let (expr, top) = parser.expr_pop();
+    // match &expr.data_type {
+    //     DataType::Boolean(_) => parser.emit_instruction(&LlvmCallPrint::Integer(top).print_i1()),
+    //     DataType::Integer(_) => parser.emit_instruction(&LlvmCallPrint::Integer(top).print_i32()),
+    //     DataType::String (_) => parser.emit_instruction(&LlvmCallPrint::String(top).call_print())
+    // }
 
     parser.consume(TokenType::Semicolon, "Expect semicolon after value");
 }

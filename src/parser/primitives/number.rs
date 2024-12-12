@@ -12,7 +12,7 @@ pub fn parse_number(parser: &mut Parser) -> Result<Expression, ParseError> {
 
     parser.constant_stack.push(Some(number_leaf.clone()));
     let expr_ast = Expression::Literal(number_leaf.data_type);
-    parser.ast_stack.push(AstNode::new_expression(expr_ast.clone()));
+    parser.ast_stack.push(AstNode::from_expression(expr_ast.clone()));
     Ok(expr_ast)
 }
 

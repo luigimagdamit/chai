@@ -30,16 +30,26 @@ pub enum AstNode {
     Expression(Expression)
 }
 impl AstNode {
-    pub fn new_expression(expression: Expression) -> AstNode {
+    pub fn from_expression(expression: Expression) -> AstNode {
         AstNode::Expression(expression)
     }
-    pub fn unpack_expression(self) -> Expression {
+    pub fn to_expression(self) -> Expression {
         match self {
             AstNode::Expression(expr) => expr,
             _ => Expression::Empty
         }
     }
 
+}
+impl From<Declaration> for AstNode {
+    fn from(value: Declaration) -> Self {
+        AstNode::Declaration(value)
+    }
+}
+impl From<Statement> for AstNode {
+    fn from(value: Statement) -> Self {
+        AstNode::Declaration(Declaration::Statement(value))
+    }
 }
 impl fmt::Display for AstNode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

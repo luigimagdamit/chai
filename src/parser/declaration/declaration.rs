@@ -4,8 +4,20 @@ use crate::parser::expression::expr::Expression;
 pub struct PrintStatement {
     pub expression: Expression
 }
+impl From<Expression> for PrintStatement {
+    fn from(expression: Expression) -> Self {
+        PrintStatement {
+            expression
+        }
+    }
+}
 pub enum Statement {
     PrintStatement(PrintStatement)
+}
+impl From<PrintStatement> for Statement {
+    fn from(print_statement: PrintStatement) -> Statement {
+        Statement::PrintStatement(print_statement)
+    }
 }
 impl Statement {
     pub fn new_print_statement(expression: Expression) -> Statement{

@@ -18,14 +18,14 @@ pub fn parse_literal(parser: &mut Parser) -> Result<Expression, ParseError> {
         match prev.token_type {
             TokenType::False => {
                 create_boolean(parser, TokenType::False);
-                let false_expr = Expression::new_literal(DataType::Boolean(false));
-                parser.ast_stack.push(AstNode::new_expression(false_expr.clone()));
+                let false_expr = Expression::from_literal(DataType::Boolean(false));
+                parser.ast_stack.push(AstNode::from_expression(false_expr.clone()));
                 Ok(false_expr)
             },
             TokenType::True => {
                 create_boolean(parser, TokenType::True);
-                let true_expr = Expression::new_literal(DataType::Boolean(true));
-                parser.ast_stack.push(AstNode::new_expression(true_expr.clone()));
+                let true_expr = Expression::from_literal(DataType::Boolean(true));
+                parser.ast_stack.push(AstNode::from_expression(true_expr.clone()));
                 Ok(true_expr)
             },
             _ => {

@@ -1,6 +1,6 @@
 use crate::parser::parser::AstNode;
 use super::{
-    super::{expression::expression::parse_precedence, parser::Parser}, expr::{resolve_binary, DataType, Expr, ParseError}, precedence::Precedence
+    super::{expression::expression::parse_precedence, parser::Parser}, expr::{DataType, Expr, ParseError}, precedence::Precedence
 };
 use crate::parser::expression::expr::{Expression, Operation};
 use crate::parser::expression::parse_rule::get_rule;
@@ -68,8 +68,8 @@ fn binary_op(parser: &mut Parser, operator: fn(i32, i32) -> i32, instruction: Op
         _ => { "i1" }
     };
             
-    let b_ast = parser.ast_stack.pop().unwrap().unpack_expression();
-    let a_ast = parser.ast_stack.pop().unwrap().unpack_expression();
+    let b_ast = parser.ast_stack.pop().unwrap().to_expression();
+    let a_ast = parser.ast_stack.pop().unwrap().to_expression();
     match (operands.0.data_type.clone(), operands.1.data_type.clone()) {
         (DataType::Integer(a), DataType::Integer(b)) => {
             let calculation = operator(a, b);
