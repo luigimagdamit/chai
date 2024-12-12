@@ -7,32 +7,41 @@ use crate::parser::declaration::declaration::{Statement, Declaration};
 
 pub fn print_statement(parser: &mut Parser) {
     expression(parser);
-    let expr_ast = parser.ast_stack.pop();
+    let ast_mode = false;
+    // =====================================================
+    if ast_mode {
+        let expr_ast = parser.ast_stack.pop();
 
-
-    if let Some(ast_node) = expr_ast { 
-        match ast_node.to_expression() {
-            Expression::Binary(b) => {
-                parser.emit_instruction(&b.llvm_print());
-                parser.ast_stack.push(AstNode::from(Statement::new_print_statement(Expression::from(b))));
-            },
-            Expression::Literal(l) => {
-                parser.emit_instruction(&l.llvm_print(parser.expr_count));
-                parser.ast_stack.push(AstNode::from(Statement::new_print_statement(Expression::from(l))));
+        if let Some(ast_node) = expr_ast { 
+            match ast_node.to_expression() {
+                Expression::Binary(b) => {
+                    parser.emit_instruction(&b.print());
+                    parser.ast_stack.push(AstNode::from(Statement::new_print_statement(Expression::from(b))));
+                },
+                Expression::Literal(l) => {
+                    parser.emit_instruction(&l.print(parser.expr_count));
+                    parser.ast_stack.push(AstNode::from(Statement::new_print_statement(Expression::from(l))));
+                }
+                _ => ()
             }
-            _ => ()
+    
         }
-
+    } else {
+        let (expr, top) = parser.expr_pop();
+        match &expr.data_type {
+            DataType::Boolean(_) => parser.emit_instruction(&LlvmCallPrint::Integer(top).print_i1()),
+            DataType::Integer(_) => parser.emit_instruction(&LlvmCallPrint::Integer(top).print_i32()),
+            DataType::String (_) => parser.emit_instruction(&LlvmCallPrint::String(top).call_print())
+        }
     }
-    parser.expr_count += 1;
 
-    // let (expr, top) = parser.expr_pop();
-    // match &expr.data_type {
-    //     DataType::Boolean(_) => parser.emit_instruction(&LlvmCallPrint::Integer(top).print_i1()),
-    //     DataType::Integer(_) => parser.emit_instruction(&LlvmCallPrint::Integer(top).print_i32()),
-    //     DataType::String (_) => parser.emit_instruction(&LlvmCallPrint::String(top).call_print())
-    // }
+    
 
+    // =====================================================
+
+
+
+    //======================================================
     parser.consume(TokenType::Semicolon, "Expect semicolon after value");
 }
 
