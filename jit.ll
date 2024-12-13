@@ -5,8 +5,6 @@ entry:
 	%i = alloca i32
 	%0 = add i32 20, 20
 	%1 = add i32 %0, 0				; expr_pop
-	store i32 %1, i32* %i			; int variable assignment (variable.rs)
-
 
 	ret i32 0 ; llvm_main_close
 }

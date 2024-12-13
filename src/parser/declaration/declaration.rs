@@ -70,6 +70,13 @@ impl VariableDeclaration {
             _ => panic!()
         }
     }
+    pub fn as_datatype(&self) -> DataType {
+        if let Some(expr) = &self.expression {
+            expr.as_datatype()
+        } else {
+            panic!()
+        }
+    }
 }
 
 #[derive(Clone)]

@@ -12,14 +12,20 @@ use super::declaration::Declaration;
 pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
     expression(parser);
     let (expr, _) = parser.expr_pop();
-    let expr_ast = parser.ast_stack.pop().unwrap();
+
+    if let Some(expr_ast) = parser.ast_stack.pop() {
+        let test = Declaration::new_variable(var_name.to_string(), Some(expr_ast.clone().to_expression()), expr_ast.to_expression().as_datatype());
+        println!("{test}");
+        test.as_variable().create_variable();
+        test.as_variable().store();
+        create_new_symbol(parser, var_name.to_string(), test.as_variable().as_datatype());
+        parser.print_symbols();
+    }
+    
     match &expr.data_type {
         DataType::Boolean(_) => (),
         DataType::Integer(_) => {
-            let test = Declaration::new_variable(var_name.to_string(), Some(expr_ast.clone().to_expression()), expr_ast.to_expression().as_datatype());
-            println!("{test}");
-            test.as_variable().create_variable();
-            test.as_variable().store();
+            
             let tmp_register = LlvmTempRegister::Integer(parser.expr_top());
             parser.emit_instruction(&tmp_register.store_in_alloca(var_name));
             

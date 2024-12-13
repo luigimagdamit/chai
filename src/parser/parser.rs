@@ -95,6 +95,11 @@ impl<'a>Parser <'a>{
             depth: 0
         }
     }
+    pub fn print_symbols(&self) {
+        for (key, value) in &self.symbol_table {
+            println!("{}: {}", key, value.variable_type);
+        }
+    }
     pub fn emit_instruction(&mut self, inst: &String) {
         if EMIT_VERBOSE { println!("{inst}") }
         self.compilation += inst;
