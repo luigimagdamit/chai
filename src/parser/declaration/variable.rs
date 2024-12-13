@@ -6,14 +6,20 @@ use crate::parser::expression::expression::expression;
 use crate::parser::expression::expr::{DataType, Expression, ParseError};
 use crate::scanner::token::TokenType;
 
+use super::declaration::Declaration;
+
 // evaluate an expression, then assign the expression at the location of the local variable with store
 pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
     expression(parser);
     let (expr, _) = parser.expr_pop();
-    parser.ast_stack.pop();
+    let expr_ast = parser.ast_stack.pop().unwrap();
     match &expr.data_type {
         DataType::Boolean(_) => (),
         DataType::Integer(_) => {
+            let test = Declaration::new_variable(var_name.to_string(), Some(expr_ast.clone().to_expression()), expr_ast.to_expression().as_datatype());
+            println!("{test}");
+            test.as_variable().create_variable();
+            test.as_variable().store();
             let tmp_register = LlvmTempRegister::Integer(parser.expr_top());
             parser.emit_instruction(&tmp_register.store_in_alloca(var_name));
             

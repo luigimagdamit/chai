@@ -78,11 +78,11 @@ impl fmt::Display for Operation {
             Operation::Mul => write!(f, "mul"),
             Operation::Div => write!(f, "div"),
             Operation::Equal => write!(f, "icmp eq"),
-            Operation::NotEqual => write!(f, "N.EQ"),
-            Operation::GreaterEqual => write!(f, "GR.EQ"),
-            Operation::GreaterThan => write!(f, "GR.TH"),
-            Operation::LessEqual => write!(f, "LE.EQ"),
-            Operation::LessThan => write!(f, "LE.TH")
+            Operation::NotEqual => write!(f, "icmp ne"),
+            Operation::GreaterEqual => write!(f, "icmp sge"),
+            Operation::GreaterThan => write!(f, "icmp sgt"),
+            Operation::LessEqual => write!(f, "icmp sle"),
+            Operation::LessThan => write!(f, "icmp slt")
         }
     }
 }
@@ -95,6 +95,11 @@ pub struct Binary {
     operator: Operation,
     register: String,
     datatype: DataType
+}
+impl fmt::Display for Binary {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "<{} {} {}>", self.left, self.right, self.operator)
+    }
 }
 impl Binary {
     pub fn new(left: Expression, right: Expression, operator: Operation, register: &str, datatype: DataType) -> Binary {
@@ -114,17 +119,16 @@ impl Binary {
     pub fn get_right(&self) -> Expression {
         *self.right.clone()
     }
+    pub fn as_datatype(&self) -> &DataType{
+        &self.datatype
+    }
 }
 pub fn convert_bool(b: bool) -> u32 {
     if b {1} else {0}
 }
 
 
-impl fmt::Display for Binary {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "<{} {} {}>", self.left, self.right, self.operator)
-    }
-}
+
 #[derive(Clone)]
 pub enum Expression {
     Literal(DataType),
@@ -193,9 +197,16 @@ impl Expression {
     pub fn from_literal(literal: DataType) -> Expression{
         Expression::Literal(literal)
     }
-    pub fn as_datatype(&self) -> &DataType {
+    pub fn as_datatype(&self) -> DataType {
         match self {
-            Expression::Literal(datatype) => datatype,
+            Expression::Literal(datatype) => datatype.clone(),
+            Expression::Binary(binary) => binary.datatype.clone(),
+            _ => panic!()
+        }
+    }
+    pub fn type_tag(&self) -> &str {
+        match self.as_datatype() {
+            DataType::Integer(int) => "i32",
             _ => panic!()
         }
     }

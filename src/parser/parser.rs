@@ -25,6 +25,8 @@ pub struct SymbolTableEntry {
     pub count: usize,
     pub variable_type: DataType
 }
+
+#[derive(Clone)]
 pub enum AstNode {
     Declaration(Declaration),
     Expression(Expression)

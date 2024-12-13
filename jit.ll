@@ -2,43 +2,10 @@
 define i32 @main() {
 entry:
 
-	%0 = add i1 1, 0				; expr_pop
-	call void @print_i1(i1 %0)
-
-	%1 = add i1 0, 0				; expr_pop
-	call void @print_i1(i1 %1)
-
-	%2 = icmp eq i1 1, 1
-	%3 = add i1 %2, 0				; expr_pop
-	call void @print_i1(i1 %3)
-
-	%4 = icmp eq i1 0, 0
-	%5 = add i1 %4, 0				; expr_pop
-	call void @print_i1(i1 %5)
-
-	%6 = icmp eq i1 1, 0
-	%7 = add i1 %6, 0				; expr_pop
-	call void @print_i1(i1 %7)
-
-	%8 = icmp eq i1 0, 1
-	%9 = add i1 %8, 0				; expr_pop
-	call void @print_i1(i1 %9)
-
-	%10 = icmp ne i1 1, 0
-	%11 = add i1 %10, 0				; expr_pop
-	call void @print_i1(i1 %11)
-
-	%12 = icmp ne i1 1, 1
-	%13 = add i1 %12, 0				; expr_pop
-	call void @print_i1(i1 %13)
-
-	%14 = icmp ne i1 0, 1
-	%15 = add i1 %14, 0				; expr_pop
-	call void @print_i1(i1 %15)
-
-	%16 = icmp ne i1 0, 0
-	%17 = add i1 %16, 0				; expr_pop
-	call void @print_i1(i1 %17)
+	%i = alloca i32
+	%0 = add i32 20, 20
+	%1 = add i32 %0, 0				; expr_pop
+	store i32 %1, i32* %i			; int variable assignment (variable.rs)
 
 
 	ret i32 0 ; llvm_main_close
