@@ -32,6 +32,9 @@ impl DataType {
     pub fn print(&self, expr_count: u32) -> String {
         match self {
             DataType::Integer(int) => {
+                // place the value in a register to be used
+                // ex. %0 = add i32 0;
+                // call the print
                 let mut cg = format!("\t%{expr_count} = add i32 {int}, 0\n");
                 cg += &llvm_call_print_local(expr_count, "i32");
                 println!("{cg}");
@@ -83,17 +86,19 @@ impl fmt::Display for Operation {
         }
     }
 }
+
+
 #[derive(Clone)]
 pub struct Binary {
     left: Box<Expression>,
     right: Box<Expression>,
     operator: Operation,
-    register: String
-
+    register: String,
+    datatype: DataType
 }
 impl Binary {
-    pub fn new(left: Expression, right: Expression, operator: Operation, register: &str) -> Binary {
-        Binary {left: Box::new(left), right: Box::new(right), operator, register: register.to_string()}
+    pub fn new(left: Expression, right: Expression, operator: Operation, register: &str, datatype: DataType) -> Binary {
+        Binary {left: Box::new(left), right: Box::new(right), operator, register: register.to_string(), datatype}
     }
     pub fn print(&self) -> String {
         if is_boolean_op(self.operator.clone()) {
@@ -137,9 +142,10 @@ impl From<DataType> for Expression {
         Expression::Literal(value)
     }
 }
+
 impl Expression {
-    pub fn new_binary(left: Expression, right: Expression, operator: Operation, register: &str) -> Expression {
-        Expression::Binary(Binary::new(left, right, operator, register))
+    pub fn new_binary(left: Expression, right: Expression, operator: Operation, register: &str, datatype: DataType) -> Expression {
+        Expression::Binary(Binary::new(left, right, operator, register, datatype))
     }
     pub fn get_register(&self) -> String {
         match self {
@@ -156,7 +162,11 @@ impl Expression {
     pub fn resolve_binary(&self) -> String {
         match self {
             Expression::Binary(b) => {
-                let tag = if is_boolean_op(b.clone().operator) {"needs to detect type of operands" } else {"i32"};
+                let tag = match b.datatype {
+                    DataType::Boolean(_) => "i1",
+                    DataType::Integer(_) => "i32",
+                    DataType::String(_) => panic!()
+                 };
                 let mut codegen = format!("{} {tag} ", b.operator);
                 codegen += &b.get_left().resolve_operand();
                 codegen += &", ".to_string();
@@ -183,7 +193,7 @@ impl Expression {
     pub fn from_literal(literal: DataType) -> Expression{
         Expression::Literal(literal)
     }
-    pub fn unwrap_literal(&self) -> &DataType {
+    pub fn as_datatype(&self) -> &DataType {
         match self {
             Expression::Literal(datatype) => datatype,
             _ => panic!()
