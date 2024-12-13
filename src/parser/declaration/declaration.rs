@@ -63,7 +63,7 @@ impl VariableDeclaration {
         match &self.variable_type {
             DataType::Integer(_) => {
                 if let Some(expr) = &self.expression {
-                    println!("store i32 {}, i32* {}", expr.resolve_operand(), self.name)
+                    println!("store i32 {}, i32* %{}", expr.resolve_operand(), self.name)
                 }
 
             },
