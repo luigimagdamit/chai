@@ -68,12 +68,12 @@ fn binary_op(parser: &mut Parser, operator: fn(i32, i32) -> i32, instruction: Op
         _ => { "i1" }
     };
             
-    let b_ast = parser.ast_stack.pop().unwrap().to_expression();
-    let a_ast = parser.ast_stack.pop().unwrap().to_expression();
+    let b_expr = parser.ast_stack.pop().unwrap().to_expression();
+    let a_expr = parser.ast_stack.pop().unwrap().to_expression();
     match (operands.0.data_type.clone(), operands.1.data_type.clone()) {
         (DataType::Integer(a), DataType::Integer(b)) => {
             let calculation = operator(a, b);
-            let ast_node = Expression::new_binary(a_ast, b_ast, instruction, &parser.expr_count.to_string());
+            let ast_node = Expression::new_binary(a_expr, b_expr, instruction, &parser.expr_count.to_string(), DataType::Integer(0));
             println!("{}", ast_node.register()); // place in register
             let register = parser.expr_increment();
             parser.new_expr(llvm_binary_operands(calculation, register, &type_tag).unwrap());
@@ -87,7 +87,7 @@ fn binary_op(parser: &mut Parser, operator: fn(i32, i32) -> i32, instruction: Op
             let b_int =  if b { 1 } else { 0 };
             
             let bool_op = operator(a_int, b_int);
-            let ast_node = Expression::new_binary(a_ast, b_ast, instruction, &parser.expr_count.to_string());
+            let ast_node = Expression::new_binary(a_expr, b_expr, instruction, &parser.expr_count.to_string(), DataType::Boolean(true));
             println!("{}", ast_node.register()); // place in register
 
             parser.constant_stack.push(llvm_binary_operands(bool_op, parser.expr_count, &type_tag));

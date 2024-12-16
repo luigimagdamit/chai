@@ -84,25 +84,28 @@ impl fmt::Display for Operation {
             Operation::Mul => write!(f, "mul"),
             Operation::Div => write!(f, "div"),
             Operation::Equal => write!(f, "icmp eq"),
-            Operation::NotEqual => write!(f, "N.EQ"),
-            Operation::GreaterEqual => write!(f, "GR.EQ"),
-            Operation::GreaterThan => write!(f, "GR.TH"),
-            Operation::LessEqual => write!(f, "LE.EQ"),
-            Operation::LessThan => write!(f, "LE.TH")
+            Operation::NotEqual => write!(f, "icmp ne"),
+            Operation::GreaterEqual => write!(f, "icmp sge"),
+            Operation::GreaterThan => write!(f, "icmp sgt"),
+            Operation::LessEqual => write!(f, "icmp sle"),
+            Operation::LessThan => write!(f, "icmp slt")
         }
     }
 }
+
+
 #[derive(Clone)]
 pub struct Binary {
     left: Box<Expression>,
     right: Box<Expression>,
     pub operator: Operation,
-    register: String
+    register: String,
+    datatype: DataType
 
 }
 impl Binary {
-    pub fn new(left: Expression, right: Expression, operator: Operation, register: &str) -> Binary {
-        Binary {left: Box::new(left), right: Box::new(right), operator, register: register.to_string()}
+    pub fn new(left: Expression, right: Expression, operator: Operation, register: &str, datatype: DataType) -> Binary {
+        Binary {left: Box::new(left), right: Box::new(right), operator, register: register.to_string(), datatype}
     }
     pub fn print(&self) -> String {
         if is_boolean_op(self.operator.clone()) {
@@ -118,6 +121,9 @@ impl Binary {
     }
     pub fn get_right(&self) -> Expression {
         *self.right.clone()
+    }
+    pub fn as_datatype(&self) -> &DataType{
+        &self.datatype
     }
 }
 pub fn convert_bool(b: bool) -> u32 {
@@ -143,6 +149,7 @@ pub trait Accept {
 pub trait Register {
     fn register(&self) -> String;
 }
+
 #[derive(Clone)]
 pub enum Expression {
     Literal(DataType),
@@ -181,9 +188,10 @@ impl From<DataType> for Expression {
         Expression::Literal(value)
     }
 }
+
 impl Expression {
-    pub fn new_binary(left: Expression, right: Expression, operator: Operation, register: &str) -> Expression {
-        Expression::Binary(Binary::new(left, right, operator, register))
+    pub fn new_binary(left: Expression, right: Expression, operator: Operation, register: &str, datatype: DataType) -> Expression {
+        Expression::Binary(Binary::new(left, right, operator, register, datatype))
     }
     pub fn get_register(&self) -> String {
         match self {
@@ -200,7 +208,11 @@ impl Expression {
     pub fn resolve_binary(&self) -> String {
         match self {
             Expression::Binary(b) => {
-                let tag = if is_boolean_op(b.clone().operator) {"needs to detect type of operands" } else {"i32"};
+                let tag = match b.datatype {
+                    DataType::Boolean(_) => "i1",
+                    DataType::Integer(_) => "i32",
+                    DataType::String(_) => panic!()
+                 };
                 let mut codegen = format!("{} {tag} ", b.operator);
                 codegen += &b.get_left().resolve_operand();
                 codegen += &", ".to_string();
@@ -227,9 +239,16 @@ impl Expression {
     pub fn from_literal(literal: DataType) -> Expression{
         Expression::Literal(literal)
     }
-    pub fn unwrap_literal(&self) -> &DataType {
+    pub fn as_datatype(&self) -> DataType {
         match self {
-            Expression::Literal(datatype) => datatype,
+            Expression::Literal(datatype) => datatype.clone(),
+            Expression::Binary(binary) => binary.datatype.clone(),
+            _ => panic!()
+        }
+    }
+    pub fn type_tag(&self) -> &str {
+        match self.as_datatype() {
+            DataType::Integer(int) => "i32",
             _ => panic!()
         }
     }

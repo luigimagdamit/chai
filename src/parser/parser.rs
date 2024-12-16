@@ -25,6 +25,8 @@ pub struct SymbolTableEntry {
     pub count: usize,
     pub variable_type: DataType
 }
+
+#[derive(Clone)]
 pub enum AstNode {
     Declaration(Declaration),
     Expression(Expression)
@@ -91,6 +93,11 @@ impl<'a>Parser <'a>{
             expr_count: 0,
             compilation: String::from(""),
             depth: 0
+        }
+    }
+    pub fn print_symbols(&self) {
+        for (key, value) in &self.symbol_table {
+            println!("{}: {}", key, value.variable_type);
         }
     }
     pub fn emit_instruction(&mut self, inst: &String) {
