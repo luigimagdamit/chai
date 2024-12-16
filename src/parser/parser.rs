@@ -107,6 +107,10 @@ impl<'a>Parser <'a>{
         self.constant_stack.push(Some(expr));
 
     }
+    pub fn expr_increment(&mut self) -> u32 {
+        self.expr_count += 1;
+        self.expr_count - 1
+    }
     pub fn expr_pop(&mut self) -> (Expr, u32) {
         if let Some(popped) = self.constant_stack.pop() {
             let expr = popped.unwrap();

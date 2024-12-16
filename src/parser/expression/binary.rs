@@ -1,4 +1,4 @@
-use crate::parser::parser::AstNode;
+use crate::parser::{expression::expr::Register, parser::AstNode};
 use super::{
     super::{expression::expression::parse_precedence, parser::Parser}, expr::{DataType, Expr, ParseError}, precedence::Precedence
 };
@@ -74,10 +74,10 @@ fn binary_op(parser: &mut Parser, operator: fn(i32, i32) -> i32, instruction: Op
         (DataType::Integer(a), DataType::Integer(b)) => {
             let calculation = operator(a, b);
             let ast_node = Expression::new_binary(a_ast, b_ast, instruction, &parser.expr_count.to_string());
-            println!("{}", ast_node.resolve_binary());
+            println!("{}", ast_node.register()); // place in register
+            let register = parser.expr_increment();
+            parser.new_expr(llvm_binary_operands(calculation, register, &type_tag).unwrap());
 
-            parser.new_expr(llvm_binary_operands(calculation, parser.expr_count, &type_tag).unwrap());
-            parser.expr_count += 1;
             parser.ast_stack.push(AstNode::Expression(ast_node.clone()));
                     
             return Ok(ast_node)
@@ -88,7 +88,7 @@ fn binary_op(parser: &mut Parser, operator: fn(i32, i32) -> i32, instruction: Op
             
             let bool_op = operator(a_int, b_int);
             let ast_node = Expression::new_binary(a_ast, b_ast, instruction, &parser.expr_count.to_string());
-            println!("{}", ast_node.resolve_binary());
+            println!("{}", ast_node.register()); // place in register
 
             parser.constant_stack.push(llvm_binary_operands(bool_op, parser.expr_count, &type_tag));
             parser.expr_count += 1;

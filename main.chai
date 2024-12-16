@@ -1,16 +1,6 @@
-
-    var a: int = 0;
-    var b: int = 1;
-
-    var i: int = 0;
-    
-    print(a);
-
-
-    while  (i < 9) {
-        var tmp: int = b;
-        b = a + b;
-        a = tmp;
-        print(tmp);
-        i = i + 1;
-    }
+print(21 * 10 + 21 * 10);
+print(39);
+print(391);
+print(39);
+print(true);
+print(true == false);

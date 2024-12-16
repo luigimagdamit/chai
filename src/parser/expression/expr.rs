@@ -29,22 +29,31 @@ impl From<bool> for DataType {
 }
 
 impl DataType {
-    pub fn print(&self, expr_count: u32) -> String {
+    pub fn print(&self) -> String {
         match self {
             DataType::Integer(int) => {
-                let mut cg = format!("\t%{expr_count} = add i32 {int}, 0\n");
-                cg += &llvm_call_print_local(expr_count, "i32");
-                println!("{cg}");
+                let cg = format!("add i32 {int}, 0");
                 cg
             },
             DataType::Boolean(bool) => {
                 let bool_val = if *bool {1} else {0};
-                let mut cg = format!("%{expr_count} = add i1 {bool_val}, 0");
-                cg += &llvm_call_print_local(expr_count, "i1");
-                println!("{cg}");
+                let mut cg = format!("add i1 {bool_val}, 0");
                 cg
             }
             _ => "".to_string()
+        }
+    }
+    pub fn type_tag(&self) -> &str {
+        match self {
+            DataType::Integer(_) => "i32",
+            DataType::Boolean(_) => "i1",
+            _ => panic!()
+        }
+    }
+    pub fn as_int(&self) -> i32 {
+        match self {
+            DataType::Integer(i) => *i,
+            _ => panic!()
         }
     }
     pub fn as_bool(&self) -> bool {
@@ -87,7 +96,7 @@ impl fmt::Display for Operation {
 pub struct Binary {
     left: Box<Expression>,
     right: Box<Expression>,
-    operator: Operation,
+    pub operator: Operation,
     register: String
 
 }
@@ -103,6 +112,7 @@ impl Binary {
         }
         
     }
+
     pub fn get_left(&self) -> Expression {
         *self.left.clone()
     }
@@ -120,12 +130,46 @@ impl fmt::Display for Binary {
         write!(f, "<{} {} {}>", self.left, self.right, self.operator)
     }
 }
+
+// Expressions
+// These are all the default actions I want to use with Expression Types
+pub trait Visitor {
+    fn visit_literal(&mut self, literal: &DataType) -> String;
+    fn visit_binary(&mut self, binary: &Binary) -> String;
+}
+pub trait Accept {
+    fn accept<V: Visitor> (&self, visitor: &mut V) -> String;
+}
+pub trait Register {
+    fn register(&self) -> String;
+}
 #[derive(Clone)]
 pub enum Expression {
     Literal(DataType),
     Variable,
     Binary(Binary),
     Empty
+}
+impl Register for Expression {
+    fn register(&self) -> String {
+        //println!("; [Register Trait] Placing expression in register for declaration use.");
+        print!("\t");
+        match self {
+            Expression::Binary(binary) => Expression::from(binary.clone()).resolve_binary(),
+            Expression::Literal(literal) => Expression::from(literal.clone()).resolve_binary(),
+            _ => panic!()
+
+        }
+    }
+}
+impl Accept for Expression {
+    fn accept<V: Visitor> (&self, visitor: &mut V) -> String{
+        match self {    
+            Expression::Literal(literal) => visitor.visit_literal(literal),
+            Expression::Binary(binary) => visitor.visit_binary(binary),
+            _ => panic!()
+        }
+    }
 }
 impl From<Binary> for Expression {
     fn from(binary: Binary) -> Expression {
@@ -205,7 +249,7 @@ pub enum ParseError {
 impl fmt::Display for DataType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DataType::Integer(int) => write!(f, "int: <{}>", int),
+            DataType::Integer(int) => write!(f, "{}", int),
             DataType::Boolean(bool) => write!(f, "bool <{}>", bool),
             DataType::String(str) => write!(f, "str:<{}>", str)
         }

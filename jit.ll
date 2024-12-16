@@ -2,59 +2,26 @@
 define i32 @main() {
 entry:
 
-	%a = alloca i32
-	%0 = add i32 0, 0				; expr_pop
-	store i32 %0, i32* %a			; int variable assignment (variable.rs)
+	%0 = mul i32 21, 10
+	%1 = mul i32 21, 10
+	%2 = add i32 %0, %1
+	call void @print_i32(i32 %2)
 
-	%b = alloca i32
-	%1 = add i32 1, 0				; expr_pop
-	store i32 %1, i32* %b			; int variable assignment (variable.rs)
-
-	%i = alloca i32
-	%2 = add i32 0, 0				; expr_pop
-	store i32 %2, i32* %i			; int variable assignment (variable.rs)
-
-	%a_0 = load i32, i32* %a 			 ; LlvmLoad load_i32
-	%3 = add i32 %a_0, 0				; expr_pop
+	%3 = add i32 39, 0
 	call void @print_i32(i32 %3)
 
-	br label %cond4
+	%4 = add i32 391, 0
+	call void @print_i32(i32 %4)
 
-cond4:
-	%i_0 = load i32, i32* %i 			 ; LlvmLoad load_i32
-	%4 = icmp slt i32 %i_0, 9
-;depth: 4
-	%5 = add i1 %4, 0				; expr_pop
-	br i1 %5, label %body4, label %exit4
+	%5 = add i32 39, 0
+	call void @print_i32(i32 %5)
 
-body4:
-	%tmp = alloca i32
-	%b_0 = load i32, i32* %b 			 ; LlvmLoad load_i32
-	%6 = add i32 %b_0, 0				; expr_pop
-	store i32 %6, i32* %tmp			; int variable assignment (variable.rs)
+	%6 = add i1 1, 0
+	call void @print_i1(i1 %6)
 
-	%a_1 = load i32, i32* %a 			 ; LlvmLoad load_i32
-	%b_1 = load i32, i32* %b 			 ; LlvmLoad load_i32
-	%7 = add i32 %a_1, %b_1
-	%8 = add i32 %7, 0				; expr_pop
-	store i32 %7, i32* %b		 ; set symbol (symbol.rs)
+	%7 = icmp eq i1 1, 0
+	call void @print_i1(i1 %7)
 
-	%tmp_0 = load i32, i32* %tmp 			 ; LlvmLoad load_i32
-	%9 = add i32 %tmp_0, 0				; expr_pop
-	store i32 %tmp_0, i32* %a		 ; set symbol (symbol.rs)
-
-	%tmp_1 = load i32, i32* %tmp 			 ; LlvmLoad load_i32
-	%10 = add i32 %tmp_1, 0				; expr_pop
-	call void @print_i32(i32 %10)
-
-	%i_1 = load i32, i32* %i 			 ; LlvmLoad load_i32
-	%11 = add i32 %i_1, 1
-	%12 = add i32 %11, 0				; expr_pop
-	store i32 %11, i32* %i		 ; set symbol (symbol.rs)
-
-	br label %cond4
-
-exit4:
 
 	ret i32 0 ; llvm_main_close
 }

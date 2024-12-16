@@ -1,13 +1,51 @@
-use crate::parser::expression::expr::{Binary, DataType, Expression};
+use std::ops::Add;
+
+use crate::parser::expression::expr::{Accept, Binary, DataType, Expr, Expression, Operation, Visitor};
 use crate::parser::expression::expression::expression;
 use crate::parser::parser::{AstNode, Parser};
 use crate::{llvm::llvm_print::llvm_call_print_local, scanner::token::TokenType};
 use crate::parser::declaration::declaration::{Statement, Declaration};
 
+pub struct PrintVisitor;
+impl Visitor for PrintVisitor {
+    fn visit_literal(&mut self, literal: &DataType) -> String{
+        literal.print()
+    }
+    fn visit_binary(&mut self, binary: &Binary) -> String {
+        binary.print()
+    }
+}
 
+pub struct RebuildVisitor;
+impl Visitor for RebuildVisitor {
+    fn visit_literal(&mut self, literal: &DataType) -> String {
+        literal.to_string()
+    }
+    fn visit_binary(&mut self, binary: &Binary) -> String {
+        let left = binary.get_left().accept(self);
+
+        let operator = match binary.operator {
+            Operation::Add => "+",
+            Operation::Sub => "-",
+            Operation::Mul => "*",
+            Operation::Div => "/",
+            Operation::Equal => "==",
+            Operation::NotEqual => "!=",
+            Operation::GreaterEqual => ">=",
+            Operation::GreaterThan => ">",
+            Operation::LessEqual => "<=",
+            Operation::LessThan => "<"
+
+        };
+        let right = binary.get_right().accept(self);
+        format!("({} {} {})", left, operator, right)
+    }
+}
 pub fn print_statement(parser: &mut Parser) {
     expression(parser);
-    let ast_mode = false;
+    let ast_mode = true;
+    let mut visitor = PrintVisitor;
+    let mut rebuild = RebuildVisitor;
     // =====================================================
     if ast_mode {
         let expr_ast = parser.ast_stack.pop();
@@ -15,11 +53,21 @@ pub fn print_statement(parser: &mut Parser) {
         if let Some(ast_node) = expr_ast { 
             match ast_node.to_expression() {
                 Expression::Binary(b) => {
+                    // println!("\t{}", rebuild.visit_binary(&b.clone()));
+                    println!("\t; {}", Expression::from(b.clone()).accept(&mut rebuild));
+                    Expression::from(b.clone()).accept(&mut visitor);
+                    println!("");
                     parser.emit_instruction(&b.print());
                     parser.ast_stack.push(AstNode::from(Statement::new_print_statement(Expression::from(b))));
                 },
                 Expression::Literal(l) => {
-                    parser.emit_instruction(&l.print(parser.expr_count));
+                    println!("\t; {}", Expression::from(l.clone()).accept(&mut rebuild));
+                    let index = parser.expr_increment();
+                    let codegen = format!("\t%{} = {}", index, Expression::from(l.clone()).accept(&mut visitor)); // loads into register
+                    let print_codegen = llvm_call_print_local(index, l.type_tag()); // calls print on the respective data type
+                    let instruction = format!("{codegen}\n{}", print_codegen);
+                    println!("{instruction}");
+                    parser.emit_instruction(&instruction);
                     parser.ast_stack.push(AstNode::from(Statement::new_print_statement(Expression::from(l))));
                 }
                 _ => ()
