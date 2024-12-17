@@ -1,16 +1,7 @@
 use super::{declaration::print::PrintVisitor, expression::expr::{Accept, VariableExpression}, parser::{AstNode, Parser, SymbolTableEntry}};
 use crate::parser::expression::expr::{DataType, Expr, Expression};
 
-pub enum LlvmGetVariable {
-    Integer((String, usize)) // name of string
-}
-impl LlvmGetVariable {
-    pub fn create_tags(&self) -> (String, String) {
-        match self {
-            Self::Integer(name) => (format!("i32 %{}_{}", name.0, name.1), format!("%{}_{}", name.0, name.1))
-        }
-    }
-}
+
 
 pub fn get_symbol(parser: &mut Parser, name: String) {
 
@@ -67,15 +58,4 @@ pub fn create_new_symbol(parser: &mut Parser, name: String, variable_type: DataT
         count: 0,
         variable_type
     });
-}
-pub enum LlvmLoad {
-    Integer(u32),
-}
-impl LlvmLoad {
-    pub fn load_i32(var_name: &str, var_count: usize) -> String {
-        format!("\t%{var_name}_{var_count} = load i32, i32* %{var_name} \t\t\t ; LlvmLoad load_i32")
-    } 
-    pub fn load_string(var_name: &str, var_count: usize) -> String {
-        format!("\t%{}_{} = load {}, {}* %{} ; \t\t\t Llvm Load String", var_name, var_count, "i8*", "i8*", var_name)
-    }
 }

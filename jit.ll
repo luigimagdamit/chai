@@ -2,12 +2,40 @@
 define i32 @main() {
 entry:
 
-	%0 = mul i32 21, 10
-	%1 = mul i32 21, 10
-	%2 = add i32 %0, %1
+	%0 = add i32 12, 0				; expr_pop
+	%a = alloca i32
+	store i32 12, i32* %a ; signature by visitor
+
+	%1 = mul i32 10, 21
+	%2 = mul i32 10, 21
+	%3 = add i32 %2, %1
+	%4 = add i32 10, 0				; expr_pop
+	%b = alloca i32
+	store i32 %3, i32* %b ; signature by visitor
+
+	%b_0 = load i32, i32* %b
 ;	ast mode
-;	; ((21 * 10) + (21 * 10));
-	call void @print_i32(i32 %2); signature from PrintVisitor
+;	; ;
+	call void @print_i32(i32 %b_0); signature from PrintVisitor
+
+	%5 = mul i32 10, 21
+;	ast mode
+;	; (10 * 21);
+	call void @print_i32(i32 %5); signature from PrintVisitor
+
+	%6 = icmp eq i1 1, 1
+;	ast mode
+;	; (bool <true> == bool <true>);
+	call void @print_i1(i1 %6); signature from PrintVisitor
+
+	%7 = icmp eq i1 1, 0
+;	ast mode
+;	; (bool <true> == bool <false>);
+	call void @print_i1(i1 %7); signature from PrintVisitor
+
+;	ast mode
+;	; 21;
+	call void @print_i32(i32 21); signature from PrintVisitor
 
 
 	ret i32 0 ; llvm_main_close

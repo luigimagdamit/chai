@@ -36,7 +36,7 @@ impl Visitor for PrintVisitor {
     fn visit_variable_expression(&mut self, variable_expression: &VariableExpression) -> String {
         match variable_expression.datatype {
             DataType::Integer(_) => {
-                format!("%{}_{} = load i32, i32* %{}", variable_expression.name, variable_expression.count, variable_expression.name)
+                format!("\t%{}_{} = load i32, i32* %{}", variable_expression.name, variable_expression.count, variable_expression.name)
             },
             _ => panic!()
         }

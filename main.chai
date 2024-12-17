@@ -2,3 +2,7 @@ var a : int  = 12;
 var b : int = 21 * 10 + 21 * 10;
 
 print(b);
+print(21 * 10);
+print(true == true);
+print(false == true);
+print(21);
