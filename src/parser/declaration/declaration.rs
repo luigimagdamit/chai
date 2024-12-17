@@ -84,6 +84,11 @@ pub enum Declaration {
     Statement(Statement),
     Variable(VariableDeclaration)
 }
+impl From<PrintStatement> for Declaration {
+    fn from(value: PrintStatement) -> Self {
+        Declaration::Statement(Statement::PrintStatement(value))
+    }
+}
 impl Declaration {
     pub fn new_statement(statement: Statement) -> Declaration {
         Declaration::Statement(statement)

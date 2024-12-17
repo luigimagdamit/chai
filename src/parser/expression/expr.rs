@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::llvm::llvm_print::llvm_call_print_local;
+use crate::{llvm::llvm_print::llvm_call_print_local, parser::declaration::declaration::PrintStatement};
 use super::binary::is_boolean_op;
 
 #[allow(unused)]
@@ -142,6 +142,9 @@ impl fmt::Display for Binary {
 pub trait Visitor {
     fn visit_literal(&mut self, literal: &DataType) -> String;
     fn visit_binary(&mut self, binary: &Binary) -> String;
+
+    // Statements
+    fn visit_print(&mut self, print_statement: &PrintStatement) -> String;
 }
 pub trait Accept {
     fn accept<V: Visitor> (&self, visitor: &mut V) -> String;

@@ -70,10 +70,15 @@ fn binary_op(parser: &mut Parser, operator: fn(i32, i32) -> i32, instruction: Op
             
     let b_expr = parser.ast_stack.pop().unwrap().to_expression();
     let a_expr = parser.ast_stack.pop().unwrap().to_expression();
+    
     match (operands.0.data_type.clone(), operands.1.data_type.clone()) {
         (DataType::Integer(a), DataType::Integer(b)) => {
+            let datatype = match instruction {
+                Operation::Add | Operation::Div | Operation::Mul | Operation::Sub => { DataType::Integer(0) },
+                _ => { DataType::Boolean(true) }
+            };
             let calculation = operator(a, b);
-            let ast_node = Expression::new_binary(a_expr, b_expr, instruction, &parser.expr_count.to_string(), DataType::Integer(0));
+            let ast_node = Expression::new_binary(a_expr, b_expr, instruction, &parser.expr_count.to_string(), datatype);
             println!("{}", ast_node.register()); // place in register
             let register = parser.expr_increment();
             parser.new_expr(llvm_binary_operands(calculation, register, &type_tag).unwrap());

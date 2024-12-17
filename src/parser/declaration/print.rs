@@ -1,10 +1,8 @@
-use std::ops::Add;
-
-use crate::parser::expression::expr::{Accept, Binary, DataType, Expr, Expression, Operation, Visitor};
+use crate::parser::expression::expr::{Accept, Binary, DataType, Expression, Operation, Visitor};
 use crate::parser::expression::expression::expression;
 use crate::parser::parser::{AstNode, Parser};
 use crate::{llvm::llvm_print::llvm_call_print_local, scanner::token::TokenType};
-use crate::parser::declaration::declaration::{Statement, Declaration};
+use crate::parser::declaration::declaration::{Declaration, PrintStatement};
 
 pub struct PrintVisitor;
 impl Visitor for PrintVisitor {
@@ -13,6 +11,18 @@ impl Visitor for PrintVisitor {
     }
     fn visit_binary(&mut self, binary: &Binary) -> String {
         binary.print()
+    }
+    fn visit_print(&mut self, print_statement: &PrintStatement) -> String {
+
+        match print_statement.expression.as_datatype() {
+            DataType::Integer(_) => {
+                format!("\tcall void @print_i32(i32 {}); signature from PrintVisitor\n", print_statement.expression.resolve_operand())
+            },
+            DataType::Boolean(_) => {
+                format!("\tcall void @print_i1(i1 {}); signature from PrintVisitor\n", print_statement.expression.resolve_operand())
+            }
+            _ => panic!()
+        }
     }
 }
 
@@ -40,12 +50,17 @@ impl Visitor for RebuildVisitor {
         let right = binary.get_right().accept(self);
         format!("({} {} {})", left, operator, right)
     }
+    fn visit_print(&mut self, print_statement: &PrintStatement) -> String {
+        format!("print {}", print_statement.expression.accept(self))
+    }
 }
 pub fn print_statement(parser: &mut Parser) {
     expression(parser);
     let ast_mode = true;
     let mut visitor = PrintVisitor;
     let mut rebuild = RebuildVisitor;
+
+    let mut print_statement = PrintStatement{ expression: Expression::Empty };
     // =====================================================
     if ast_mode {
         parser.comment("\tast mode");
@@ -55,21 +70,20 @@ pub fn print_statement(parser: &mut Parser) {
             match ast_node.to_expression() {
                 Expression::Binary(b) => {
                     // println!("\t{}", rebuild.visit_binary(&b.clone()));
-                    parser.comment(&format!("\t; {};", Expression::from(b.clone()).accept(&mut rebuild)));
-                    Expression::from(b.clone()).accept(&mut visitor);
-                    println!("");
-                    parser.emit_instruction(&b.print());
-                    parser.ast_stack.push(AstNode::from(Statement::new_print_statement(Expression::from(b))));
+                    let expr = Expression::from(b);
+                    parser.comment(&format!("\t; {};", expr.clone().accept(&mut rebuild)));
+                    print_statement.expression = expr;
+                    
+                    parser.ast_stack.push(AstNode::from(Declaration::from(print_statement.clone())));
+                    parser.emit_instruction(&visitor.visit_print(&print_statement));
                 },
                 Expression::Literal(l) => {
-                    parser.comment(&format!("\t; {};", Expression::from(l.clone()).accept(&mut rebuild)));
-                    let index = parser.expr_increment();
-                    let codegen = format!("\t%{} = {}", index, Expression::from(l.clone()).accept(&mut visitor)); // loads into register
-                    let print_codegen = llvm_call_print_local(index, l.type_tag()); // calls print on the respective data type
-                    let instruction = format!("{codegen}\n{}", print_codegen);
-                    println!("{instruction} ;instruction");
-                    parser.emit_instruction(&instruction);
-                    parser.ast_stack.push(AstNode::from(Statement::new_print_statement(Expression::from(l))));
+                    let expr = Expression::from(l);
+                    parser.comment(&format!("\t; {};", expr.clone().accept(&mut rebuild)));
+                    print_statement.expression = expr;
+
+                    parser.ast_stack.push(AstNode::from(Declaration::from(print_statement.clone())));
+                    parser.emit_instruction(&visitor.visit_print(&print_statement));
                 }
                 _ => ()
             }
