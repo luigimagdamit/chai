@@ -48,25 +48,26 @@ pub fn print_statement(parser: &mut Parser) {
     let mut rebuild = RebuildVisitor;
     // =====================================================
     if ast_mode {
+        parser.comment("\tast mode");
         let expr_ast = parser.ast_stack.pop();
 
         if let Some(ast_node) = expr_ast { 
             match ast_node.to_expression() {
                 Expression::Binary(b) => {
                     // println!("\t{}", rebuild.visit_binary(&b.clone()));
-                    println!("\t; {}", Expression::from(b.clone()).accept(&mut rebuild));
+                    parser.comment(&format!("\t; {};", Expression::from(b.clone()).accept(&mut rebuild)));
                     Expression::from(b.clone()).accept(&mut visitor);
                     println!("");
                     parser.emit_instruction(&b.print());
                     parser.ast_stack.push(AstNode::from(Statement::new_print_statement(Expression::from(b))));
                 },
                 Expression::Literal(l) => {
-                    println!("\t; {}", Expression::from(l.clone()).accept(&mut rebuild));
+                    parser.comment(&format!("\t; {};", Expression::from(l.clone()).accept(&mut rebuild)));
                     let index = parser.expr_increment();
                     let codegen = format!("\t%{} = {}", index, Expression::from(l.clone()).accept(&mut visitor)); // loads into register
                     let print_codegen = llvm_call_print_local(index, l.type_tag()); // calls print on the respective data type
                     let instruction = format!("{codegen}\n{}", print_codegen);
-                    println!("{instruction}");
+                    println!("{instruction} ;instruction");
                     parser.emit_instruction(&instruction);
                     parser.ast_stack.push(AstNode::from(Statement::new_print_statement(Expression::from(l))));
                 }
