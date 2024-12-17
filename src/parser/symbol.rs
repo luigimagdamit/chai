@@ -1,4 +1,4 @@
-use super::parser::{Parser, SymbolTableEntry, AstNode};
+use super::{declaration::print::PrintVisitor, expression::expr::{Accept, VariableExpression}, parser::{AstNode, Parser, SymbolTableEntry}};
 use crate::parser::expression::expr::{DataType, Expr, Expression};
 
 pub enum LlvmGetVariable {
@@ -16,32 +16,19 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
 
     if let Some(variable) = parser.symbol_table.get(&name) {
         let SymbolTableEntry { name: _, count, variable_type } = variable;
-   
-        match variable.variable_type {
-             DataType::Integer(_) => {
-                 let codegen = &LlvmLoad::load_i32(&variable.name, *count);
-                 let expr_tags = LlvmGetVariable::Integer((variable.name.clone(), *count)).create_tags();
-                 parser.ast_stack.push(AstNode::from_expression(Expression::Literal(variable_type.clone())));
-                 parser.new_expr(Expr {
-                     left: expr_tags.0,
-                     right: expr_tags.1,
-                     data_type: variable_type.clone()
-                 });
-                 
-                 parser.emit_instruction(codegen);
-             },
-             DataType::String(_) => {
-                 let codegen = &LlvmLoad::load_string(&variable.name, *count);
-                 parser.new_expr(Expr {
-                     left: format!("%{}_{}", variable.name, count),
-                     right: String::from("<__var_string__>"),
-                     data_type: variable_type.clone()
-                 });
-                 parser.emit_instruction(&codegen);
-             }
-             _ => ()
-         }
-         parser.symbol_table.get_mut(&name).unwrap().count += 1;
+        let variable_expression = VariableExpression {
+            name: name.clone(),
+            datatype: variable_type.clone(),
+            count: count.clone()
+        };
+
+        let mut visitor = PrintVisitor;
+        let codegen = Expression::from(variable_expression.clone()).accept(&mut visitor);
+        println!("{codegen}");
+        parser.emit_instruction(&codegen);
+
+        parser.ast_stack.push(AstNode::Expression(Expression::from(variable_expression).clone()));
+        parser.symbol_table.get_mut(&name).unwrap().count += 1;
     } else {
         parser.error_at_previous("Variable was not declared -");
     }

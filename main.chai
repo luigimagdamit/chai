@@ -1,5 +1,4 @@
-print(1 + 2 * 12 - 20);
-print(69 > 21);
-print(69 == 21);
+var a : int  = 12;
+var b : int = 21 * 10 + 21 * 10;
 
-print(21 * 10 + 21 * 10);
+print(b);

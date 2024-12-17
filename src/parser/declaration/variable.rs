@@ -3,54 +3,38 @@ use crate::parser::parser::{AstNode, Parser, StringEntry};
 use crate::parser::symbol::{create_new_symbol, get_symbol, set_symbol};
 use crate::parser::parse_fn::convert_type_tag;
 use crate::parser::expression::expression::expression;
-use crate::parser::expression::expr::{DataType, Expression, ParseError};
+use crate::parser::expression::expr::{Accept, DataType, Expression, ParseError};
 use crate::scanner::token::TokenType;
 
 use super::declaration::Declaration;
+use super::print::{PrintVisitor, RebuildVisitor};
 
 // evaluate an expression, then assign the expression at the location of the local variable with store
 pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
+    let mut rebuild = RebuildVisitor;
+    let mut visitor = PrintVisitor;
     expression(parser);
     let (expr, _) = parser.expr_pop();
 
     if let Some(expr_ast) = parser.ast_stack.pop() {
         let test = Declaration::new_variable(var_name.to_string(), Some(expr_ast.clone().to_expression()), expr_ast.to_expression().as_datatype());
-        println!("{test}");
-        test.as_variable().create_variable();
-        test.as_variable().store();
+
+        parser.emit_instruction(&test.accept(&mut visitor));
         create_new_symbol(parser, var_name.to_string(), test.as_variable().as_datatype());
         parser.print_symbols();
-    }
-    
-    match &expr.data_type {
-        DataType::Boolean(_) => (),
-        DataType::Integer(_) => {
-            
-            let tmp_register = LlvmTempRegister::Integer(parser.expr_top());
-            parser.emit_instruction(&tmp_register.store_in_alloca(var_name));
-            
-            create_new_symbol(parser, var_name.to_string(), expr.data_type);
-        },
-        DataType::String(_) => {
-            let tmp_register = LlvmTempRegister::StaticString(parser.expr_top());
-            let store_codegen = tmp_register.store_in_alloca(var_name);
-            parser.emit_instruction(&store_codegen);
-                
-            create_new_symbol(parser, var_name.to_string(), expr.data_type);
-        }
+        create_new_symbol(parser, var_name.to_string(), expr.data_type);
     }
     
 
-    
 }
 pub fn variable_declaration(parser: &mut Parser) {
     let global_name = parse_variable_name(parser, "Expected a variable name");
     parser.consume(TokenType::Colon, "Expected : when declaring variable");
     parser.consume(TokenType::Identifier, "Expected a type identifier when declaring variable");
-    let type_tag = convert_type_tag(parser.previous.unwrap().start);
-    let codegen = format!("\t%{} = {}", global_name, type_tag);
+    // let type_tag = convert_type_tag(parser.previous.unwrap().start);
+    // let codegen = format!("\t%{} = {}", global_name, type_tag);
 
-    parser.emit_instruction(&codegen);
+    // parser.emit_instruction(&codegen);
     if parser.match_current(TokenType::Equal) { variable_assignment(parser, &global_name) } else {}
 
     parser.consume(TokenType::Semicolon, "Expected a semicolon after variable declaration");

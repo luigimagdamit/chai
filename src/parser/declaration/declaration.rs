@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::parser::expression::expr::{DataType, Expression};
+use crate::parser::expression::expr::{DataType, Expression, Visitor, Accept};
 #[derive(Clone)]
 pub struct PrintStatement {
     pub expression: Expression
@@ -36,9 +36,9 @@ impl fmt::Display for Statement {
 }
 #[derive(Clone)]
 pub struct VariableDeclaration {
-    name: String,
-    variable_type: DataType,
-    expression: Option<Expression> // sometimes will have no value right?
+    pub name: String,
+    pub variable_type: DataType,
+    pub expression: Option<Expression> // sometimes will have no value right?
 
 }
 impl fmt::Display for VariableDeclaration {
@@ -51,25 +51,28 @@ impl fmt::Display for VariableDeclaration {
     }
 }
 impl VariableDeclaration {
-    pub fn create_variable(&self) {
+    pub fn create_variable(&self) -> String{
         match self.variable_type {
             DataType::Integer(_) => {
-                println!("%{} = alloca i32", self.name)
+                format!("%{} = alloca i32", self.name)
             },
             _ => panic!()
         }
     }
-    pub fn store(&self) {
+    pub fn store(&self) -> String {
         match &self.variable_type {
             DataType::Integer(_) => {
                 if let Some(expr) = &self.expression {
-                    println!("store i32 {}, i32* %{}", expr.resolve_operand(), self.name)
+                    format!("store i32 {}, i32* %{}", expr.resolve_operand(), self.name)
+                } else {
+                    "".to_string()
                 }
 
             },
             _ => panic!()
         }
     }
+
     pub fn as_datatype(&self) -> DataType {
         if let Some(expr) = &self.expression {
             expr.as_datatype()
@@ -83,6 +86,23 @@ impl VariableDeclaration {
 pub enum Declaration {
     Statement(Statement),
     Variable(VariableDeclaration)
+}
+impl Accept for Declaration {
+    fn accept<V: Visitor> (&self, visitor: &mut V) -> String{
+        match self {    
+            Declaration::Statement(statement) => {
+                match statement {
+                    Statement::PrintStatement(print_statement) => {
+                        visitor.visit_print(print_statement)
+                    }
+                }
+            },
+            Declaration::Variable(var_declaration) => {
+                visitor.visit_variable_declaration(var_declaration)
+            }
+            _ => panic!()
+        }
+    }
 }
 impl From<PrintStatement> for Declaration {
     fn from(value: PrintStatement) -> Self {

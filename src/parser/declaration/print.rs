@@ -1,4 +1,4 @@
-use crate::parser::expression::expr::{Accept, Binary, DataType, Expression, Operation, Visitor};
+use crate::parser::expression::expr::{Accept, Binary, DataType, Expression, Operation, VariableExpression, Visitor};
 use crate::parser::expression::expression::expression;
 use crate::parser::parser::{AstNode, Parser};
 use crate::{llvm::llvm_print::llvm_call_print_local, scanner::token::TokenType};
@@ -21,6 +21,23 @@ impl Visitor for PrintVisitor {
             DataType::Boolean(_) => {
                 format!("\tcall void @print_i1(i1 {}); signature from PrintVisitor\n", print_statement.expression.resolve_operand())
             }
+            _ => panic!()
+        }
+    }
+    fn visit_variable_declaration(&mut self, variable_declaration: &super::declaration::VariableDeclaration) -> String {
+        match variable_declaration.as_datatype() {
+            DataType::Integer(_) => {
+                format!("\t{}\n\t{} ; signature by visitor\n", variable_declaration.create_variable(), variable_declaration.store())
+            },
+            _ => panic!()
+        }
+        
+    }
+    fn visit_variable_expression(&mut self, variable_expression: &VariableExpression) -> String {
+        match variable_expression.datatype {
+            DataType::Integer(_) => {
+                format!("%{}_{} = load i32, i32* %{}", variable_expression.name, variable_expression.count, variable_expression.name)
+            },
             _ => panic!()
         }
     }
@@ -53,6 +70,18 @@ impl Visitor for RebuildVisitor {
     fn visit_print(&mut self, print_statement: &PrintStatement) -> String {
         format!("print {}", print_statement.expression.accept(self))
     }
+    fn visit_variable_declaration(&mut self, variable_declaration: &super::declaration::VariableDeclaration) -> String {
+        match variable_declaration.as_datatype() {
+            DataType::Integer(_) => {
+                format!("var {} : int", variable_declaration.name)
+            },
+            _ => panic!()
+        }
+        
+    }
+    fn visit_variable_expression(&mut self, variable_expression: &VariableExpression) -> String {
+        "".to_string()
+    }
 }
 pub fn print_statement(parser: &mut Parser) {
     expression(parser);
@@ -69,12 +98,10 @@ pub fn print_statement(parser: &mut Parser) {
         if let Some(ast_node) = expr_ast { 
             match ast_node.to_expression() {
                 Expression::Binary(b) => {
-                    // println!("\t{}", rebuild.visit_binary(&b.clone()));
                     let expr = Expression::from(b);
                     parser.comment(&format!("\t; {};", expr.clone().accept(&mut rebuild)));
                     print_statement.expression = expr;
-                    
-                    parser.ast_stack.push(AstNode::from(Declaration::from(print_statement.clone())));
+
                     parser.emit_instruction(&visitor.visit_print(&print_statement));
                 },
                 Expression::Literal(l) => {
@@ -82,7 +109,13 @@ pub fn print_statement(parser: &mut Parser) {
                     parser.comment(&format!("\t; {};", expr.clone().accept(&mut rebuild)));
                     print_statement.expression = expr;
 
-                    parser.ast_stack.push(AstNode::from(Declaration::from(print_statement.clone())));
+                    parser.emit_instruction(&visitor.visit_print(&print_statement));
+                }
+                Expression::Variable(variable) => {
+                    let expr = Expression::from(variable);
+                    parser.comment(&format!("\t; {};", expr.clone().accept(&mut rebuild)));
+                    print_statement.expression = expr;
+
                     parser.emit_instruction(&visitor.visit_print(&print_statement));
                 }
                 _ => ()

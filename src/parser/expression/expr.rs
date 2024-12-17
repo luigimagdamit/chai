@@ -1,5 +1,5 @@
-use std::fmt;
-use crate::{llvm::llvm_print::llvm_call_print_local, parser::declaration::declaration::PrintStatement};
+use std::{clone, fmt};
+use crate::{llvm::llvm_print::llvm_call_print_local, parser::declaration::declaration::{PrintStatement, VariableDeclaration}};
 use super::binary::is_boolean_op;
 
 #[allow(unused)]
@@ -142,9 +142,11 @@ impl fmt::Display for Binary {
 pub trait Visitor {
     fn visit_literal(&mut self, literal: &DataType) -> String;
     fn visit_binary(&mut self, binary: &Binary) -> String;
+    fn visit_variable_expression(&mut self, variable_expression: &VariableExpression) -> String;
 
     // Statements
     fn visit_print(&mut self, print_statement: &PrintStatement) -> String;
+    fn visit_variable_declaration(&mut self, variable_declaration: &VariableDeclaration) -> String;
 }
 pub trait Accept {
     fn accept<V: Visitor> (&self, visitor: &mut V) -> String;
@@ -152,11 +154,21 @@ pub trait Accept {
 pub trait Register {
     fn register(&self) -> String;
 }
-
+#[derive(Clone)]
+pub struct VariableExpression {
+    pub name: String,
+    pub datatype: DataType,
+    pub count: usize
+}
+impl From<VariableExpression> for Expression {
+    fn from(value: VariableExpression) -> Self {
+        Expression::Variable(value)
+    }
+}
 #[derive(Clone)]
 pub enum Expression {
     Literal(DataType),
-    Variable,
+    Variable(VariableExpression),
     Binary(Binary),
     Empty
 }
@@ -167,6 +179,7 @@ impl Register for Expression {
         match self {
             Expression::Binary(binary) => Expression::from(binary.clone()).resolve_binary(),
             Expression::Literal(literal) => Expression::from(literal.clone()).resolve_binary(),
+
             _ => panic!()
 
         }
@@ -177,6 +190,7 @@ impl Accept for Expression {
         match self {    
             Expression::Literal(literal) => visitor.visit_literal(literal),
             Expression::Binary(binary) => visitor.visit_binary(binary),
+            Expression::Variable(variable) => visitor.visit_variable_expression(variable),
             _ => panic!()
         }
     }
@@ -235,6 +249,9 @@ impl Expression {
                     DataType::Boolean(bool) => convert_bool(*bool).to_string(),
                     _ => "".to_string()
                 }
+            },
+            Expression::Variable(variable) => {
+                format!("%{}_{}", variable.name, variable.count)
             }
             _ => "".to_string()
         }
@@ -246,6 +263,7 @@ impl Expression {
         match self {
             Expression::Literal(datatype) => datatype.clone(),
             Expression::Binary(binary) => binary.datatype.clone(),
+            Expression::Variable(variable) => variable.datatype.clone(),
             _ => panic!()
         }
     }
