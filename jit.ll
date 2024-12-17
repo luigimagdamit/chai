@@ -2,41 +2,54 @@
 define i32 @main() {
 entry:
 
-	%0 = add i32 12, 0				; expr_pop
 	%a = alloca i32
-	store i32 12, i32* %a ; signature by visitor
+	store i32 0, i32* %a ; signature by visitor
 
-	%1 = mul i32 10, 21
-	%2 = mul i32 10, 21
-	%3 = add i32 %2, %1
-	%4 = add i32 10, 0				; expr_pop
 	%b = alloca i32
-	store i32 %3, i32* %b ; signature by visitor
+	store i32 1, i32* %b ; signature by visitor
 
-	%b_0 = load i32, i32* %b
+	%i = alloca i32
+	store i32 0, i32* %i ; signature by visitor
+
+%a_0 = load i32, i32* %a
 ;	ast mode
 ;	; ;
-	call void @print_i32(i32 %b_0); signature from PrintVisitor
+	call void @print_i32(i32 %a_0); signature from PrintVisitor
 
-	%5 = mul i32 10, 21
+	br label %cond0
+
+cond0:
+%i_0 = load i32, i32* %i
+	%0 = icmp slt i32 %i_0, 9
+;depth: 0
+	%1 = add i32 9, 0				; expr_pop
+	br i1 %0, label %body0, label %exit0
+
+body0:
+%b_0 = load i32, i32* %b
+	%tmp = alloca i32
+	store i32 %b_0, i32* %tmp ; signature by visitor
+
+%a_1 = load i32, i32* %a
+%b_1 = load i32, i32* %b
+	%2 = add i32 %a_1, %b_1
+	store i32 %2, i32* %b		 ; set symbol (symbol.rs)
+
+%tmp_0 = load i32, i32* %tmp
+	store i32 %tmp_0, i32* %a		 ; set symbol (symbol.rs)
+
+%tmp_1 = load i32, i32* %tmp
 ;	ast mode
-;	; (10 * 21);
-	call void @print_i32(i32 %5); signature from PrintVisitor
+;	; ;
+	call void @print_i32(i32 %tmp_1); signature from PrintVisitor
 
-	%6 = icmp eq i1 1, 1
-;	ast mode
-;	; (bool <true> == bool <true>);
-	call void @print_i1(i1 %6); signature from PrintVisitor
+%i_1 = load i32, i32* %i
+	%3 = add i32 %i_1, 1
+	store i32 %3, i32* %i		 ; set symbol (symbol.rs)
 
-	%7 = icmp eq i1 1, 0
-;	ast mode
-;	; (bool <true> == bool <false>);
-	call void @print_i1(i1 %7); signature from PrintVisitor
+	br label %cond0
 
-;	ast mode
-;	; 21;
-	call void @print_i32(i32 21); signature from PrintVisitor
-
+exit0:
 
 	ret i32 0 ; llvm_main_close
 }

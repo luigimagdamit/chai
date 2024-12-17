@@ -26,7 +26,8 @@ pub fn while_statement(parser: &mut Parser) {
     parser.depth += 1;
     
     let expr = parser.expr_pop();
-    parser.emit_instruction(&branch.while_cond(expr.1));
+
+    parser.emit_instruction(&branch.while_cond(expr.1 - 1));
     parser.consume(TokenType::LeftBrace, "message");
     parser.emit_instruction(&branch.while_body());
     // // parse block

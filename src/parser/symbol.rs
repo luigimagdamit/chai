@@ -27,18 +27,18 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
     
 }
 // be for setting it after initial assignment
-pub fn set_symbol(parser: &mut Parser, name: String, new_value: Expr) {
+pub fn set_symbol(parser: &mut Parser, name: String, new_value: Expression) {
 
     if let Some(variable) = parser.symbol_table.get(&name).clone() {
         let a_type = &variable.variable_type;
-        let b_type = &new_value.data_type;
+        let b_type = &new_value.as_datatype();
     
-        if types_equal(&variable.variable_type, &new_value.data_type) {
+        if types_equal(a_type, b_type) {
             let error_msg = format!("Incompatible variable assignment types - Failed to assign variable {}'s value to an item of type {}", a_type, b_type);
             parser.error_at(&parser.current.unwrap(), &error_msg)
         }
         match &variable.variable_type {
-            DataType::Integer(_) => parser.emit_instruction(&format!("\tstore {}, i32* %{}\t\t ; set symbol (symbol.rs)\n", new_value.left , name)),
+            DataType::Integer(_) => parser.emit_instruction(&format!("\tstore i32 {}, i32* %{}\t\t ; set symbol (symbol.rs)\n", new_value.resolve_operand() , name)),
             DataType::String(_) => panic!("set_symbol() not impl for strings"),
             _ => panic!("set symbol not added for this data type")
         }

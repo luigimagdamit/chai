@@ -32,7 +32,7 @@ impl DataType {
     pub fn print(&self) -> String {
         match self {
             DataType::Integer(int) => {
-                let cg = format!("add i32 {int}, 0");
+                let cg = format!("add i32 {int}, 0; a");
                 cg
             },
             DataType::Boolean(bool) => {

@@ -14,13 +14,46 @@ impl Visitor for PrintVisitor {
     }
     fn visit_print(&mut self, print_statement: &PrintStatement) -> String {
 
-        match print_statement.expression.as_datatype() {
-            DataType::Integer(_) => {
-                format!("\tcall void @print_i32(i32 {}); signature from PrintVisitor\n", print_statement.expression.resolve_operand())
+        // match print_statement.expression.as_datatype() {
+        //     DataType::Integer(_) => {
+        //         format!("\tcall void @print_i32(i32 {}); signature from PrintVisitor\n", print_statement.expression.resolve_operand())
+        //     },
+        //     DataType::Boolean(_) => {
+        //         format!("\tcall void @print_i1(i1 {}); signature from PrintVisitor\n", print_statement.expression.resolve_operand())
+        //     }
+        //     _ => panic!()
+        // }
+        match &print_statement.expression {
+            Expression::Binary(binary) => {
+                match binary.operator.clone() {
+                    Operation::Equal | Operation::GreaterEqual | Operation::GreaterThan |Operation::LessEqual |Operation::LessThan | Operation::NotEqual => {
+                        format!("\tcall void @print_i1(i1 {}); signature from PrintVisitor\n", Expression::from(binary.clone()).resolve_operand())
+                    },
+                    _ => format!("\tcall void @print_i32(i32 {}); signature from PrintVisitor\n", Expression::from(binary.clone()).resolve_operand())
+                }
             },
-            DataType::Boolean(_) => {
-                format!("\tcall void @print_i1(i1 {}); signature from PrintVisitor\n", print_statement.expression.resolve_operand())
-            }
+            Expression::Literal(literal) => {
+                match literal {
+                    DataType::Integer(_) => {
+                        format!("\tcall void @print_i32(i32 {}); signature from PrintVisitor\n", print_statement.expression.resolve_operand())
+                    },
+                    DataType::Boolean(_) => {
+                        format!("\tcall void @print_i1(i1 {}); signature from PrintVisitor\n", print_statement.expression.resolve_operand())
+                    }   
+                    _ => panic!()
+                }
+            },
+            Expression::Variable(variable) => {
+                match variable.datatype {
+                    DataType::Integer(_) => {
+                        format!("\tcall void @print_i32(i32 {}); signature from PrintVisitor\n", print_statement.expression.resolve_operand())
+                    },
+                    DataType::Boolean(_) => {
+                        format!("\tcall void @print_i1(i1 {}); signature from PrintVisitor\n", print_statement.expression.resolve_operand())
+                    }   
+                    _ => panic!()
+                }
+            },
             _ => panic!()
         }
     }
@@ -36,7 +69,7 @@ impl Visitor for PrintVisitor {
     fn visit_variable_expression(&mut self, variable_expression: &VariableExpression) -> String {
         match variable_expression.datatype {
             DataType::Integer(_) => {
-                format!("\t%{}_{} = load i32, i32* %{}", variable_expression.name, variable_expression.count, variable_expression.name)
+                format!("%{}_{} = load i32, i32* %{}", variable_expression.name, variable_expression.count, variable_expression.name)
             },
             _ => panic!()
         }

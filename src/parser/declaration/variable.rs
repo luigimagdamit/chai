@@ -11,10 +11,9 @@ use super::print::{PrintVisitor, RebuildVisitor};
 
 // evaluate an expression, then assign the expression at the location of the local variable with store
 pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
-    let mut rebuild = RebuildVisitor;
     let mut visitor = PrintVisitor;
     expression(parser);
-    let (expr, _) = parser.expr_pop();
+
 
     if let Some(expr_ast) = parser.ast_stack.pop() {
         let test = Declaration::new_variable(var_name.to_string(), Some(expr_ast.clone().to_expression()), expr_ast.to_expression().as_datatype());
@@ -22,20 +21,26 @@ pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
         parser.emit_instruction(&test.accept(&mut visitor));
         create_new_symbol(parser, var_name.to_string(), test.as_variable().as_datatype());
         parser.print_symbols();
-        create_new_symbol(parser, var_name.to_string(), expr.data_type);
     }
-    
-
 }
 pub fn variable_declaration(parser: &mut Parser) {
     let global_name = parse_variable_name(parser, "Expected a variable name");
     parser.consume(TokenType::Colon, "Expected : when declaring variable");
     parser.consume(TokenType::Identifier, "Expected a type identifier when declaring variable");
-    // let type_tag = convert_type_tag(parser.previous.unwrap().start);
-    // let codegen = format!("\t%{} = {}", global_name, type_tag);
+    let type_tag = parser.previous.unwrap();
+    let type_tag = match type_tag.start {
+        "int" => DataType::Integer(0),
+        "bool" => DataType::Boolean(true),
+        _ => panic!()
+    };
 
-    // parser.emit_instruction(&codegen);
-    if parser.match_current(TokenType::Equal) { variable_assignment(parser, &global_name) } else {}
+    if parser.match_current(TokenType::Equal) { variable_assignment(parser, &global_name) } 
+    else {
+        let mut visitor = PrintVisitor;
+        let test = Declaration::new_variable(global_name    .to_string(), None, type_tag.clone());
+        parser.emit_instruction(&test.accept(&mut visitor));
+        create_new_symbol(parser, global_name, type_tag);
+    }
 
     parser.consume(TokenType::Semicolon, "Expected a semicolon after variable declaration");
 }
@@ -44,8 +49,9 @@ pub fn parse_set_variable(parser: &mut Parser) {
     let identifier = parser.previous.unwrap();
     if parser.match_current(TokenType::Equal) {
         expression(parser);
-        let expr = parser.expr_pop();
-        set_symbol(parser, String::from(identifier.start), expr.0);
+        // let expr = parser.expr_pop();
+        let expr = parser.ast_stack.pop().unwrap().to_expression().clone();
+        set_symbol(parser, String::from(identifier.start), expr);
         parser.consume(TokenType::Semicolon, "");
     } else {
         parse_get_variable(parser);

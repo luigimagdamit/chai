@@ -77,7 +77,7 @@ impl VariableDeclaration {
         if let Some(expr) = &self.expression {
             expr.as_datatype()
         } else {
-            panic!()
+            self.variable_type.clone()
         }
     }
 }
