@@ -15,7 +15,7 @@ pub enum LlvmConditional {
 impl LlvmConditional {
     pub fn create_branch(&self, bool_reg: u32) -> String {
         match self {
-            Self::If(depth) => format!("\tbr i1 %{}, label %then{}, label %else{}", bool_reg, depth, depth)
+            Self::If(depth) => format!("\tbr i1 %{}, label %then{}, label %else{}", bool_reg - 2, depth, depth)
         }
     }
     pub fn then_branch(&self) -> String {
@@ -69,13 +69,14 @@ impl LlvmConditional {
 pub fn if_statement(parser: &mut Parser) {
     // if keyworld already consumed
     // parse expression
+    parser.expr_count += 3;
     let depth = parser.depth;
     expression(parser);
     let expr = parser.expr_pop();
     let branch = LlvmConditional::If(depth);
     parser.comment(&format!("depth: {}", depth).to_string());
     parser.depth += 1;
-    parser.emit_instruction(&branch.create_branch(expr.1));
+    parser.emit_instruction(&branch.create_branch(expr.1+1));
     parser.consume(TokenType::LeftBrace, "message");
     parser.emit_instruction(&branch.then_branch());
     // parse block

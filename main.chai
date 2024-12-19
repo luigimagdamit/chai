@@ -1,9 +1,28 @@
-var a: bool = true;
-print(a);
+fn main() int {
+    print("hello world!");
 
-a = false;
-print(a);
+    var breakfast: str = "beignets";
+    var beverage: str = "cafe au lait";
 
-var b: bool = false;
+    print(breakfast);
+    print(beverage);
 
-print(a == b);
+    var hungry: bool = true;
+
+    var snacks: int = 10;
+
+    while (snacks != 0) {
+        snacks = snacks - 1;
+
+        if (hungry == true) {
+            print("lets eat!");
+            print("nom");
+            hungry = false;
+        } else {
+            print("ima sleep");
+            print("zzz");
+            hungry = true;
+        }
+
+    }
+}

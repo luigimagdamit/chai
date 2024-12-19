@@ -5,8 +5,6 @@ mod common;
 mod llvm;
 mod jit;
 
-use common::flags::{PARSE_DECLARATION_MODE, PARSE_EXPRESSION_MODE, EMIT_VERBOSE};
-
 use parser::parser::Parser;
 use std::io::{self, Write};
 use jit::compile::jit_compile;

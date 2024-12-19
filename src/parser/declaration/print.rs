@@ -1,4 +1,6 @@
-use crate::parser::expression::expr::{Accept, Binary, DataType, Expression, Operation, VariableExpression, Visitor};
+use std::fmt::format;
+
+use crate::parser::expression::expr::{Accept, Binary, DataType, Expression, Operation, Register, StringConstant, VariableExpression, Visitor};
 use crate::parser::expression::expression::expression;
 use crate::parser::parser::Parser;
 use crate::scanner::token::TokenType;
@@ -9,6 +11,7 @@ use super::declaration::VariableDeclaration;
 pub trait CodegenPrint {
     fn print_i1(expr: &Expression) -> String;
     fn print_i32(expr: &Expression) -> String;
+    fn print_str_constant(expr: &Expression) -> String;
     fn new_variable(dec: &VariableDeclaration) -> String;
     fn store_variable(dec: &VariableDeclaration) -> String;
     fn var_expr(expr: &VariableExpression) -> String;
@@ -21,14 +24,23 @@ impl CodegenPrint for LlvmPrint {
     fn print_i32(expr: &Expression) -> String {
         format!("\tcall void @print_i32(i32 {}); signature from PrintVisitor\n", Expression::from(expr.clone()).resolve_operand())
     }
+    fn print_str_constant(expr: &Expression) -> String {
+        format!("\tcall i32 (i8*, ...) @printf(i8* {})", expr.resolve_operand())
+    }
     fn new_variable(dec: &VariableDeclaration) -> String {
-        format!("\t%{} = alloca i32", dec.name)
+        match dec.as_datatype() {
+            DataType::Integer(_) => format!("\t%{} = alloca i32", dec.name),
+            DataType::Boolean(_) => format!("\t%{} = alloca i1", dec.name),
+            DataType::String(_) => format!("\t%{} = alloca i8*", dec.name)
+        }
+        
     }
     fn store_variable(dec: &VariableDeclaration) -> String {
         if let Some(expr) = &dec.expression {
             match expr.as_datatype() {
                 DataType::Integer(_) => format!("store i32 {}, i32* %{}", expr.resolve_operand(), dec.name),
                 DataType::Boolean(_) => format!("store i1 {}, i1* %{}", expr.resolve_operand(), dec.name),
+                DataType::String(_) => format!("store i8* {}, i8** %{}", expr.resolve_operand(), dec.name),
                 _ => panic!("Strings not supported for storing variables")
             }
             
@@ -42,6 +54,8 @@ impl CodegenPrint for LlvmPrint {
         match expr.datatype {
             DataType::Integer(_) => format!("\n\t%{}_{} = load i32, i32* %{}", expr.name, expr.count, expr.name),
             DataType::Boolean(_) => format!("\n\t%{}_{} = load i1, i1* %{}", expr.name, expr.count, expr.name),
+            DataType::String(_) => format!("\n\t%{}_{} = load i8*, i8** %{}", expr.name, expr.count, expr.name),
+            
             _ => panic!("not supported for strings: variable expressions")
         }
         
@@ -54,6 +68,9 @@ impl Visitor for PrintVisitor {
     }
     fn visit_binary(&mut self, binary: &Binary) -> String {
         binary.print()
+    }
+    fn visit_string(&mut self, str_constant: &StringConstant) -> String {
+        str_constant.print()
     }
     fn visit_print(&mut self, print_statement: &PrintStatement) -> String {
         match &print_statement.expression {
@@ -72,10 +89,14 @@ impl Visitor for PrintVisitor {
                     _ => panic!()
                 }
             },
+            Expression::StringConstant(str_constant) => {
+                str_constant.print()
+            }
             Expression::Variable(variable) => {
                 match variable.datatype {
                     DataType::Integer(_) => LlvmPrint::print_i32(&Expression::from(variable.clone())),
                     DataType::Boolean(_) => LlvmPrint::print_i1(&Expression::from(variable.clone())),
+                    DataType::String(_) => LlvmPrint::print_str_constant(&Expression::from(variable.clone())),
                     _ => panic!()
                 }
             },
@@ -114,6 +135,9 @@ impl Visitor for RebuildVisitor {
         };
         let right = binary.get_right().accept(self);
         format!("({} {} {})", left, operator, right)
+    }
+    fn visit_string(&mut self, str_constant: &StringConstant) -> String {
+        format!("{}", str_constant.name)
     }
     fn visit_print(&mut self, print_statement: &PrintStatement) -> String {
         format!("print {}", print_statement.expression.accept(self))
@@ -157,6 +181,14 @@ pub fn print_statement(parser: &mut Parser) {
                     print_statement.expression = expr;
 
                     parser.emit_instruction(&visitor.visit_print(&print_statement));
+                }
+                Expression::StringConstant(str_constant) => {
+                    let expr = Expression::from(str_constant);
+                    parser.comment(&format!("\t;awww {};", expr.clone().accept(&mut rebuild)));
+                    print_statement.expression = expr;
+
+                    parser.emit_instruction(&visitor.visit_print(&print_statement));
+                    parser.expr_count += 1;
                 }
                 Expression::Variable(variable) => {
                     let expr = Expression::from(variable);

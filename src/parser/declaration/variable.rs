@@ -29,6 +29,7 @@ pub fn variable_declaration(parser: &mut Parser) {
     let type_tag = match type_tag.start {
         "int" => DataType::Integer(0),
         "bool" => DataType::Boolean(true),
+        "str" => DataType::String("".to_string()),
         _ => panic!()
     };
 
@@ -39,7 +40,7 @@ pub fn variable_declaration(parser: &mut Parser) {
         parser.emit_instruction(&test.accept(&mut visitor));
         create_new_symbol(parser, global_name, type_tag);
     }
-
+    parser.expr_count += 1;
     parser.consume(TokenType::Semicolon, "Expected a semicolon after variable declaration");
 }
 

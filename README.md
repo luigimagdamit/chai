@@ -14,21 +14,29 @@ fn main() int {
     var beverage: str = "cafe au lait";
 
     print(breakfast);
-
     print(beverage);
 
-    var hungry: int = 1;
-    if (hungry == 1) {
-        print("lets eat!");
-    }
+    var hungry: bool = true;
 
     var snacks: int = 10;
+
     while (snacks != 0) {
         snacks = snacks - 1;
-        print("nom");
+
+        if (hungry == true) {
+            print("lets eat!");
+            print("nom");
+            hungry = false;
+        } else {
+            print("ima sleep");
+            print("zzz");
+            hungry = true;
+        }
+
     }
 }
 ```
+
 
 
 

@@ -20,6 +20,7 @@ pub fn parse_literal(parser: &mut Parser) -> Result<Expression, ParseError> {
                 create_boolean(parser, TokenType::False);
                 let false_expr = Expression::from_literal(DataType::Boolean(false));
                 parser.ast_stack.push(AstNode::from_expression(false_expr.clone()));
+
                 Ok(false_expr)
             },
             TokenType::True => {

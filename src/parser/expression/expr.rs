@@ -1,7 +1,7 @@
 use std::fmt;
 use crate::{llvm::llvm_print::llvm_call_print_local, parser::declaration::declaration::{PrintStatement, VariableDeclaration}};
 use super::binary::is_boolean_op;
-
+use crate::llvm::llvm_string::*;
 #[allow(unused)]
 
 // DataType is a literal
@@ -124,6 +124,7 @@ impl fmt::Display for Binary {
 pub trait Visitor {
     fn visit_literal(&mut self, literal: &DataType) -> String;
     fn visit_binary(&mut self, binary: &Binary) -> String;
+    fn visit_string(&mut self, str_constant: &StringConstant) -> String;
     fn visit_variable_expression(&mut self, variable_expression: &VariableExpression) -> String;
 
     // Statements
@@ -148,10 +149,29 @@ impl From<VariableExpression> for Expression {
     }
 }
 #[derive(Clone)]
+pub struct StringConstant {
+    pub name: String,
+    pub length: usize,
+    pub count: usize,
+    pub text: String,
+    pub index: usize,
+    pub register: usize
+}
+impl StringConstant {
+    pub fn print(&self) -> String {
+        format!("\tcall i32 (i8*, ...) @printf(i8* %{})", self.register)
+    }
+    pub fn place(&self) -> String {
+        format!("\t%{} = {} ; place() in impl StringConstant", self.register, &llvm_retrieve_static_string(self.length, self.index))
+    }
+}
+
+#[derive(Clone)]
 pub enum Expression {
     Literal(DataType),
     Variable(VariableExpression),
     Binary(Binary),
+    StringConstant(StringConstant),
     Empty
 }
 impl Register for Expression {
@@ -161,7 +181,7 @@ impl Register for Expression {
         match self {
             Expression::Binary(binary) => Expression::from(binary.clone()).resolve_binary(),
             Expression::Literal(literal) => Expression::from(literal.clone()).resolve_binary(),
-
+            Expression::StringConstant(str_constant) => format!("%{}", str_constant.register),
             _ => panic!()
 
         }
@@ -173,6 +193,7 @@ impl Accept for Expression {
             Expression::Literal(literal) => visitor.visit_literal(literal),
             Expression::Binary(binary) => visitor.visit_binary(binary),
             Expression::Variable(variable) => visitor.visit_variable_expression(variable),
+            Expression::StringConstant(str_constant) => visitor.visit_string(str_constant),
             _ => panic!()
         }
     }
@@ -197,12 +218,21 @@ impl From<&DataType> for Expression {
         Expression::Literal(value.clone())
     }
 }
-
+impl From<StringConstant> for Expression {
+    fn from(value: StringConstant) -> Self {
+        Expression::StringConstant(value)
+    }
+}
 impl Expression {
     pub fn new_binary(left: Expression, right: Expression, operator: Operation, register: &str, datatype: DataType) -> Expression {
         Expression::Binary(Binary::new(left, right, operator, register, datatype))
     }
-
+    pub fn as_str_constant(&self) -> StringConstant {
+        match self {
+            Expression::StringConstant(str_constant) => str_constant.clone(),
+            _ => panic!()
+        }
+    }
     pub fn resolve_binary(&self) -> String {
         match self {
             Expression::Binary(b) => {
@@ -231,6 +261,7 @@ impl Expression {
                     _ => "".to_string()
                 }
             },
+            Expression::StringConstant(str_constant) => self.register(),
             Expression::Variable(variable) => {
                 format!("%{}_{}", variable.name, variable.count)
             }
@@ -245,6 +276,7 @@ impl Expression {
             Expression::Literal(datatype) => datatype.clone(),
             Expression::Binary(binary) => binary.datatype.clone(),
             Expression::Variable(variable) => variable.datatype.clone(),
+            Expression::StringConstant(_) => DataType::String("".to_string()),
             _ => panic!()
         }
     }
