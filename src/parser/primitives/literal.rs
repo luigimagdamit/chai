@@ -4,7 +4,7 @@ use super::super::parser::Parser;
 use crate::parser::expression::expr::{DataType, Expr, Expression, ParseError};
 
 
-use crate::parser::parser::AstNode;
+use crate::parser::core::ast_node::AstNode;
 use crate::scanner::token::TokenType;
 fn create_boolean(parser: &mut Parser, token_type: TokenType) {
     match token_type {

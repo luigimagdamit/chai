@@ -170,16 +170,7 @@ pub fn print_statement(parser: &mut Parser) {
     
         }
     } else {
-
     }
-
-    
-
-    // =====================================================
-
-
-
-    //======================================================
     parser.consume(TokenType::Semicolon, "Expect semicolon after value");
 }
 

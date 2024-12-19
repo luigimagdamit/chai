@@ -1,8 +1,14 @@
-use super::{declaration::print::PrintVisitor, expression::expr::{Accept, VariableExpression}, parser::{AstNode, Parser, SymbolTableEntry}};
-use crate::parser::expression::expr::{DataType, Expression};
+use crate::parser::parser::Parser;
+use crate::parser::expression::expr::VariableExpression;
+use crate::parser::declaration::print::PrintVisitor;
+use crate::parser::expression::expr::{DataType, Expression, Accept};
+use crate::parser::core::ast_node::AstNode;
 
-
-
+pub struct SymbolTableEntry {
+    pub name: String,
+    pub count: usize,
+    pub variable_type: DataType
+}
 pub fn get_symbol(parser: &mut Parser, name: String) {
 
     if let Some(variable) = parser.symbol_table.get(&name) {

@@ -1,4 +1,5 @@
-use crate::parser::{expression::expr::Register, parser::AstNode};
+use crate::parser::expression::expr::Register;
+use crate::parser::core::ast_node::AstNode;
 use super::{
     super::{expression::expression::parse_precedence, parser::Parser}, expr::{DataType, ParseError}, precedence::Precedence
 };

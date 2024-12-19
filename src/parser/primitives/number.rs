@@ -1,5 +1,5 @@
 use crate::parser::expression::expr::ParseError;
-use crate::parser::parser::AstNode;
+use crate::parser::core::ast_node::AstNode;
 use super::super::parser::Parser;
 use super::super:: expression::expr::{DataType, Expr, Expression};
 pub fn parse_number(parser: &mut Parser) -> Result<Expression, ParseError> {

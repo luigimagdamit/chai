@@ -1,5 +1,5 @@
 use crate::parser::parser::Parser;
-use crate::parser::symbol::{create_new_symbol, get_symbol, set_symbol};
+use crate::parser::core::symbol::{create_new_symbol, get_symbol, set_symbol};
 use crate::parser::expression::expression::expression;
 use crate::parser::expression::expr::{Accept, DataType, Expression, ParseError};
 use crate::scanner::token::TokenType;

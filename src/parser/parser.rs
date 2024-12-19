@@ -1,66 +1,29 @@
 use std::collections::HashMap;
 use std::process::exit;
-use std::fmt;
 use crate::common::flags::{EMIT_VERBOSE, PARSE_EXPRESSION_MODE, PARSE_FN_OUTPUT, PARSE_SUPRESS_PREDEFINES, PARSE_TOKEN_OUTPUT};
 use crate::scanner::{
     token::{Token, TokenType},
     scanner::Scanner
 };
-use crate::parser::declaration::declaration::{Statement, Declaration};
+use crate::parser::core::ast_node::AstNode;
+
 use crate::common::error::ErrorCode;
 use crate::parser::expression::expr::Expr;
 use crate::llvm::llvm_print::{llvm_fmt_string_int, llvm_main_close, llvm_print_bool_declare, llvm_print_define, llvm_print_i32_define};
 use crate::parser::parse_fn::declaration;
 
+use crate::parser::core::symbol::SymbolTableEntry;
 
-use super::expression::expr::{DataType, Expression};
+
 #[allow(unused)]
 pub struct StringEntry {
     pub codegen: String,
     pub length: usize,
     pub index: usize
 }
-pub struct SymbolTableEntry {
-    pub name: String,
-    pub count: usize,
-    pub variable_type: DataType
-}
 
-#[derive(Clone)]
-pub enum AstNode {
-    Declaration(Declaration),
-    Expression(Expression)
-}
-impl AstNode {
-    pub fn from_expression(expression: Expression) -> AstNode {
-        AstNode::Expression(expression)
-    }
-    pub fn to_expression(self) -> Expression {
-        match self {
-            AstNode::Expression(expr) => expr,
-            _ => Expression::Empty
-        }
-    }
 
-}
-impl From<Declaration> for AstNode {
-    fn from(value: Declaration) -> Self {
-        AstNode::Declaration(value)
-    }
-}
-impl From<Statement> for AstNode {
-    fn from(value: Statement) -> Self {
-        AstNode::Declaration(Declaration::Statement(value))
-    }
-}
-impl fmt::Display for AstNode {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            AstNode::Declaration(_) => write!(f, "todo: declaration ast"),
-            AstNode::Expression(e) => write!(f, "AstNode: Expression => {e}")
-        }
-    }
-}
+
 #[allow(unused)]
 pub struct Parser<'a>{
     pub current: Option<Token<'a>>,
@@ -121,25 +84,7 @@ impl<'a>Parser <'a>{
     pub fn expr_pop(&mut self) -> (Expr, u32) {
         if let Some(popped) = self.constant_stack.pop() {
             let expr = popped.unwrap();
-            match expr.clone().data_type {
-                DataType::Boolean(_) => {
-                    let c1 = format!("\t%{} = add {}, 0\t\t\t\t; expr_pop", self.expr_count , expr.left);
-                    self.emit_instruction(&c1);
-                    self.expr_count += 1;
-                }
-                DataType::Integer(_) => {
-                    let c1 = format!("\t%{} = add {}, 0\t\t\t\t; expr_pop", self.expr_count, expr.left);
-                    self.emit_instruction(&c1);
-                    self.expr_count += 1;
-                }, 
-                DataType::String(str) => {
-                    let str_lookup = self.string_table.get(&str).clone();
-                    if let Some(_lookup_result) = str_lookup {
-
-                        self.expr_count += 1;
-                    }
-                },
-            }
+            self.expr_count += 1;
             return (expr, self.expr_top())
         }
         panic!("{}", self.current.unwrap().token_type);
