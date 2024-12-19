@@ -1,9 +1,52 @@
 use crate::parser::expression::expr::{Accept, Binary, DataType, Expression, Operation, VariableExpression, Visitor};
 use crate::parser::expression::expression::expression;
-use crate::parser::parser::{AstNode, Parser};
-use crate::{llvm::llvm_print::llvm_call_print_local, scanner::token::TokenType};
-use crate::parser::declaration::declaration::{Declaration, PrintStatement};
+use crate::parser::parser::Parser;
+use crate::scanner::token::TokenType;
+use crate::parser::declaration::declaration::PrintStatement;
 
+use super::declaration::VariableDeclaration;
+
+pub trait CodegenPrint {
+    fn print_i1(expr: &Expression) -> String;
+    fn print_i32(expr: &Expression) -> String;
+    fn new_variable(dec: &VariableDeclaration) -> String;
+    fn store_variable(dec: &VariableDeclaration) -> String;
+    fn var_expr(expr: &VariableExpression) -> String;
+}
+pub struct LlvmPrint;
+impl CodegenPrint for LlvmPrint {
+    fn print_i1(expr: &Expression) -> String {
+        format!("\tcall void @print_i1(i1 {}); signature from PrintVisitor\n", Expression::from(expr.clone()).resolve_operand())
+    }
+    fn print_i32(expr: &Expression) -> String {
+        format!("\tcall void @print_i32(i32 {}); signature from PrintVisitor\n", Expression::from(expr.clone()).resolve_operand())
+    }
+    fn new_variable(dec: &VariableDeclaration) -> String {
+        format!("\t%{} = alloca i32", dec.name)
+    }
+    fn store_variable(dec: &VariableDeclaration) -> String {
+        if let Some(expr) = &dec.expression {
+            match expr.as_datatype() {
+                DataType::Integer(_) => format!("store i32 {}, i32* %{}", expr.resolve_operand(), dec.name),
+                DataType::Boolean(_) => format!("store i1 {}, i1* %{}", expr.resolve_operand(), dec.name),
+                _ => panic!("Strings not supported for storing variables")
+            }
+            
+        } else {
+            "".to_string()
+        }
+        
+        
+    }
+    fn var_expr(expr: &VariableExpression) -> String {
+        match expr.datatype {
+            DataType::Integer(_) => format!("\n\t%{}_{} = load i32, i32* %{}", expr.name, expr.count, expr.name),
+            DataType::Boolean(_) => format!("\n\t%{}_{} = load i1, i1* %{}", expr.name, expr.count, expr.name),
+            _ => panic!("not supported for strings: variable expressions")
+        }
+        
+    }
+}
 pub struct PrintVisitor;
 impl Visitor for PrintVisitor {
     fn visit_literal(&mut self, literal: &DataType) -> String{
@@ -13,66 +56,38 @@ impl Visitor for PrintVisitor {
         binary.print()
     }
     fn visit_print(&mut self, print_statement: &PrintStatement) -> String {
-
-        // match print_statement.expression.as_datatype() {
-        //     DataType::Integer(_) => {
-        //         format!("\tcall void @print_i32(i32 {}); signature from PrintVisitor\n", print_statement.expression.resolve_operand())
-        //     },
-        //     DataType::Boolean(_) => {
-        //         format!("\tcall void @print_i1(i1 {}); signature from PrintVisitor\n", print_statement.expression.resolve_operand())
-        //     }
-        //     _ => panic!()
-        // }
         match &print_statement.expression {
             Expression::Binary(binary) => {
-                match binary.operator.clone() {
+                match binary.operator {
                     Operation::Equal | Operation::GreaterEqual | Operation::GreaterThan |Operation::LessEqual |Operation::LessThan | Operation::NotEqual => {
-                        format!("\tcall void @print_i1(i1 {}); signature from PrintVisitor\n", Expression::from(binary.clone()).resolve_operand())
+                        LlvmPrint::print_i1(&Expression::from(binary))
                     },
-                    _ => format!("\tcall void @print_i32(i32 {}); signature from PrintVisitor\n", Expression::from(binary.clone()).resolve_operand())
+                    _ => LlvmPrint::print_i32(&Expression::from(binary))
                 }
             },
             Expression::Literal(literal) => {
                 match literal {
-                    DataType::Integer(_) => {
-                        format!("\tcall void @print_i32(i32 {}); signature from PrintVisitor\n", print_statement.expression.resolve_operand())
-                    },
-                    DataType::Boolean(_) => {
-                        format!("\tcall void @print_i1(i1 {}); signature from PrintVisitor\n", print_statement.expression.resolve_operand())
-                    }   
+                    DataType::Integer(_) => LlvmPrint::print_i32(&Expression::from(literal)),
+                    DataType::Boolean(_) => LlvmPrint::print_i1(&Expression::from(literal)), 
                     _ => panic!()
                 }
             },
             Expression::Variable(variable) => {
                 match variable.datatype {
-                    DataType::Integer(_) => {
-                        format!("\tcall void @print_i32(i32 {}); signature from PrintVisitor\n", print_statement.expression.resolve_operand())
-                    },
-                    DataType::Boolean(_) => {
-                        format!("\tcall void @print_i1(i1 {}); signature from PrintVisitor\n", print_statement.expression.resolve_operand())
-                    }   
+                    DataType::Integer(_) => LlvmPrint::print_i32(&Expression::from(variable.clone())),
+                    DataType::Boolean(_) => LlvmPrint::print_i1(&Expression::from(variable.clone())),
                     _ => panic!()
                 }
             },
-            _ => panic!()
+            _ => panic!("Unrecognized print statement expression input")
         }
     }
     fn visit_variable_declaration(&mut self, variable_declaration: &super::declaration::VariableDeclaration) -> String {
-        match variable_declaration.as_datatype() {
-            DataType::Integer(_) => {
-                format!("\t{}\n\t{} ; signature by visitor\n", variable_declaration.create_variable(), variable_declaration.store())
-            },
-            _ => panic!()
-        }
+        LlvmPrint::new_variable(variable_declaration) + &LlvmPrint::store_variable(variable_declaration)
         
     }
     fn visit_variable_expression(&mut self, variable_expression: &VariableExpression) -> String {
-        match variable_expression.datatype {
-            DataType::Integer(_) => {
-                format!("%{}_{} = load i32, i32* %{}", variable_expression.name, variable_expression.count, variable_expression.name)
-            },
-            _ => panic!()
-        }
+        LlvmPrint::var_expr(variable_expression)
     }
 }
 
@@ -113,7 +128,7 @@ impl Visitor for RebuildVisitor {
         
     }
     fn visit_variable_expression(&mut self, variable_expression: &VariableExpression) -> String {
-        "".to_string()
+        format!("{}", variable_expression.name)
     }
 }
 pub fn print_statement(parser: &mut Parser) {
@@ -134,7 +149,6 @@ pub fn print_statement(parser: &mut Parser) {
                     let expr = Expression::from(b);
                     parser.comment(&format!("\t; {};", expr.clone().accept(&mut rebuild)));
                     print_statement.expression = expr;
-
                     parser.emit_instruction(&visitor.visit_print(&print_statement));
                 },
                 Expression::Literal(l) => {
@@ -156,13 +170,7 @@ pub fn print_statement(parser: &mut Parser) {
     
         }
     } else {
-        let (expr, top) = parser.expr_pop();
-        match &expr.data_type {
-            DataType::Boolean(_) => parser.emit_instruction(&LlvmCallPrint::Integer(top).print_i1()),
-            DataType::Integer(_) => parser.emit_instruction(&LlvmCallPrint::Integer(top).print_i32()),
-            DataType::String (_) => parser.emit_instruction(&LlvmCallPrint::String(top).call_print())
-        }
-        parser.expr_count += 1;
+
     }
 
     
@@ -175,27 +183,3 @@ pub fn print_statement(parser: &mut Parser) {
     parser.consume(TokenType::Semicolon, "Expect semicolon after value");
 }
 
-pub enum LlvmCallPrint {
-    String(u32), //register value
-    Integer(u32),
-}
-impl LlvmCallPrint {
-    pub fn call_print(&self) -> String {
-        match self {
-            Self::String(register) => format!("\tcall i32 (i8*, ...) @printf(i8* %{})\t\t\t\t\t\t\t\t\t\t\t; Auto generated by LlvmCallPrint (print.rs)\n", register),
-            Self::Integer(_) => panic!()
-        }
-    }
-    pub fn print_i32(&self) -> String {
-        match self {
-            Self::Integer(register) => llvm_call_print_local(register.clone(), "i32"),
-            _ => panic!("Not a i32")
-        }
-    }
-    pub fn print_i1(&self) -> String {
-        match self {
-            Self::Integer(register) => llvm_call_print_local(register.clone(), "i1"),
-            _ => panic!("Not a i32")
-        }
-    }
-}

@@ -1,5 +1,5 @@
 use super::{declaration::print::PrintVisitor, expression::expr::{Accept, VariableExpression}, parser::{AstNode, Parser, SymbolTableEntry}};
-use crate::parser::expression::expr::{DataType, Expr, Expression};
+use crate::parser::expression::expr::{DataType, Expression};
 
 
 
@@ -39,6 +39,7 @@ pub fn set_symbol(parser: &mut Parser, name: String, new_value: Expression) {
         }
         match &variable.variable_type {
             DataType::Integer(_) => parser.emit_instruction(&format!("\tstore i32 {}, i32* %{}\t\t ; set symbol (symbol.rs)\n", new_value.resolve_operand() , name)),
+            DataType::Boolean(_) => parser.emit_instruction(&format!("\tstore i1 {}, i1* %{}\t\t ; set symbol (symbol.rs)\n", new_value.resolve_operand() , name)),
             DataType::String(_) => panic!("set_symbol() not impl for strings"),
             _ => panic!("set symbol not added for this data type")
         }

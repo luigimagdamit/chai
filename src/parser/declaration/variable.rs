@@ -1,13 +1,11 @@
-use crate::llvm::llvm_string::llvm_retrieve_static_string;
-use crate::parser::parser::{AstNode, Parser, StringEntry};
+use crate::parser::parser::Parser;
 use crate::parser::symbol::{create_new_symbol, get_symbol, set_symbol};
-use crate::parser::parse_fn::convert_type_tag;
 use crate::parser::expression::expression::expression;
 use crate::parser::expression::expr::{Accept, DataType, Expression, ParseError};
 use crate::scanner::token::TokenType;
 
 use super::declaration::Declaration;
-use super::print::{PrintVisitor, RebuildVisitor};
+use super::print::PrintVisitor;
 
 // evaluate an expression, then assign the expression at the location of the local variable with store
 pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
@@ -37,7 +35,7 @@ pub fn variable_declaration(parser: &mut Parser) {
     if parser.match_current(TokenType::Equal) { variable_assignment(parser, &global_name) } 
     else {
         let mut visitor = PrintVisitor;
-        let test = Declaration::new_variable(global_name    .to_string(), None, type_tag.clone());
+        let test = Declaration::new_variable(global_name.to_string(), None, type_tag.clone());
         parser.emit_instruction(&test.accept(&mut visitor));
         create_new_symbol(parser, global_name, type_tag);
     }
@@ -54,36 +52,12 @@ pub fn parse_set_variable(parser: &mut Parser) {
         set_symbol(parser, String::from(identifier.start), expr);
         parser.consume(TokenType::Semicolon, "");
     } else {
-        parse_get_variable(parser);
+        let _ = parse_get_variable(parser);
     }
 }
 
 #[allow(unused)]
-pub enum LlvmTempRegister {
-    StaticString(u32), // holds string value for lookup
-    Integer(u32) // register from exprtop
-}
-impl LlvmTempRegister {
-    pub fn new_register(&self, lookup: &StringEntry) -> String {
-        match self {
-            Self::StaticString(register) => {
-                format!("\t%{} = {}\t\t;LLVM Register for String @ ExprCount {}(variable.rs) ", register, llvm_retrieve_static_string(lookup.length, lookup.index), register)
-            },
-            _ => panic!()
-        }
-    }
 
-    pub fn store_in_alloca(&self, target: &str) -> String {
-        match self {
-            Self::StaticString(register) => {
-                format!("\tstore i8* %{register}, i8** %{target}\t\t\t\t ; storing item in a stack variable\n")
-            },
-            LlvmTempRegister::Integer(register) => {
-                format!("\tstore i32 %{}, i32* %{}\t\t\t; int variable assignment (variable.rs)\n", register , target)
-            }
-        }
-    }
-}
 
 pub fn parse_variable_name(parser: &mut Parser, err_msg: &str) -> String {
     parser.consume(TokenType::Identifier, err_msg);

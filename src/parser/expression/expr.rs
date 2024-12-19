@@ -1,4 +1,4 @@
-use std::{clone, fmt};
+use std::fmt;
 use crate::{llvm::llvm_print::llvm_call_print_local, parser::declaration::declaration::{PrintStatement, VariableDeclaration}};
 use super::binary::is_boolean_op;
 
@@ -32,37 +32,18 @@ impl DataType {
     pub fn print(&self) -> String {
         match self {
             DataType::Integer(int) => {
-                let cg = format!("add i32 {int}, 0; a");
-                cg
+                format!("add i32 {int}, 0; a")
             },
             DataType::Boolean(bool) => {
                 let bool_val = if *bool {1} else {0};
-                let mut cg = format!("add i1 {bool_val}, 0");
-                cg
+                format!("add i1 {bool_val}, 0")
             }
             _ => "".to_string()
         }
     }
-    pub fn type_tag(&self) -> &str {
-        match self {
-            DataType::Integer(_) => "i32",
-            DataType::Boolean(_) => "i1",
-            _ => panic!()
-        }
-    }
-    pub fn as_int(&self) -> i32 {
-        match self {
-            DataType::Integer(i) => *i,
-            _ => panic!()
-        }
-    }
-    pub fn as_bool(&self) -> bool {
-        match self {
-            DataType::Boolean(b) => *b,
-            _ => panic!()
-        }
-    }
 }
+
+
 #[derive(Clone)]
 pub enum Operation {
     Add,
@@ -103,6 +84,7 @@ pub struct Binary {
     datatype: DataType
 
 }
+#[allow(unused)]
 impl Binary {
     pub fn new(left: Expression, right: Expression, operator: Operation, register: &str, datatype: DataType) -> Binary {
         Binary {left: Box::new(left), right: Box::new(right), operator, register: register.to_string(), datatype}
@@ -200,9 +182,19 @@ impl From<Binary> for Expression {
         Expression::Binary(binary)
     }
 }
+impl From<&Binary> for Expression {
+    fn from(binary: &Binary) -> Expression {
+        Expression::Binary(binary.clone())
+    }
+}
 impl From<DataType> for Expression {
     fn from(value: DataType) -> Self {
         Expression::Literal(value)
+    }
+}
+impl From<&DataType> for Expression {
+    fn from(value: &DataType) -> Self {
+        Expression::Literal(value.clone())
     }
 }
 
@@ -210,18 +202,7 @@ impl Expression {
     pub fn new_binary(left: Expression, right: Expression, operator: Operation, register: &str, datatype: DataType) -> Expression {
         Expression::Binary(Binary::new(left, right, operator, register, datatype))
     }
-    pub fn get_register(&self) -> String {
-        match self {
-            Expression::Binary(b) => b.register.clone(),
-            _ => "".to_string()
-        }
-    }
-    pub fn as_binary(&self) -> Binary {
-        match self {
-            Expression::Binary(b) => b.clone(),
-            _ => panic!()
-        }
-    }
+
     pub fn resolve_binary(&self) -> String {
         match self {
             Expression::Binary(b) => {
@@ -267,12 +248,7 @@ impl Expression {
             _ => panic!()
         }
     }
-    pub fn type_tag(&self) -> &str {
-        match self.as_datatype() {
-            DataType::Integer(int) => "i32",
-            _ => panic!()
-        }
-    }
+
 }
 impl fmt::Display for Expression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

@@ -2,7 +2,7 @@
 
 use crate::scanner::token::TokenType;
 use crate::parser::{
-    declaration::function::parse_fn_declare, declaration::variable::parse_get_variable, parser::Parser,
+    declaration::variable::parse_get_variable, parser::Parser,
     primitives::{literal::parse_literal, number::parse_number, string::parse_string},
     expression::{binary::parse_binary, precedence::Precedence, expression::parse_grouping, expr::{Expression, ParseError}}
 };

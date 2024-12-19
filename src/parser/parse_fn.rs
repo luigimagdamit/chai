@@ -18,14 +18,6 @@ pub fn expression_statement(parser: &mut Parser) {
     parser.consume(TokenType::Semicolon, "Expect ; after expression");
 }
 
-pub fn convert_type_tag(tag: &str) -> String {
-    match tag {
-        "int" => String::from("alloca i32"),
-        "bool" => String::from("alloca i1"),
-        "str" => String::from("alloca i8*"),
-        _ => String::from("")
-    }
-}
 // getters need to create a new expression since it is one
 
 fn advance_then_declaration(parser: &mut Parser, declaration: fn(&mut Parser)) {
@@ -54,7 +46,7 @@ pub fn statement(parser: &mut Parser) {
     } else if parser.match_current(TokenType::While) {
         while_statement(parser);
     } else if parser.match_current(TokenType::Identifier) {
-        parse_get_variable(parser);
+        let _ = parse_get_variable(parser);
     }
     else {
         expression_statement(parser);

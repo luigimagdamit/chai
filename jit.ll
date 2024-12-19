@@ -2,54 +2,31 @@
 define i32 @main() {
 entry:
 
-	%a = alloca i32
-	store i32 0, i32* %a ; signature by visitor
+	%a = alloca i32store i1 1, i1* %a
 
-	%b = alloca i32
-	store i32 1, i32* %b ; signature by visitor
-
-	%i = alloca i32
-	store i32 0, i32* %i ; signature by visitor
-
-%a_0 = load i32, i32* %a
+	%a_0 = load i1, i1* %a
 ;	ast mode
-;	; ;
-	call void @print_i32(i32 %a_0); signature from PrintVisitor
+;	; a;
+	call void @print_i1(i1 %a_0); signature from PrintVisitor
 
-	br label %cond0
+	store i1 0, i1* %a		 ; set symbol (symbol.rs)
 
-cond0:
-%i_0 = load i32, i32* %i
-	%0 = icmp slt i32 %i_0, 9
-;depth: 0
-	%1 = add i32 9, 0				; expr_pop
-	br i1 %0, label %body0, label %exit0
 
-body0:
-%b_0 = load i32, i32* %b
-	%tmp = alloca i32
-	store i32 %b_0, i32* %tmp ; signature by visitor
-
-%a_1 = load i32, i32* %a
-%b_1 = load i32, i32* %b
-	%2 = add i32 %a_1, %b_1
-	store i32 %2, i32* %b		 ; set symbol (symbol.rs)
-
-%tmp_0 = load i32, i32* %tmp
-	store i32 %tmp_0, i32* %a		 ; set symbol (symbol.rs)
-
-%tmp_1 = load i32, i32* %tmp
+	%a_1 = load i1, i1* %a
 ;	ast mode
-;	; ;
-	call void @print_i32(i32 %tmp_1); signature from PrintVisitor
+;	; a;
+	call void @print_i1(i1 %a_1); signature from PrintVisitor
 
-%i_1 = load i32, i32* %i
-	%3 = add i32 %i_1, 1
-	store i32 %3, i32* %i		 ; set symbol (symbol.rs)
+	%b = alloca i32store i1 0, i1* %b
 
-	br label %cond0
+	%a_2 = load i1, i1* %a
 
-exit0:
+	%b_0 = load i1, i1* %b
+	%0 = icmp eq i1 %a_2, %b_0
+;	ast mode
+;	; (a == b);
+	call void @print_i1(i1 %0); signature from PrintVisitor
+
 
 	ret i32 0 ; llvm_main_close
 }

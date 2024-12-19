@@ -1,2 +1,9 @@
-var i: int = 30;
-print(i < 10);
+var a: bool = true;
+print(a);
+
+a = false;
+print(a);
+
+var b: bool = false;
+
+print(a == b);

@@ -20,13 +20,7 @@ impl From<PrintStatement> for Statement {
         Statement::PrintStatement(print_statement)
     }
 }
-impl Statement {
-    pub fn new_print_statement(expression: Expression) -> Statement{
-        Statement::PrintStatement(PrintStatement{
-            expression
-        })
-    }
-}
+
 impl fmt::Display for Statement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -51,27 +45,6 @@ impl fmt::Display for VariableDeclaration {
     }
 }
 impl VariableDeclaration {
-    pub fn create_variable(&self) -> String{
-        match self.variable_type {
-            DataType::Integer(_) => {
-                format!("%{} = alloca i32", self.name)
-            },
-            _ => panic!()
-        }
-    }
-    pub fn store(&self) -> String {
-        match &self.variable_type {
-            DataType::Integer(_) => {
-                if let Some(expr) = &self.expression {
-                    format!("store i32 {}, i32* %{}", expr.resolve_operand(), self.name)
-                } else {
-                    "".to_string()
-                }
-
-            },
-            _ => panic!()
-        }
-    }
 
     pub fn as_datatype(&self) -> DataType {
         if let Some(expr) = &self.expression {
@@ -92,15 +65,10 @@ impl Accept for Declaration {
         match self {    
             Declaration::Statement(statement) => {
                 match statement {
-                    Statement::PrintStatement(print_statement) => {
-                        visitor.visit_print(print_statement)
-                    }
+                    Statement::PrintStatement(print_statement) => visitor.visit_print(print_statement)
                 }
             },
-            Declaration::Variable(var_declaration) => {
-                visitor.visit_variable_declaration(var_declaration)
-            }
-            _ => panic!()
+            Declaration::Variable(var_declaration) => visitor.visit_variable_declaration(var_declaration)
         }
     }
 }
@@ -110,9 +78,6 @@ impl From<PrintStatement> for Declaration {
     }
 }
 impl Declaration {
-    pub fn new_statement(statement: Statement) -> Declaration {
-        Declaration::Statement(statement)
-    }
     pub fn new_variable(name: String, expression: Option<Expression>, variable_type: DataType) -> Declaration {
         Declaration::Variable(VariableDeclaration {
             name,

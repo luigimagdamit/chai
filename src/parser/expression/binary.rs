@@ -1,11 +1,10 @@
 use crate::parser::{expression::expr::Register, parser::AstNode};
 use super::{
-    super::{expression::expression::parse_precedence, parser::Parser}, expr::{DataType, Expr, ParseError}, precedence::Precedence
+    super::{expression::expression::parse_precedence, parser::Parser}, expr::{DataType, ParseError}, precedence::Precedence
 };
 use crate::parser::expression::expr::{Expression, Operation};
 use crate::parser::expression::parse_rule::get_rule;
 use crate::scanner::token::TokenType;
-use crate::llvm::llvm_binary::llvm_binary_operands;
 
 pub fn parse_binary(parser: &mut Parser)  -> Result<Expression, ParseError>{
     if let Some(token) = parser.previous {
@@ -16,18 +15,18 @@ pub fn parse_binary(parser: &mut Parser)  -> Result<Expression, ParseError>{
         parse_precedence(parser, Precedence::from_u32(new_prec + 1));
 
         match operator_type {
-            TokenType::Plus => binary_op(parser, add_op, Operation::Add),
-            TokenType::Minus => binary_op(parser, sub_op, Operation::Sub),
-            TokenType::Star => binary_op(parser, mult_op, Operation::Mul),
-            TokenType::Slash => binary_op(parser, div_op, Operation::Div),
+            TokenType::Plus => binary_op(parser, Operation::Add),
+            TokenType::Minus => binary_op(parser, Operation::Sub),
+            TokenType::Star => binary_op(parser, Operation::Mul),
+            TokenType::Slash => binary_op(parser, Operation::Div),
 
 
-            TokenType::EqualEqual => binary_op(parser, eq_op, Operation::Equal),
-            TokenType::BangEqual => binary_op(parser, neq_op, Operation::NotEqual),
-            TokenType::Greater => binary_op(parser, gt_op, Operation::GreaterThan),
-            TokenType::Less => binary_op(parser, lt_op, Operation::LessThan),
-            TokenType::GreaterEqual => binary_op(parser, gte_op, Operation::GreaterEqual),
-            TokenType::LessEqual => binary_op(parser, lte_op, Operation::LessEqual),
+            TokenType::EqualEqual => binary_op(parser, Operation::Equal),
+            TokenType::BangEqual => binary_op(parser, Operation::NotEqual),
+            TokenType::Greater => binary_op(parser, Operation::GreaterThan),
+            TokenType::Less => binary_op(parser, Operation::LessThan),
+            TokenType::GreaterEqual => binary_op(parser, Operation::GreaterEqual),
+            TokenType::LessEqual => binary_op(parser, Operation::LessEqual),
 
             _ => Err(ParseError::Generic)
         }
@@ -36,61 +35,33 @@ pub fn parse_binary(parser: &mut Parser)  -> Result<Expression, ParseError>{
     }
     
 }
-fn match_instruction(operation: Operation) -> (String, fn(i32, i32) -> i32) {
-    match operation {
-        Operation::Add => (ADD.to_string(), add_op),
-        Operation::Sub => (SUB.to_string(), sub_op),
-        Operation::Div => (DIV.to_string(), div_op),
-        Operation::Mul => (MUL.to_string(), mult_op),
-        Operation::Equal => (EQL.to_string(), eq_op),
-        Operation::NotEqual => (NEQ.to_string(), neq_op),
-        Operation::GreaterEqual => (GTE.to_string(), gte_op),
-        Operation::GreaterThan => (GT.to_string(), gt_op),
-        Operation::LessEqual => (LTE.to_string(), lte_op),
-        Operation::LessThan => (LT.to_string(), lt_op)
-    }
-}
+
 pub fn is_boolean_op(instruction: Operation) -> bool{
     match instruction {
         Operation::Add | Operation::Div | Operation::Mul | Operation::Sub => false,
         _ => true
     }
 }
-fn binary_op(parser: &mut Parser, operator: fn(i32, i32) -> i32, instruction: Operation)  -> Result<Expression, ParseError>
+fn binary_op(parser: &mut Parser, instruction: Operation)  -> Result<Expression, ParseError>
 {
     let operands = get_binary_operands(parser);
-    let type_tag = match instruction {
-        Operation::Add | Operation::Div | Operation::Mul | Operation::Sub => { "i32" },
-        _ => { "i1" }
-    };
+
             
     let b_expr = operands.0;
     let a_expr = operands.1;
     
     match (b_expr.as_datatype(), a_expr.as_datatype()) {
-        (DataType::Integer(a), DataType::Integer(b)) => {
-            // let datatype = match instruction {
-            //     Operation::Add | Operation::Div | Operation::Mul | Operation::Sub => { DataType::Integer(0) },
-            //     _ => { DataType::Boolean(true) }
-            // };
+        (DataType::Integer(_), DataType::Integer(_)) => {
             let datatype = DataType::Integer(0);
-
             let ast_node = Expression::new_binary(b_expr, a_expr, instruction, &parser.expr_increment().to_string(), datatype);
 
             let codegen = "\t".to_string() + &ast_node.register();
             parser.emit_instruction(&codegen);
-
-
-
             parser.ast_stack.push(AstNode::Expression(ast_node.clone()));
                     
             return Ok(ast_node)
         },
-        (DataType::Boolean(a), DataType::Boolean(b)) if is_boolean_op(instruction.clone()) => {
-            let a_int =  if a { 1 } else { 0 };
-            let b_int =  if b { 1 } else { 0 };
-            
-            let bool_op = operator(a_int, b_int);
+        (DataType::Boolean(_), DataType::Boolean(_)) if is_boolean_op(instruction.clone()) => {
             let register= parser.expr_increment();
             let ast_node = Expression::new_binary(b_expr, a_expr, instruction, &register.to_string(), DataType::Boolean(true));
             let codegen = "\t".to_string() + &ast_node.register();
@@ -102,51 +73,10 @@ fn binary_op(parser: &mut Parser, operator: fn(i32, i32) -> i32, instruction: Op
             return Ok(ast_node)
         },
         (_, _) => return Err(ParseError::Generic)
-                // no operators found
-                
     }
-
-
 }
 
 
-fn add_op(a: i32, b: i32) -> i32 {
-    a + b
-}
-fn sub_op(a: i32, b: i32) -> i32 {
-    a - b
-}
-fn mult_op(a: i32, b: i32) -> i32 {
-    a * b
-}
-fn div_op(a: i32, b: i32) -> i32 {
-    a / b
-}
-
-fn eq_op(a: i32, b: i32) -> i32 {
-    let res = a == b;
-    if res {1} else {0}
-}
-fn neq_op(a: i32, b: i32) -> i32 {
-    let res = a != b;
-    if res {1} else {0}
-}
-fn gt_op(a: i32, b: i32) -> i32 {
-    let res = a > b;
-    if res {1} else {0}
-}
-fn gte_op(a: i32, b: i32) -> i32 {
-    let res = a >= b;
-    if res {1} else {0}
-}
-fn lt_op(a: i32, b: i32) -> i32 {
-    let res = a < b;
-    if res {1} else {0}
-}
-fn lte_op(a: i32, b: i32) -> i32 {
-    let res = a <= b;
-    if res {1} else {0}
-}
 
 fn get_binary_operands(parser: &mut Parser) -> (Expression, Expression) {
     
@@ -156,16 +86,3 @@ fn get_binary_operands(parser: &mut Parser) -> (Expression, Expression) {
     (local_left.to_expression(), local_right.to_expression())
 
 }
-
-const ADD: &str = "add";
-const SUB: &str = "sub";
-const MUL: &str = "mul";
-const DIV: &str = "div";
-
-const EQL: &str = "icmp eq";
-const NEQ: &str = "icmp ne";
-const GT: &str = "icmp sgt";
-const GTE: &str = "icmp sge";
-const LT: &str = "icmp slt";
-const LTE: &str = "icmp sle";
-const BOOL_OPS: [&str; 6] = [EQL, NEQ, GT, GTE, LT, LTE];
