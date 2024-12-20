@@ -214,6 +214,7 @@ pub fn print_statement(parser: &mut Parser) {
                     print_statement.expression = expr;
                     parser.comment(&format!("; {};", &rebuild.visit_print(&print_statement)));
                     parser.emit_instruction(&visitor.visit_print(&print_statement));
+                    parser.expr_count += 1;
                 }
                 _ => ()
             }

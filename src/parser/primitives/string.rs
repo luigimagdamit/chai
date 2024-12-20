@@ -14,17 +14,16 @@ pub fn parse_string(parser: &mut Parser) -> Result<Expression, ParseError> {
     match parser.string_table.get(value) {
         Some(str) => {
             let retrieve_codegen = string_expr(length - 1, str.index, value, parser.expr_count);
-            
-            parser.ast_stack.push(AstNode::from_expression(
-                Expression::from(StringConstant{
-                    name: value.to_string(),
-                    length: length - 1,
-                    count: 0,
-                    index: str.index,
-                    text: value.to_string(),
-                    register: parser.expr_count as usize
-                })
-            ));
+            let str_constant=  Expression::from(StringConstant{
+                name: value.to_string(),
+                length: length - 1,
+                count: 0,
+                index: str.index,
+                text: value.to_string(),
+                register: parser.expr_count as usize
+            });
+            parser.ast_stack.push(AstNode::from_expression(str_constant.clone()));
+            parser.emit_instruction(&str_constant.as_str_constant().place());
             parser.new_expr(retrieve_codegen.clone());
             parser.string_table.get_mut(value).unwrap().index += 1;
             parser.expr_count += 1;
