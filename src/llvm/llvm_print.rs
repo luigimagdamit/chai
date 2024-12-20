@@ -10,7 +10,7 @@ pub fn llvm_main_close() -> String {
 }
 pub fn llvm_print_define() -> String {
     let codegen = "declare i32 @printf(i8*, ...)";
-    println!("{}", codegen);
+
     String::from(codegen)
 }
 pub fn llvm_print_i32_define() -> String {
@@ -34,7 +34,7 @@ pub fn llvm_call_print(index: u32, data_type: &str) {
 }
 pub fn llvm_call_print_local(index: u32, data_type: &str) -> String {
     let codegen = format!(
-        "\tcall void @print_{}({} %{})\n", data_type, data_type, index);
+        "call void @print_{}({} %{})\n", data_type, data_type, index);
     //println!("{}", codegen);
     codegen
 }

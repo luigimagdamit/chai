@@ -3,7 +3,7 @@ mod tests {
     use core::panic;
 
     use crate::common::flags::PARSE_CONSTANT_FOLD;
-    use crate::parser::expression::expr::DataType;
+    use crate::parser::expression::expr::{Binary, DataType, Expression};
     use crate::parser::expression::expression::parse_precedence;
     use crate::scanner::token::TokenType;
     use crate::parser::parser::Parser;
@@ -14,18 +14,32 @@ mod tests {
         parser.advance();
         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Integer(value) => {
-                    assert_eq!(value, 3);
-                    assert_eq!(parser.compilation, "\t%0 = add i32 1, 2\n");
+        if let Some(ast_node) = parser.ast_stack.pop() {
+            let expr = ast_node.to_expression();
+            assert_eq!(expr.as_datatype(), DataType::Integer(0)); // test if binary type is correct
+
+            // Assert that left operand is 1
+            match Binary::from(expr.clone()).get_left() {
+                Expression::Literal(literal) => {
+                    match literal {
+                        DataType::Integer(int) => assert_eq!(int, 1),
+                        _ => panic!()
+                    }
                 },
-                _ => {}
+                _ => panic!()
             }
-        } else {
-            panic!();
+
+            // Assert that right operand is 2
+            match Binary::from(expr).get_right() {
+                Expression::Literal(literal) => {
+                    match literal {
+                        DataType::Integer(int) => assert_eq!(int, 2),
+                        _ => panic!()
+                    }
+                },
+                _ => panic!()
+            }
         }
-        assert_eq!(parser.constant_stack.len(), 0);
         
     }
     #[test]

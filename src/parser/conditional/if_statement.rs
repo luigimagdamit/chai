@@ -15,12 +15,12 @@ pub enum LlvmConditional {
 impl LlvmConditional {
     pub fn create_branch(&self, bool_reg: u32) -> String {
         match self {
-            Self::If(depth) => format!("\tbr i1 %{}, label %then{}, label %else{}", bool_reg - 2, depth, depth)
+            Self::If(depth) => format!("br i1 %{}, label %then{}, label %else{}", bool_reg - 2, depth, depth)
         }
     }
     pub fn then_branch(&self) -> String {
         match self {
-            Self::If(depth) => format!("\nthen{}:", depth)
+            Self::If(depth) => format!("then{}:", depth)
         }
     }
     pub fn else_branch(&self) -> String {
@@ -35,13 +35,13 @@ impl LlvmConditional {
     }
     pub fn to_end(&self) -> String {
         match self {
-            Self::If(depth) => format!("\tbr label %end{}", depth)
+            Self::If(depth) => format!("br label %end{}", depth)
         }
     }
 
     pub fn while_cond(&self, bool_reg: u32) -> String {
         match self {
-            Self::If(depth) => format!("\tbr i1 %{}, label %body{}, label %exit{}", bool_reg, depth, depth)
+            Self::If(depth) => format!("br i1 %{}, label %body{}, label %exit{}", bool_reg, depth, depth)
         }
     }
     pub fn while_start(&self) -> String {
@@ -61,7 +61,7 @@ impl LlvmConditional {
     }
     pub fn while_check_cond(&self, bool_reg: u32) -> String {
         match self {
-            Self::If(depth) => format!("\tbr label %cond{}", depth)
+            Self::If(depth) => format!("br label %cond{}", depth)
         }
     }
     

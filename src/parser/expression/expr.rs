@@ -5,7 +5,7 @@ use crate::llvm::llvm_string::*;
 #[allow(unused)]
 
 // DataType is a literal
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub enum DataType {
     Integer(i32),
     String(String),
@@ -40,6 +40,16 @@ impl DataType {
             }
             _ => "".to_string()
         }
+    }
+    pub fn as_str(&self) -> &str {
+        match self {
+            DataType::Integer(_) => "i32",
+            DataType::Boolean(_) => "i1",
+            DataType::String(_) => "i8*"
+        }
+    }
+    pub fn place(&self, register: usize) -> String {
+        format!("%{} = {}", register, self.print())
     }
 }
 
@@ -159,10 +169,10 @@ pub struct StringConstant {
 }
 impl StringConstant {
     pub fn print(&self) -> String {
-        format!("\tcall i32 (i8*, ...) @printf(i8* %{})", self.register)
+        format!("call i32 (i8*, ...) @printf(i8* %{})", self.register)
     }
     pub fn place(&self) -> String {
-        format!("\t%{} = {} ; place() in impl StringConstant", self.register, &llvm_retrieve_static_string(self.length, self.index))
+        format!("%{} = {} ; place() in impl StringConstant", self.register, &llvm_retrieve_static_string(self.length, self.index))
     }
 }
 
@@ -218,6 +228,14 @@ impl From<&DataType> for Expression {
         Expression::Literal(value.clone())
     }
 }
+impl From<Expression> for Binary {
+    fn from(value: Expression) -> Self {
+        match value {
+            Expression::Binary(binary) => binary,
+            _ => panic!("Not a binary expression") 
+        }
+    }
+}
 impl From<StringConstant> for Expression {
     fn from(value: StringConstant) -> Self {
         Expression::StringConstant(value)
@@ -236,11 +254,7 @@ impl Expression {
     pub fn resolve_binary(&self) -> String {
         match self {
             Expression::Binary(b) => {
-                let tag = match b.datatype {
-                    DataType::Boolean(_) => "i1",
-                    DataType::Integer(_) => "i32",
-                    DataType::String(_) => panic!()
-                 };
+                let tag = b.as_datatype().as_str();
                 let mut codegen = format!("{} {tag} ", b.operator);
                 codegen += &b.get_left().resolve_operand();
                 codegen += &", ".to_string();

@@ -19,19 +19,19 @@ pub trait CodegenPrint {
 pub struct LlvmPrint;
 impl CodegenPrint for LlvmPrint {
     fn print_i1(expr: &Expression) -> String {
-        format!("\tcall void @print_i1(i1 {}); signature from PrintVisitor\n", Expression::from(expr.clone()).resolve_operand())
+        format!("call void @print_i1(i1 {}); signature from PrintVisitor\n", Expression::from(expr.clone()).resolve_operand())
     }
     fn print_i32(expr: &Expression) -> String {
-        format!("\tcall void @print_i32(i32 {}); signature from PrintVisitor\n", Expression::from(expr.clone()).resolve_operand())
+        format!("call void @print_i32(i32 {}); signature from PrintVisitor\n", Expression::from(expr.clone()).resolve_operand())
     }
     fn print_str_constant(expr: &Expression) -> String {
-        format!("\tcall i32 (i8*, ...) @printf(i8* {})", expr.resolve_operand())
+        format!("call i32 (i8*, ...) @printf(i8* {})", expr.resolve_operand())
     }
     fn new_variable(dec: &VariableDeclaration) -> String {
         match dec.as_datatype() {
-            DataType::Integer(_) => format!("\t%{} = alloca i32", dec.name),
-            DataType::Boolean(_) => format!("\t%{} = alloca i1", dec.name),
-            DataType::String(_) => format!("\t%{} = alloca i8*", dec.name)
+            DataType::Integer(_) => format!("%{} = alloca i32", dec.name),
+            DataType::Boolean(_) => format!("%{} = alloca i1", dec.name),
+            DataType::String(_) => format!("%{} = alloca i8*", dec.name)
         }
         
     }
@@ -52,9 +52,9 @@ impl CodegenPrint for LlvmPrint {
     }
     fn var_expr(expr: &VariableExpression) -> String {
         match expr.datatype {
-            DataType::Integer(_) => format!("\n\t%{}_{} = load i32, i32* %{}", expr.name, expr.count, expr.name),
-            DataType::Boolean(_) => format!("\n\t%{}_{} = load i1, i1* %{}", expr.name, expr.count, expr.name),
-            DataType::String(_) => format!("\n\t%{}_{} = load i8*, i8** %{}", expr.name, expr.count, expr.name),
+            DataType::Integer(_) => format!("%{}_{} = load i32, i32* %{} ; loading existing variable", expr.name, expr.count, expr.name),
+            DataType::Boolean(_) => format!("%{}_{} = load i1, i1* %{} ; loading existing variable", expr.name, expr.count, expr.name),
+            DataType::String(_) => format!("%{}_{} = load i8*, i8** %{} ; loading existing variable", expr.name, expr.count, expr.name),
             
             _ => panic!("not supported for strings: variable expressions")
         }
@@ -104,7 +104,7 @@ impl Visitor for PrintVisitor {
         }
     }
     fn visit_variable_declaration(&mut self, variable_declaration: &super::declaration::VariableDeclaration) -> String {
-        LlvmPrint::new_variable(variable_declaration) + &LlvmPrint::store_variable(variable_declaration)
+        LlvmPrint::new_variable(variable_declaration) + &"\n\t" + &LlvmPrint::store_variable(variable_declaration)
         
     }
     fn visit_variable_expression(&mut self, variable_expression: &VariableExpression) -> String {
@@ -164,27 +164,26 @@ pub fn print_statement(parser: &mut Parser) {
     let mut print_statement = PrintStatement{ expression: Expression::Empty };
     // =====================================================
     if ast_mode {
-        parser.comment("\tast mode");
         let expr_ast = parser.ast_stack.pop();
 
         if let Some(ast_node) = expr_ast { 
             match ast_node.to_expression() {
                 Expression::Binary(b) => {
                     let expr = Expression::from(b);
-                    parser.comment(&format!("\t; {};", expr.clone().accept(&mut rebuild)));
+                    parser.comment(&format!("; {};", expr.clone().accept(&mut rebuild)));
                     print_statement.expression = expr;
                     parser.emit_instruction(&visitor.visit_print(&print_statement));
                 },
                 Expression::Literal(l) => {
                     let expr = Expression::from(l);
-                    parser.comment(&format!("\t; {};", expr.clone().accept(&mut rebuild)));
+                    parser.comment(&format!("; {};", expr.clone().accept(&mut rebuild)));
                     print_statement.expression = expr;
 
                     parser.emit_instruction(&visitor.visit_print(&print_statement));
                 }
                 Expression::StringConstant(str_constant) => {
                     let expr = Expression::from(str_constant);
-                    parser.comment(&format!("\t;awww {};", expr.clone().accept(&mut rebuild)));
+                    parser.comment(&format!("calling print on {};", expr.clone().accept(&mut rebuild)));
                     print_statement.expression = expr;
 
                     parser.emit_instruction(&visitor.visit_print(&print_statement));
@@ -192,7 +191,7 @@ pub fn print_statement(parser: &mut Parser) {
                 }
                 Expression::Variable(variable) => {
                     let expr = Expression::from(variable);
-                    parser.comment(&format!("\t; {};", expr.clone().accept(&mut rebuild)));
+                    parser.comment(&format!("; printing {};", expr.clone().accept(&mut rebuild)));
                     print_statement.expression = expr;
 
                     parser.emit_instruction(&visitor.visit_print(&print_statement));

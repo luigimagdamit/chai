@@ -65,12 +65,12 @@ impl<'a>Parser <'a>{
     }
     pub fn emit_instruction(&mut self, inst: &String) {
         if EMIT_VERBOSE { println!("{inst}") }
+        self.compilation += &("\t");
         self.compilation += inst;
         self.compilation += &String::from("\n");
     }
     pub fn comment(&mut self, comment: &str) {
-        if EMIT_VERBOSE { println!("{comment}") }
-        self.compilation += &(";".to_string() + comment);
+        self.compilation += &("\n\t;".to_string() + comment);
         self.compilation += &String::from("\n");
     }
     pub fn new_expr(&mut self, expr: Expr) {
