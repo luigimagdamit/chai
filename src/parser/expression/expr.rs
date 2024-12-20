@@ -54,7 +54,7 @@ impl DataType {
 }
 
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum Operation {
     Add,
     Sub,

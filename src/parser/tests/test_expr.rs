@@ -3,7 +3,7 @@ mod tests {
     use core::panic;
 
     use crate::common::flags::PARSE_CONSTANT_FOLD;
-    use crate::parser::expression::expr::{Binary, DataType, Expression};
+    use crate::parser::expression::expr::{Binary, DataType, Expression, Operation};
     use crate::parser::expression::expression::parse_precedence;
     use crate::scanner::token::TokenType;
     use crate::parser::parser::Parser;
@@ -17,7 +17,7 @@ mod tests {
         if let Some(ast_node) = parser.ast_stack.pop() {
             let expr = ast_node.to_expression();
             assert_eq!(expr.as_datatype(), DataType::Integer(0)); // test if binary type is correct
-
+            assert_eq!(Binary::from(expr.clone()).operator, Operation::Add);
             // Assert that left operand is 1
             match Binary::from(expr.clone()).get_left() {
                 Expression::Literal(literal) => {
