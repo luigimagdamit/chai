@@ -5,17 +5,18 @@ use crate::parser::expression::expr::{Accept, DataType, Expression, ParseError};
 use crate::scanner::token::TokenType;
 
 use super::declaration::Declaration;
-use super::print::PrintVisitor;
+use super::print::{PrintVisitor, RebuildVisitor};
 
 // evaluate an expression, then assign the expression at the location of the local variable with store
 pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
     let mut visitor = PrintVisitor;
+    let mut rebuild = RebuildVisitor;
     expression(parser);
 
 
     if let Some(expr_ast) = parser.ast_stack.pop() {
         let test = Declaration::new_variable(var_name.to_string(), Some(expr_ast.clone().to_expression()), expr_ast.to_expression().as_datatype());
-
+        parser.comment(&test.accept(&mut rebuild));
         parser.emit_instruction(&test.accept(&mut visitor));
         create_new_symbol(parser, var_name.to_string(), test.as_variable().as_datatype());
         parser.print_symbols();

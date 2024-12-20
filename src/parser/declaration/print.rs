@@ -111,7 +111,6 @@ impl Visitor for PrintVisitor {
         LlvmPrint::var_expr(variable_expression)
     }
 }
-
 pub struct RebuildVisitor;
 impl Visitor for RebuildVisitor {
     fn visit_literal(&mut self, literal: &DataType) -> String {
@@ -145,10 +144,27 @@ impl Visitor for RebuildVisitor {
     fn visit_variable_declaration(&mut self, variable_declaration: &super::declaration::VariableDeclaration) -> String {
         match variable_declaration.as_datatype() {
             DataType::Integer(_) => {
-                format!("var {} : int", variable_declaration.name)
+                if let Some(expr) = &variable_declaration.expression {
+                    format!("var {} : int = {}", variable_declaration.name, expr.accept(self))
+                } else {
+                    format!("var {} : int;", variable_declaration.name)
+                }
+                
             },
-            DataType::Boolean(_) => format!("var {} : bool", variable_declaration.name),
-            DataType::String(_) => format!("var {} : str", variable_declaration.name),
+            DataType::Boolean(_) => {
+                if let Some(expr) = &variable_declaration.expression {
+                    format!("var {} : bool = {};", variable_declaration.name, expr.accept(self))
+                } else {
+                    format!("var {} : bool;", variable_declaration.name)
+                }
+            },
+            DataType::String(_) => {
+                if let Some(expr) = &variable_declaration.expression {
+                    format!("var {} : str = {};", variable_declaration.name, expr.accept(self))
+                } else {
+                    format!("var {} : str;", variable_declaration.name)
+                }
+            },
             _ => panic!()
         }
         
