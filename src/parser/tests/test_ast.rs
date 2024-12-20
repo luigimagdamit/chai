@@ -1,5 +1,7 @@
 use crate::parser::expression::expr::Expression;
 
+// This test is for testing the proper AST expression structure
+
 mod tests {
     #![allow(unused_imports)]
     use core::panic;
@@ -17,12 +19,40 @@ mod tests {
         parse_precedence(parser, Precedence::PrecAssignment);
 
         if let Some(ast_node) = parser.ast_stack.pop() {
-            let expr = Expression::from(ast_node.to_expression());
+            let expr = ast_node.to_expression();
             let binary = Binary::from(expr.clone());
             let operands = binary_operands(binary.clone());
-            assert_eq!(expr.as_datatype(), DataType::Integer(0)); // test if binary type is correct
+
+            // 1 - The operation is the correct type
+            assert_eq!(expr.as_datatype(), DataType::Integer(0));
+
+            // 2 - The operator is the correct binary operator
             assert_eq!(Binary::from(expr.clone()).operator, Operation::Add);
-            // Assert that left operand is 1
+            
+            // 3 - Test the operands
+            test_operand_value_int(operands.0, 1);
+            test_operand_value_int(operands.1, 2);
+        }
+        
+    }
+    #[test]
+    fn test_parse_one_times_two() {
+        let parser = &mut Parser::init_parser("1*2\0");
+        parser.advance();
+        parse_precedence(parser, Precedence::PrecAssignment);
+
+        if let Some(ast_node) = parser.ast_stack.pop() {
+            let expr = ast_node.to_expression();
+            let binary = Binary::from(expr.clone());
+            let operands = binary_operands(binary.clone());
+
+            // 1 - The operation is the correct type
+            assert_eq!(expr.as_datatype(), DataType::Integer(0));
+
+            // 2 - The operator is the correct binary operator
+            assert_eq!(Binary::from(expr.clone()).operator, Operation::Mul);
+            
+            // 3 - Test the operands
             test_operand_value_int(operands.0, 1);
             test_operand_value_int(operands.1, 2);
         }

@@ -140,13 +140,15 @@ impl Visitor for RebuildVisitor {
         format!("{}", str_constant.name)
     }
     fn visit_print(&mut self, print_statement: &PrintStatement) -> String {
-        format!("print {}", print_statement.expression.accept(self))
+        format!("print({});", print_statement.expression.accept(self))
     }
     fn visit_variable_declaration(&mut self, variable_declaration: &super::declaration::VariableDeclaration) -> String {
         match variable_declaration.as_datatype() {
             DataType::Integer(_) => {
                 format!("var {} : int", variable_declaration.name)
             },
+            DataType::Boolean(_) => format!("var {} : bool", variable_declaration.name),
+            DataType::String(_) => format!("var {} : str", variable_declaration.name),
             _ => panic!()
         }
         
@@ -170,30 +172,31 @@ pub fn print_statement(parser: &mut Parser) {
             match ast_node.to_expression() {
                 Expression::Binary(b) => {
                     let expr = Expression::from(b);
-                    parser.comment(&format!("; {};", expr.clone().accept(&mut rebuild)));
+                    
                     print_statement.expression = expr;
+                    parser.comment(&format!("; {};", &rebuild.visit_print(&print_statement)));
                     parser.emit_instruction(&visitor.visit_print(&print_statement));
                 },
                 Expression::Literal(l) => {
                     let expr = Expression::from(l);
-                    parser.comment(&format!("; {};", expr.clone().accept(&mut rebuild)));
+                    
                     print_statement.expression = expr;
-
+                    parser.comment(&format!("; {};", &rebuild.visit_print(&print_statement)));
                     parser.emit_instruction(&visitor.visit_print(&print_statement));
                 }
                 Expression::StringConstant(str_constant) => {
                     let expr = Expression::from(str_constant);
-                    parser.comment(&format!("calling print on {};", expr.clone().accept(&mut rebuild)));
+                    
                     print_statement.expression = expr;
-
+                    
                     parser.emit_instruction(&visitor.visit_print(&print_statement));
                     parser.expr_count += 1;
                 }
                 Expression::Variable(variable) => {
                     let expr = Expression::from(variable);
-                    parser.comment(&format!("; printing {};", expr.clone().accept(&mut rebuild)));
-                    print_statement.expression = expr;
 
+                    print_statement.expression = expr;
+                    parser.comment(&format!("; {};", &rebuild.visit_print(&print_statement)));
                     parser.emit_instruction(&visitor.visit_print(&print_statement));
                 }
                 _ => ()
