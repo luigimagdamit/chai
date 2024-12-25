@@ -18,14 +18,14 @@ pub fn parse_literal(parser: &mut Parser) -> Result<Expression, ParseError> {
         match prev.token_type {
             TokenType::False => {
                 create_boolean(parser, TokenType::False);
-                let false_expr = Expression::from_literal(DataType::Boolean(false));
+                let false_expr = Expression::from_literal(DataType::Boolean(Some(false)));
                 parser.ast_stack.push(AstNode::from_expression(false_expr.clone()));
 
                 Ok(false_expr)
             },
             TokenType::True => {
                 create_boolean(parser, TokenType::True);
-                let true_expr = Expression::from_literal(DataType::Boolean(true));
+                let true_expr = Expression::from_literal(DataType::Boolean(Some(true)));
                 parser.ast_stack.push(AstNode::from_expression(true_expr.clone()));
                 Ok(true_expr)
             },
@@ -46,12 +46,12 @@ fn new_bool_val(bool_val: bool) -> Expr {
         true => Expr {
             left: LlvmBooleanTag::True.left(),
             right: LlvmBooleanTag::True.right(),
-            data_type: DataType::Boolean(bool_val)
+            data_type: DataType::Boolean(Some(bool_val))
         },
         false => Expr {
             left: LlvmBooleanTag::False.left(),
             right: LlvmBooleanTag::False.right(),
-            data_type: DataType::Boolean(bool_val)
+            data_type: DataType::Boolean(Some(bool_val))
         }
     }
     

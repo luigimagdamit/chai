@@ -39,7 +39,7 @@ pub struct VariableDeclaration {
 impl fmt::Display for VariableDeclaration {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(expr) = &self.expression {
-            write!(f, "Variable Name: {}, Type: {},  Expresion: {}", self.name, expr.as_datatype(), expr)
+            write!(f, "Variable Name: {}, Type: {},  Expresion: {}", self.name, "TODO", expr)
         } else {
             write!(f, "Variable Name: {}", self.name)
         }

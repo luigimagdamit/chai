@@ -6,6 +6,7 @@ mod llvm;
 mod jit;
 mod codegen;
 
+use std::env;
 use parser::parser::Parser;
 use std::io::{self, Write};
 use jit::compile::jit_compile;
@@ -53,7 +54,7 @@ fn repl() -> io::Result<()>{
     }
 }
 fn main() {
-
+    env::set_var("RUST_BACKTRACE", "1");
     let args: Vec<String> = std::env::args().collect();
     if args.len() <= 1 {
         repl();

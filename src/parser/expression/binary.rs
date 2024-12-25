@@ -60,7 +60,7 @@ fn binary_op(parser: &mut Parser, instruction: Operation)  -> Result<Expression,
         },
         (DataType::Boolean(_), DataType::Boolean(_)) if is_boolean_op(instruction.clone()) => {
             let register= parser.expr_increment();
-            let ast_node = Expression::new_binary(b_expr, a_expr, instruction, &register.to_string(), DataType::Boolean(true));
+            let ast_node = Expression::new_binary(b_expr, a_expr, instruction, &register.to_string(), DataType::Boolean(None));
             let codegen = "".to_string() + &ast_node.register();
             parser.emit_instruction(&codegen);
 

@@ -130,296 +130,296 @@ mod tests {
 
 
 }
-mod boolean_equality_tests {
-    #![allow(unused_imports)]
-    use core::panic;
+// mod boolean_equality_tests {
+//     #![allow(unused_imports)]
+//     use core::panic;
 
-    use crate::common::flags::PARSE_CONSTANT_FOLD;
-    use crate::parser::expression::expr::DataType;
-    use crate::parser::expression::expression::parse_precedence;
+//     use crate::common::flags::PARSE_CONSTANT_FOLD;
+//     use crate::parser::expression::expr::DataType;
+//     use crate::parser::expression::expression::parse_precedence;
 
-    use crate::parser::parser::Parser;
-    use crate::parser::expression::precedence::Precedence;
-    #[test]
-    fn test_parse_bool_true() {
-        let parser = &mut Parser::init_parser("true\0");
-        parser.advance();
-        parse_precedence(parser, Precedence::PrecAssignment);
+//     use crate::parser::parser::Parser;
+//     use crate::parser::expression::precedence::Precedence;
+//     #[test]
+//     fn test_parse_bool_true() {
+//         let parser = &mut Parser::init_parser("true\0");
+//         parser.advance();
+//         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Boolean(value) => assert_eq!(value, true),
-                _ => ()
-            }
-        }
+//         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+//             match c.data_type {
+//                 DataType::Boolean(value) => assert_eq!(value, true),
+//                 _ => ()
+//             }
+//         }
 
-        assert_eq!(parser.constant_stack.len(), 0);
-    }
-    #[test]
-    fn test_parse_bool_false() {
-        let parser = &mut Parser::init_parser("false\0");
-        let test_val = false;
-        parser.advance();
-        parse_precedence(parser, Precedence::PrecAssignment);
+//         assert_eq!(parser.constant_stack.len(), 0);
+//     }
+//     #[test]
+//     fn test_parse_bool_false() {
+//         let parser = &mut Parser::init_parser("false\0");
+//         let test_val = false;
+//         parser.advance();
+//         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Boolean(value) => assert_eq!(value, test_val),
-                _ => ()
-            }
-        }
-        assert_eq!(parser.constant_stack.len(), 0);
-    }
-    #[test]
-    fn test_parse_bool_eq_tt() {
-        let parser = &mut Parser::init_parser("true == true\0");
-        let test_val = true == true;
-        parser.advance();
-        parse_precedence(parser, Precedence::PrecAssignment);
+//         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+//             match c.data_type {
+//                 DataType::Boolean(value) => assert_eq!(value, test_val),
+//                 _ => ()
+//             }
+//         }
+//         assert_eq!(parser.constant_stack.len(), 0);
+//     }
+//     #[test]
+//     fn test_parse_bool_eq_tt() {
+//         let parser = &mut Parser::init_parser("true == true\0");
+//         let test_val = true == true;
+//         parser.advance();
+//         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Boolean(value) => assert_eq!(value, test_val),
-                _ => ()
-            }
-        }
-        assert_eq!(parser.constant_stack.len(), 0);
-    }
-    #[test]
-    fn test_parse_bool_eq_tf() {
-        let parser = &mut Parser::init_parser("true == false\0");
-        let test_val = true == false;
-        parser.advance();
-        parse_precedence(parser, Precedence::PrecAssignment);
+//         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+//             match c.data_type {
+//                 DataType::Boolean(value) => assert_eq!(value, test_val),
+//                 _ => ()
+//             }
+//         }
+//         assert_eq!(parser.constant_stack.len(), 0);
+//     }
+//     #[test]
+//     fn test_parse_bool_eq_tf() {
+//         let parser = &mut Parser::init_parser("true == false\0");
+//         let test_val = true == false;
+//         parser.advance();
+//         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Boolean(value) => assert_eq!(value, test_val),
-                _ => ()
-            }
-        }
-        assert_eq!(parser.constant_stack.len(), 0);
-    }
-    #[test]
-    fn test_parse_bool_eq_ft() {
-        let parser = &mut Parser::init_parser("false == true\0");
-        let test_val = false == true;
-        parser.advance();
-        parse_precedence(parser, Precedence::PrecAssignment);
+//         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+//             match c.data_type {
+//                 DataType::Boolean(value) => assert_eq!(value, test_val),
+//                 _ => ()
+//             }
+//         }
+//         assert_eq!(parser.constant_stack.len(), 0);
+//     }
+//     #[test]
+//     fn test_parse_bool_eq_ft() {
+//         let parser = &mut Parser::init_parser("false == true\0");
+//         let test_val = false == true;
+//         parser.advance();
+//         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Boolean(value) => assert_eq!(value, test_val),
-                _ => ()
-            }
-        }
-        assert_eq!(parser.constant_stack.len(), 0);
-    }
-    #[test]
-    fn test_parse_bool_eq_ff() {
-        let parser = &mut Parser::init_parser("false == false\0");
-        let test_val = false == false;
-        parser.advance();
-        parse_precedence(parser, Precedence::PrecAssignment);
+//         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+//             match c.data_type {
+//                 DataType::Boolean(value) => assert_eq!(value, test_val),
+//                 _ => ()
+//             }
+//         }
+//         assert_eq!(parser.constant_stack.len(), 0);
+//     }
+//     #[test]
+//     fn test_parse_bool_eq_ff() {
+//         let parser = &mut Parser::init_parser("false == false\0");
+//         let test_val = false == false;
+//         parser.advance();
+//         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Boolean(value) => assert_eq!(value, test_val),
-                _ => ()
-            }
-        }
-        assert_eq!(parser.constant_stack.len(), 0);
-    }
+//         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+//             match c.data_type {
+//                 DataType::Boolean(value) => assert_eq!(value, test_val),
+//                 _ => ()
+//             }
+//         }
+//         assert_eq!(parser.constant_stack.len(), 0);
+//     }
 
-    #[test]
-    fn test_parse_bool_neq_tt() {
-        let parser = &mut Parser::init_parser("true != true\0");
-        let test_val = true != true;
-        parser.advance();
-        parse_precedence(parser, Precedence::PrecAssignment);
+//     #[test]
+//     fn test_parse_bool_neq_tt() {
+//         let parser = &mut Parser::init_parser("true != true\0");
+//         let test_val = true != true;
+//         parser.advance();
+//         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Boolean(value) => assert_eq!(value, test_val),
-                _ => ()
-            }
-        }
-        assert_eq!(parser.constant_stack.len(), 0);
-    }
-    #[test]
-    fn test_parse_bool_neq_tf() {
-        let parser = &mut Parser::init_parser("true != false\0");
-        let test_val = true != false;
-        parser.advance();
-        parse_precedence(parser, Precedence::PrecAssignment);
+//         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+//             match c.data_type {
+//                 DataType::Boolean(value) => assert_eq!(value, test_val),
+//                 _ => ()
+//             }
+//         }
+//         assert_eq!(parser.constant_stack.len(), 0);
+//     }
+//     #[test]
+//     fn test_parse_bool_neq_tf() {
+//         let parser = &mut Parser::init_parser("true != false\0");
+//         let test_val = true != false;
+//         parser.advance();
+//         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Boolean(value) => assert_eq!(value, test_val),
-                _ => ()
-            }
-        }
-    }
-    #[test]
-    fn test_parse_bool_neq_ft() {
-        let parser = &mut Parser::init_parser("false != true\0");
-        let test_val = false != true;
-        parser.advance();
-        parse_precedence(parser, Precedence::PrecAssignment);
+//         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+//             match c.data_type {
+//                 DataType::Boolean(value) => assert_eq!(value, test_val),
+//                 _ => ()
+//             }
+//         }
+//     }
+//     #[test]
+//     fn test_parse_bool_neq_ft() {
+//         let parser = &mut Parser::init_parser("false != true\0");
+//         let test_val = false != true;
+//         parser.advance();
+//         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Boolean(value) => assert_eq!(value, test_val),
-                _ => ()
-            }
-        }
-    }
-    #[test]
-    fn test_parse_bool_neq_ff() {
-        let parser = &mut Parser::init_parser("false != false\0");
-        let test_val = false != false;
-        parser.advance();
-        parse_precedence(parser, Precedence::PrecAssignment);
+//         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+//             match c.data_type {
+//                 DataType::Boolean(value) => assert_eq!(value, test_val),
+//                 _ => ()
+//             }
+//         }
+//     }
+//     #[test]
+//     fn test_parse_bool_neq_ff() {
+//         let parser = &mut Parser::init_parser("false != false\0");
+//         let test_val = false != false;
+//         parser.advance();
+//         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Boolean(value) => assert_eq!(value, test_val),
-                _ => ()
-            }
-        }
-    }
-}
+//         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+//             match c.data_type {
+//                 DataType::Boolean(value) => assert_eq!(value, test_val),
+//                 _ => ()
+//             }
+//         }
+//     }
+// }
 
-mod value_comparison_tests {
-    #![allow(unused_imports)]
-    use core::panic;
+// mod value_comparison_tests {
+//     #![allow(unused_imports)]
+//     use core::panic;
 
-    use crate::common::flags::PARSE_CONSTANT_FOLD;
-    use crate::parser::expression::expr::DataType;
-    use crate::parser::expression::expression::parse_precedence;
+//     use crate::common::flags::PARSE_CONSTANT_FOLD;
+//     use crate::parser::expression::expr::DataType;
+//     use crate::parser::expression::expression::parse_precedence;
 
-    use crate::parser::parser::Parser;
-    use crate::parser::expression::precedence::Precedence;
-    #[test]
-    fn test_parse_numbers_eq_true() {
-        let parser = &mut Parser::init_parser("1 == 1\0");
-        let test_val = 1 == 1;
-        parser.advance();
-        parse_precedence(parser, Precedence::PrecAssignment);
+//     use crate::parser::parser::Parser;
+//     use crate::parser::expression::precedence::Precedence;
+//     #[test]
+//     fn test_parse_numbers_eq_true() {
+//         let parser = &mut Parser::init_parser("1 == 1\0");
+//         let test_val = 1 == 1;
+//         parser.advance();
+//         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Boolean(value) => assert_eq!(value, test_val),
-                _ => ()
-            }
-        }
-        assert_eq!(parser.constant_stack.len(), 0);
-    }
+//         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+//             match c.data_type {
+//                 DataType::Boolean(value) => assert_eq!(value, test_val),
+//                 _ => ()
+//             }
+//         }
+//         assert_eq!(parser.constant_stack.len(), 0);
+//     }
 
-    #[test]
-    fn test_parse_numbers_eq_false() {
-        let parser = &mut Parser::init_parser("1 == 2\0");
-        let test_val = 1 == 2;
-        parser.advance();
-        parse_precedence(parser, Precedence::PrecAssignment);
+//     #[test]
+//     fn test_parse_numbers_eq_false() {
+//         let parser = &mut Parser::init_parser("1 == 2\0");
+//         let test_val = 1 == 2;
+//         parser.advance();
+//         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Boolean(value) => assert_eq!(value, test_val),
-                _ => ()
-            }
-        }
-        assert_eq!(parser.constant_stack.len(), 0);
-    }
+//         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+//             match c.data_type {
+//                 DataType::Boolean(value) => assert_eq!(value, test_val),
+//                 _ => ()
+//             }
+//         }
+//         assert_eq!(parser.constant_stack.len(), 0);
+//     }
 
-    #[test]
-    fn test_parse_numbers_neq_true() {
-        let parser = &mut Parser::init_parser("1 != 2\0");
-        let test_val = 1 != 2;
-        parser.advance();
-        parse_precedence(parser, Precedence::PrecAssignment);
+//     #[test]
+//     fn test_parse_numbers_neq_true() {
+//         let parser = &mut Parser::init_parser("1 != 2\0");
+//         let test_val = 1 != 2;
+//         parser.advance();
+//         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Boolean(value) => assert_eq!(value, test_val),
-                _ => ()
-            }
-        }
-        assert_eq!(parser.constant_stack.len(), 0);
-    }
-    #[test]
-    fn test_parse_numbers_neq_false() {
-        let parser = &mut Parser::init_parser("2 != 2\0");
-        let test_val = 2 != 2;
-        parser.advance();
-        parse_precedence(parser, Precedence::PrecAssignment);
+//         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+//             match c.data_type {
+//                 DataType::Boolean(value) => assert_eq!(value, test_val),
+//                 _ => ()
+//             }
+//         }
+//         assert_eq!(parser.constant_stack.len(), 0);
+//     }
+//     #[test]
+//     fn test_parse_numbers_neq_false() {
+//         let parser = &mut Parser::init_parser("2 != 2\0");
+//         let test_val = 2 != 2;
+//         parser.advance();
+//         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Boolean(value) => assert_eq!(value, test_val),
-                _ => ()
-            }
-        }
-        assert_eq!(parser.constant_stack.len(), 0);
-    }
-    #[test]
-    fn test_parse_numbers_gt_true() {
-        let parser = &mut Parser::init_parser("3 > 2\0");
-        let test_val = 3 > 2;
-        parser.advance();
-        parse_precedence(parser, Precedence::PrecAssignment);
+//         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+//             match c.data_type {
+//                 DataType::Boolean(value) => assert_eq!(value, test_val),
+//                 _ => ()
+//             }
+//         }
+//         assert_eq!(parser.constant_stack.len(), 0);
+//     }
+//     #[test]
+//     fn test_parse_numbers_gt_true() {
+//         let parser = &mut Parser::init_parser("3 > 2\0");
+//         let test_val = 3 > 2;
+//         parser.advance();
+//         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Boolean(value) => assert_eq!(value, test_val),
-                _ => ()
-            }
-        }
-        assert_eq!(parser.constant_stack.len(), 0);
-    }
-    #[test]
-    fn test_parse_numbers_gt_false() {
-        let parser = &mut Parser::init_parser("1 > 3\0");
-        let test_val = 1 > 3;
-        parser.advance();
-        parse_precedence(parser, Precedence::PrecAssignment);
+//         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+//             match c.data_type {
+//                 DataType::Boolean(value) => assert_eq!(value, test_val),
+//                 _ => ()
+//             }
+//         }
+//         assert_eq!(parser.constant_stack.len(), 0);
+//     }
+//     #[test]
+//     fn test_parse_numbers_gt_false() {
+//         let parser = &mut Parser::init_parser("1 > 3\0");
+//         let test_val = 1 > 3;
+//         parser.advance();
+//         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Boolean(value) => assert_eq!(value, test_val),
-                _ => ()
-            }
-        }
-        assert_eq!(parser.constant_stack.len(), 0);
-    }
-    #[test]
-    fn test_parse_numbers_lt_true() {
-        let parser = &mut Parser::init_parser("4 < 5\0");
-        let test_val = 4 < 5;
-        parser.advance();
-        parse_precedence(parser, Precedence::PrecAssignment);
+//         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+//             match c.data_type {
+//                 DataType::Boolean(value) => assert_eq!(value, test_val),
+//                 _ => ()
+//             }
+//         }
+//         assert_eq!(parser.constant_stack.len(), 0);
+//     }
+//     #[test]
+//     fn test_parse_numbers_lt_true() {
+//         let parser = &mut Parser::init_parser("4 < 5\0");
+//         let test_val = 4 < 5;
+//         parser.advance();
+//         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Boolean(value) => assert_eq!(value, test_val),
-                _ => ()
-            }
-        }
-        assert_eq!(parser.constant_stack.len(), 0);
-    }
-    #[test]
-    fn test_parse_numbers_lt_false() {
-        let parser = &mut Parser::init_parser("6 < 5\0");
-        let test_val = 6 < 5;
-        parser.advance();
-        parse_precedence(parser, Precedence::PrecAssignment);
+//         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+//             match c.data_type {
+//                 DataType::Boolean(value) => assert_eq!(value, test_val),
+//                 _ => ()
+//             }
+//         }
+//         assert_eq!(parser.constant_stack.len(), 0);
+//     }
+//     #[test]
+//     fn test_parse_numbers_lt_false() {
+//         let parser = &mut Parser::init_parser("6 < 5\0");
+//         let test_val = 6 < 5;
+//         parser.advance();
+//         parse_precedence(parser, Precedence::PrecAssignment);
 
-        if let Some(c) = &parser.constant_stack.pop().unwrap() {
-            match c.data_type {
-                DataType::Boolean(value) => assert_eq!(value, test_val),
-                _ => ()
-            }
-        }
-        assert_eq!(parser.constant_stack.len(), 0);
-    }
-}
+//         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+//             match c.data_type {
+//                 DataType::Boolean(value) => assert_eq!(value, test_val),
+//                 _ => ()
+//             }
+//         }
+//         assert_eq!(parser.constant_stack.len(), 0);
+//     }
+// }

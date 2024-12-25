@@ -6,12 +6,13 @@ use crate::llvm::llvm_string::*;
 #[allow(unused)]
 
 const DATATYPE_INT_ERROR: &'static str = "Could not retrieve i32 from Datatype";
+const DATATYPE_BOOL_ERROR: &'static str = "Could not retrieve i1 from Datatype";
 // DataType is a literal
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum DataType {
     Integer(Option<i32>),
     String(String),
-    Boolean(bool)
+    Boolean(Option<bool>)
 }
 // Turn an i32 integer into a DataType::Integer
 impl From<i32> for DataType {
@@ -26,7 +27,7 @@ impl From<String> for DataType {
 }
 impl From<bool> for DataType {
     fn from(item: bool) -> DataType {
-        DataType::Boolean(item)
+        DataType::Boolean(Some(item))
     }
 }
 
@@ -37,7 +38,7 @@ impl DataType {
                 format!("add i32 {}, 0; a", int.expect(DATATYPE_INT_ERROR))
             },
             DataType::Boolean(bool) => {
-                let bool_val = if *bool {1} else {0};
+                let bool_val = if bool.expect(DATATYPE_BOOL_ERROR) {1} else {0};
                 format!("add i1 {bool_val}, 0")
             }
             _ => "".to_string()
@@ -267,7 +268,7 @@ impl Expression {
             Expression::Literal(i) => {
                 match i {
                     DataType::Integer(int) => int.expect(DATATYPE_INT_ERROR).to_string(),
-                    DataType::Boolean(bool) => convert_bool(*bool).to_string(),
+                    DataType::Boolean(bool) => convert_bool(bool.expect(DATATYPE_BOOL_ERROR)).to_string(),
                     _ => "".to_string()
                 }
             },
@@ -307,8 +308,14 @@ pub enum ParseError {
 impl fmt::Display for DataType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DataType::Integer(int) => write!(f, "{}", int.expect(DATATYPE_INT_ERROR)),
-            DataType::Boolean(bool) => write!(f, "bool <{}>", bool),
+            DataType::Integer(int) => match int {
+                Some(item) => write!(f, "{}", item),
+                None => write!(f, "int")
+            },
+            DataType::Boolean(b) => match b {
+                Some(item) => write!(f, "{}", item),
+                None => write!(f, "bool")
+            },
             DataType::String(str) => write!(f, "str:<{}>", str)
         }
     }
