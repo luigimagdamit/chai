@@ -2,7 +2,7 @@ use super::super::parser::{Parser, StringEntry};
 use super::super::expression::expr::{DataType, Expr};
 use crate::llvm::llvm_string::*;
 use crate::parser::core::ast_node::AstNode;
-use crate::parser::expression::expr::{Expression, ParseError, Register, StringConstant};
+use crate::parser::expression::expr::{Expression, ParseError, StringConstant};
 
 pub fn parse_string(parser: &mut Parser) -> Result<Expression, ParseError> {
     let value = parser.previous.unwrap().start;
@@ -17,9 +17,9 @@ pub fn parse_string(parser: &mut Parser) -> Result<Expression, ParseError> {
             let str_constant=  Expression::from(StringConstant{
                 name: value.to_string(),
                 length: length - 1,
-                count: 0,
+
                 index: str.index,
-                text: value.to_string(),
+
                 register: parser.expr_count as usize
             });
             parser.ast_stack.push(AstNode::from_expression(str_constant.clone()));
@@ -36,14 +36,19 @@ pub fn parse_string(parser: &mut Parser) -> Result<Expression, ParseError> {
             }); 
 
             let new_index = parser.string_table.len() - 1;
-            let new_str_codegen = string_expr(length, new_index, value, parser.expr_count);
+            let new_str_codegen = string_expr(
+                length, 
+                new_index, 
+                value, 
+                parser.expr_count
+            );
             parser.comment(&("\t; pushing a new string on the stack ...".to_string() + value));
             let str_constant = Expression::from(StringConstant{
                 name: value.to_string(),
                 length: length,
-                count: 0,
+
                 index: new_index,
-                text: value.to_string(),
+
                 register: parser.expr_count as usize
             });
 

@@ -1,8 +1,7 @@
-use crate::parser::expression::expr::{DataType, Binary, StringConstant, Expression, Operation, VariableExpression};
+use crate::parser::expression::expr::{DataType, Binary, StringConstant, Operation, VariableExpression};
 use crate::parser::declaration::declaration::{VariableDeclaration, PrintStatement};
 use crate::parser::visitor::visitor::{Visitor, Accept};
-use crate::codegen::llvm_codegen::{LlvmPrint};
-use crate::codegen::codegen_print::CodegenPrint;
+
 pub struct RebuildVisitor;
 impl Visitor for RebuildVisitor {
     fn visit_literal(&mut self, literal: &DataType) -> String {
@@ -57,7 +56,6 @@ impl Visitor for RebuildVisitor {
                     format!("var {} : str;", variable_declaration.name)
                 }
             },
-            _ => panic!()
         }
         
     }

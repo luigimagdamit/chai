@@ -49,7 +49,7 @@ impl DataType {
             DataType::String(_) => "i8*"
         }
     }
-    pub fn place(&self, register: usize) -> String {
+    pub fn _place(&self, register: usize) -> String {
         format!("%{} = {}", register, self.print())
     }
 }
@@ -159,8 +159,6 @@ impl From<VariableExpression> for Expression {
 pub struct StringConstant {
     pub name: String,
     pub length: usize,
-    pub count: usize,
-    pub text: String,
     pub index: usize,
     pub register: usize
 }
@@ -272,7 +270,7 @@ impl Expression {
                     _ => "".to_string()
                 }
             },
-            Expression::StringConstant(str_constant) => self.register(),
+            Expression::StringConstant(_) => self.register(),
             Expression::Variable(variable) => {
                 format!("%{}_{}", variable.name, variable.count)
             }

@@ -3,9 +3,9 @@ use crate::parser::core::symbol::{create_new_symbol, get_symbol, set_symbol};
 use crate::parser::expression::expression::expression;
 use crate::parser::expression::expr::{DataType, Expression, ParseError};
 use crate::scanner::token::TokenType;
-use crate::parser::visitor::visitor::{Accept};
+use crate::parser::visitor::visitor::Accept;
 use super::declaration::Declaration;
-use crate::parser::visitor::rebuild_visitor::{RebuildVisitor};
+use crate::parser::visitor::rebuild_visitor::RebuildVisitor;
 use crate::parser::visitor::print_visitor::PrintVisitor;
 
 // evaluate an expression, then assign the expression at the location of the local variable with store
@@ -25,8 +25,14 @@ pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
 }
 pub fn variable_declaration(parser: &mut Parser) {
     let global_name = parse_variable_name(parser, "Expected a variable name");
-    parser.consume(TokenType::Colon, "Expected : when declaring variable");
-    parser.consume(TokenType::Identifier, "Expected a type identifier when declaring variable");
+    parser.consume(
+        TokenType::Colon, 
+        "Expected : when declaring variable"
+    );
+    parser.consume(
+        TokenType::Identifier, 
+        "Expected a type identifier when declaring variable
+    ");
     let type_tag = parser.previous.expect("Expected a token when getting the type identifier");
     let type_tag = match type_tag.start {
         "int" => DataType::Integer(0),
@@ -35,10 +41,16 @@ pub fn variable_declaration(parser: &mut Parser) {
         _ => panic!()
     };
 
-    if parser.match_current(TokenType::Equal) { variable_assignment(parser, &global_name) } 
+    if parser.match_current(TokenType::Equal) { 
+        variable_assignment(parser, &global_name) 
+    } 
     else {
         let mut visitor = PrintVisitor;
-        let test = Declaration::new_variable(&global_name, None, type_tag.clone());
+        let test = Declaration::new_variable(
+            &global_name, 
+            None, 
+            type_tag.clone()
+        );
         parser.emit_instruction(&test.accept(&mut visitor));
         create_new_symbol(parser, &global_name, type_tag);
     }

@@ -1,7 +1,7 @@
 use crate::parser::expression::expr::{DataType, Binary, StringConstant, Expression, Operation, VariableExpression};
 use crate::parser::declaration::declaration::{VariableDeclaration, PrintStatement};
 use crate::parser::visitor::visitor::Visitor;
-use crate::codegen::llvm_codegen::{LlvmPrint};
+use crate::codegen::llvm_codegen::LlvmPrint;
 use crate::codegen::codegen_print::CodegenPrint;
 pub struct PrintVisitor;
 impl Visitor for PrintVisitor {
@@ -39,7 +39,6 @@ impl Visitor for PrintVisitor {
                     DataType::Integer(_) => LlvmPrint::print_i32(&Expression::from(variable.clone())),
                     DataType::Boolean(_) => LlvmPrint::print_i1(&Expression::from(variable.clone())),
                     DataType::String(_) => LlvmPrint::print_str_constant(&Expression::from(variable.clone())),
-                    _ => panic!()
                 }
             },
             _ => panic!("Unrecognized print statement expression input")

@@ -2,12 +2,53 @@
 define i32 @main() {
 entry:
 
-	%0 = mul i32 21, 10
-	%1 = mul i32 21, 10
-	%2 = add i32 %0, %1
 
-	;; print(((21 * 10) + (21 * 10)));;
-	call void @print_i32(i32 %2); signature from PrintVisitor
+	;; print(bool <true>);;
+	call void @print_i1(i1 1); signature from PrintVisitor
+
+
+	;; print(bool <false>);;
+	call void @print_i1(i1 0); signature from PrintVisitor
+
+	%0 = icmp eq i1 1, 1
+
+	;; print((bool <true> == bool <true>));;
+	call void @print_i1(i1 %0); signature from PrintVisitor
+
+	%1 = icmp eq i1 0, 0
+
+	;; print((bool <false> == bool <false>));;
+	call void @print_i1(i1 %1); signature from PrintVisitor
+
+	%2 = icmp eq i1 1, 0
+
+	;; print((bool <true> == bool <false>));;
+	call void @print_i1(i1 %2); signature from PrintVisitor
+
+	%3 = icmp eq i1 0, 1
+
+	;; print((bool <false> == bool <true>));;
+	call void @print_i1(i1 %3); signature from PrintVisitor
+
+	%4 = icmp ne i1 1, 0
+
+	;; print((bool <true> != bool <false>));;
+	call void @print_i1(i1 %4); signature from PrintVisitor
+
+	%5 = icmp ne i1 1, 1
+
+	;; print((bool <true> != bool <true>));;
+	call void @print_i1(i1 %5); signature from PrintVisitor
+
+	%6 = icmp ne i1 0, 1
+
+	;; print((bool <false> != bool <true>));;
+	call void @print_i1(i1 %6); signature from PrintVisitor
+
+	%7 = icmp ne i1 0, 0
+
+	;; print((bool <false> != bool <false>));;
+	call void @print_i1(i1 %7); signature from PrintVisitor
 
 
 	ret i32 0 ; llvm_main_close
