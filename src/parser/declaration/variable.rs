@@ -35,7 +35,7 @@ pub fn variable_declaration(parser: &mut Parser) {
     ");
     let type_tag = parser.previous.expect("Expected a token when getting the type identifier");
     let type_tag = match type_tag.start {
-        "int" => DataType::Integer(0),
+        "int" => DataType::Integer(None),
         "bool" => DataType::Boolean(true),
         "str" => DataType::String("".to_string()),
         _ => panic!()

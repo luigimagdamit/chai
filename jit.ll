@@ -3,53 +3,60 @@ define i32 @main() {
 entry:
 
 
-	;; print(bool <true>);;
-	call void @print_i1(i1 1); signature from PrintVisitor
+	;var a : int = 0
+	%a = alloca i32
+	store i32 0, i32* %a
 
+	;var b : int = 1
+	%b = alloca i32
+	store i32 1, i32* %b
 
-	;; print(bool <false>);;
-	call void @print_i1(i1 0); signature from PrintVisitor
+	;var i : int = 0
+	%i = alloca i32
+	store i32 0, i32* %i
+	%a_0 = load i32, i32* %a ; loading existing variable
 
-	%0 = icmp eq i1 1, 1
+	;; print(a);;
+	call void @print_i32(i32 %a_0); signature from PrintVisitor
 
-	;; print((bool <true> == bool <true>));;
-	call void @print_i1(i1 %0); signature from PrintVisitor
+	br label %cond4
+	
+cond4:
+	%i_0 = load i32, i32* %i ; loading existing variable
+	%4 = icmp slt i32 %i_0, 9
 
-	%1 = icmp eq i1 0, 0
+	;depth: 4
+	br i1 %4, label %body4, label %exit4
+	
+body4:
+	%b_0 = load i32, i32* %b ; loading existing variable
 
-	;; print((bool <false> == bool <false>));;
-	call void @print_i1(i1 %1); signature from PrintVisitor
+	;var tmp : int = b
+	%tmp = alloca i32
+	store i32 %b_0, i32* %tmp
+	%a_1 = load i32, i32* %a ; loading existing variable
+	%b_1 = load i32, i32* %b ; loading existing variable
+	%7 = add i32 %a_1, %b_1
+	store i32 %7, i32* %b
+	 ; set symbol (symbol.rs)
 
-	%2 = icmp eq i1 1, 0
+	%tmp_0 = load i32, i32* %tmp ; loading existing variable
+	store i32 %tmp_0, i32* %a
+	 ; set symbol (symbol.rs)
 
-	;; print((bool <true> == bool <false>));;
-	call void @print_i1(i1 %2); signature from PrintVisitor
+	%tmp_1 = load i32, i32* %tmp ; loading existing variable
 
-	%3 = icmp eq i1 0, 1
+	;; print(tmp);;
+	call void @print_i32(i32 %tmp_1); signature from PrintVisitor
 
-	;; print((bool <false> == bool <true>));;
-	call void @print_i1(i1 %3); signature from PrintVisitor
+	%i_1 = load i32, i32* %i ; loading existing variable
+	%9 = add i32 %i_1, 1
+	store i32 %9, i32* %i
+	 ; set symbol (symbol.rs)
 
-	%4 = icmp ne i1 1, 0
-
-	;; print((bool <true> != bool <false>));;
-	call void @print_i1(i1 %4); signature from PrintVisitor
-
-	%5 = icmp ne i1 1, 1
-
-	;; print((bool <true> != bool <true>));;
-	call void @print_i1(i1 %5); signature from PrintVisitor
-
-	%6 = icmp ne i1 0, 1
-
-	;; print((bool <false> != bool <true>));;
-	call void @print_i1(i1 %6); signature from PrintVisitor
-
-	%7 = icmp ne i1 0, 0
-
-	;; print((bool <false> != bool <false>));;
-	call void @print_i1(i1 %7); signature from PrintVisitor
-
+	br label %cond4
+	
+exit4:
 
 	ret i32 0 ; llvm_main_close
 }

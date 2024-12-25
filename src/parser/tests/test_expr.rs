@@ -16,13 +16,13 @@ mod tests {
 
         if let Some(ast_node) = parser.ast_stack.pop() {
             let expr = ast_node.to_expression();
-            assert_eq!(expr.as_datatype(), DataType::Integer(0)); // test if binary type is correct
+            assert_eq!(expr.as_datatype(), DataType::Integer(None)); // test if binary type is correct
             assert_eq!(Binary::from(expr.clone()).operator, Operation::Add);
             // Assert that left operand is 1
             match Binary::from(expr.clone()).get_left() {
                 Expression::Literal(literal) => {
                     match literal {
-                        DataType::Integer(int) => assert_eq!(int, 1),
+                        DataType::Integer(int) => assert_eq!(int.unwrap(), 1),
                         _ => panic!()
                     }
                 },
@@ -33,7 +33,7 @@ mod tests {
             match Binary::from(expr).get_right() {
                 Expression::Literal(literal) => {
                     match literal {
-                        DataType::Integer(int) => assert_eq!(int, 2),
+                        DataType::Integer(int) => assert_eq!(int.unwrap(), 2),
                         _ => panic!()
                     }
                 },
@@ -60,7 +60,7 @@ mod tests {
                 match c.data_type {
                     DataType::Integer(value) => {
                         assert_eq!(parser.compilation, codegen_test);
-                        assert_eq!(value, 420);
+                        assert_eq!(value.unwrap(), 420);
                     }
                     _ => {}
                 }
@@ -88,7 +88,7 @@ mod tests {
                 assert_eq!(c.right, test_right);
             } else {
                 match c.data_type {
-                    DataType::Integer(value) => assert_eq!(value, 18),
+                    DataType::Integer(value) => assert_eq!(value.unwrap(), 18),
                     _ => {}
                 }
             }
@@ -115,7 +115,7 @@ mod tests {
                 assert_eq!(c.right, test_right);
             } else {
                 match c.data_type {
-                    DataType::Integer(value) => assert_eq!(value, 66),
+                    DataType::Integer(value) => assert_eq!(value.unwrap(), 66),
                     _ => {}
                 }
             }

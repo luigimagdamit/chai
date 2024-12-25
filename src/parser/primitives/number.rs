@@ -7,7 +7,7 @@ pub fn parse_number(parser: &mut Parser) -> Result<Expression, ParseError> {
     let number_leaf = Expr {
         left: LlvmNumberTag::Integer(value.clone()).left(),
         right: LlvmNumberTag::Integer(value.clone()).right(),
-        data_type: DataType::Integer(value.parse().expect("Tried to convert a string into a number type"))
+        data_type: DataType::Integer(Some(value.parse().expect("Tried to convert a string into a number type")))
     };
 
     parser.constant_stack.push(Some(number_leaf.clone()));

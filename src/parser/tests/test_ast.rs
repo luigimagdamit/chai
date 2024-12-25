@@ -23,7 +23,7 @@ mod tests {
             let operands = binary_operands(binary.clone());
 
             // 1 - The operation is the correct type
-            assert_eq!(expr.as_datatype(), DataType::Integer(0));
+            assert_eq!(expr.as_datatype(), DataType::Integer(None));
 
             // 2 - The operator is the correct binary operator
             assert_eq!(Binary::from(expr.clone()).operator, Operation::Add);
@@ -46,7 +46,7 @@ mod tests {
             let operands = binary_operands(binary.clone());
 
             // 1 - The operation is the correct type
-            assert_eq!(expr.as_datatype(), DataType::Integer(0));
+            assert_eq!(expr.as_datatype(), DataType::Integer(None));
 
             // 2 - The operator is the correct binary operator
             assert_eq!(Binary::from(expr.clone()).operator, Operation::Mul);
@@ -64,7 +64,7 @@ mod tests {
         match expr {
             Expression::Literal(literal) => {
                 match literal {
-                    DataType::Integer(int) => assert_eq!(int, value),
+                    DataType::Integer(int) => assert_eq!(int.expect(""), value),
                     _ => panic!()
                 }
             },

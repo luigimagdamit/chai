@@ -45,15 +45,11 @@ pub fn is_boolean_op(instruction: Operation) -> bool{
 }
 fn binary_op(parser: &mut Parser, instruction: Operation)  -> Result<Expression, ParseError>
 {
-    let operands = get_binary_operands(parser);
+    let (b_expr, a_expr) = get_binary_operands(parser);
 
-            
-    let b_expr = operands.0;
-    let a_expr = operands.1;
-    
     match (b_expr.as_datatype(), a_expr.as_datatype()) {
         (DataType::Integer(_), DataType::Integer(_)) => {
-            let datatype = DataType::Integer(0);
+            let datatype = DataType::Integer(None);
             let ast_node = Expression::new_binary(b_expr, a_expr, instruction, &parser.expr_increment().to_string(), datatype);
 
             let codegen = "".to_string() + &ast_node.register();

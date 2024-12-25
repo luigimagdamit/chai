@@ -5,17 +5,18 @@ use super::binary::is_boolean_op;
 use crate::llvm::llvm_string::*;
 #[allow(unused)]
 
+const DATATYPE_INT_ERROR: &'static str = "Could not retrieve i32 from Datatype";
 // DataType is a literal
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum DataType {
-    Integer(i32),
+    Integer(Option<i32>),
     String(String),
     Boolean(bool)
 }
 // Turn an i32 integer into a DataType::Integer
 impl From<i32> for DataType {
     fn from(item: i32) -> DataType {
-        DataType::Integer(item)
+        DataType::Integer(Some(item))
     } 
 }
 impl From<String> for DataType {
@@ -33,7 +34,7 @@ impl DataType {
     pub fn print(&self) -> String {
         match self {
             DataType::Integer(int) => {
-                format!("add i32 {int}, 0; a")
+                format!("add i32 {}, 0; a", int.expect(DATATYPE_INT_ERROR))
             },
             DataType::Boolean(bool) => {
                 let bool_val = if *bool {1} else {0};
@@ -265,7 +266,7 @@ impl Expression {
             Expression::Binary(b) => format!("%{}", b.register),
             Expression::Literal(i) => {
                 match i {
-                    DataType::Integer(int) => int.to_string(),
+                    DataType::Integer(int) => int.expect(DATATYPE_INT_ERROR).to_string(),
                     DataType::Boolean(bool) => convert_bool(*bool).to_string(),
                     _ => "".to_string()
                 }
@@ -306,7 +307,7 @@ pub enum ParseError {
 impl fmt::Display for DataType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DataType::Integer(int) => write!(f, "{}", int),
+            DataType::Integer(int) => write!(f, "{}", int.expect(DATATYPE_INT_ERROR)),
             DataType::Boolean(bool) => write!(f, "bool <{}>", bool),
             DataType::String(str) => write!(f, "str:<{}>", str)
         }
