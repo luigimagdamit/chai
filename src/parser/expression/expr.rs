@@ -101,9 +101,17 @@ impl Binary {
     }
     pub fn print(&self) -> String {
         if is_boolean_op(self.operator.clone()) {
-            format!("{}", llvm_call_print_local(self.register.clone().parse().unwrap(), "i1"))
+            format!("{}", llvm_call_print_local(
+                self.register.clone()
+                    .parse()
+                    .expect("Could not convert the register name to a string")
+                , "i1"))
         } else {
-            format!("{}", llvm_call_print_local(self.register.clone().parse().unwrap(), "i32"))
+            format!("{}", llvm_call_print_local(self.register
+                .clone()
+                .parse()
+                .expect("Could not parse register name to a string")
+            , "i32"))
         }
         
     }

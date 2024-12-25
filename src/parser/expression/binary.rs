@@ -81,8 +81,12 @@ fn binary_op(parser: &mut Parser, instruction: Operation)  -> Result<Expression,
 
 fn get_binary_operands(parser: &mut Parser) -> (Expression, Expression) {
     
-    let local_right = parser.ast_stack.pop().unwrap_or_else(|| panic!());
-    let local_left = parser.ast_stack.pop().unwrap_or_else(|| panic!());
+    let local_right = parser.ast_stack
+        .pop()
+        .expect("Tried to get right operand from ast_node option, but unwrapped none");
+    let local_left = parser.ast_stack
+        .pop()
+        .expect("Tried to get left operand from ast_node option, but unwrapped none");
     
     (local_left.to_expression(), local_right.to_expression())
 

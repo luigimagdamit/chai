@@ -58,6 +58,12 @@ impl<'a>Parser <'a>{
             depth: 0
         }
     }
+    pub fn get_previous_token(&self) -> Token {
+        self.previous.expect("Tried to get previous token, but it was empty")
+    }
+    pub fn get_current_token(&self) -> Token {
+        self.previous.expect("Tried to get current token, but it was empty")
+    }
     pub fn print_symbols(&self) {
         for (key, value) in &self.symbol_table {
             println!("{}: {}", key, value.variable_type);
@@ -83,11 +89,13 @@ impl<'a>Parser <'a>{
     }
     pub fn expr_pop(&mut self) -> (Expr, u32) {
         if let Some(popped) = self.constant_stack.pop() {
-            let expr = popped.unwrap();
+            let expr = popped.expect("expr_pop() expected a an Expr type");
             self.expr_count += 1;
             return (expr, self.expr_top())
+        } else {
+            panic!("{}", self.current.expect("Tried to get a token at current but it was empty").token_type);
         }
-        panic!("{}", self.current.unwrap().token_type);
+        
     }
     pub fn expr_top(&self) -> u32 {
         self.expr_count - 1

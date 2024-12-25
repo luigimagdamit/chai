@@ -9,12 +9,12 @@ pub struct SymbolTableEntry {
     pub count: usize,
     pub variable_type: DataType
 }
-pub fn get_symbol(parser: &mut Parser, name: String) {
+pub fn get_symbol(parser: &mut Parser, name: &str) {
 
-    if let Some(variable) = parser.symbol_table.get(&name) {
+    if let Some(variable) = parser.symbol_table.get(&name.to_string()) {
         let SymbolTableEntry { name: _, count, variable_type } = variable;
         let variable_expression = VariableExpression {
-            name: name.clone(),
+            name: name.to_string(),
             datatype: variable_type.clone(),
             count: count.clone()
         };
@@ -25,7 +25,7 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
         parser.emit_instruction(&codegen);
 
         parser.ast_stack.push(AstNode::Expression(Expression::from(variable_expression).clone()));
-        parser.symbol_table.get_mut(&name).unwrap().count += 1;
+        parser.symbol_table.get_mut(&name.to_string()).expect("Tried incrementing count, but could not find symbol in table").count += 1;
     } else {
         parser.error_at_previous("Variable was not declared -");
     }
@@ -33,9 +33,9 @@ pub fn get_symbol(parser: &mut Parser, name: String) {
     
 }
 // be for setting it after initial assignment
-pub fn set_symbol(parser: &mut Parser, name: String, new_value: Expression) {
+pub fn set_symbol(parser: &mut Parser, name: &str, new_value: Expression) {
 
-    if let Some(variable) = parser.symbol_table.get(&name).clone() {
+    if let Some(variable) = parser.symbol_table.get(&name.to_string()).clone() {
         let a_type = &variable.variable_type;
         let b_type = &new_value.as_datatype();
     
@@ -59,9 +59,9 @@ pub fn set_symbol(parser: &mut Parser, name: String, new_value: Expression) {
 pub fn types_equal(a: &DataType, b: &DataType) -> bool {
     std::mem::discriminant(a) != std::mem::discriminant(b)
 }
-pub fn create_new_symbol(parser: &mut Parser, name: String, variable_type: DataType) {
-    parser.symbol_table.insert(name.clone(), SymbolTableEntry {
-        name,
+pub fn create_new_symbol(parser: &mut Parser, name: &str, variable_type: DataType) {
+    parser.symbol_table.insert(name.to_string(), SymbolTableEntry {
+        name: name.to_string(),
         count: 0,
         variable_type
     });

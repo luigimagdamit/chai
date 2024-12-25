@@ -25,7 +25,7 @@ pub fn parse_string(parser: &mut Parser) -> Result<Expression, ParseError> {
             parser.ast_stack.push(AstNode::from_expression(str_constant.clone()));
             parser.emit_instruction(&str_constant.as_str_constant().place());
             parser.new_expr(retrieve_codegen.clone());
-            parser.string_table.get_mut(value).unwrap().index += 1;
+            parser.string_table.get_mut(value).expect("Tried to get a value from the string table, but it could not be found").index += 1;
             parser.expr_count += 1;
         },
         None => {

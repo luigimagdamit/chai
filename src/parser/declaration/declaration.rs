@@ -78,9 +78,9 @@ impl From<PrintStatement> for Declaration {
     }
 }
 impl Declaration {
-    pub fn new_variable(name: String, expression: Option<Expression>, variable_type: DataType) -> Declaration {
+    pub fn new_variable(name: &str, expression: Option<Expression>, variable_type: DataType) -> Declaration {
         Declaration::Variable(VariableDeclaration {
-            name,
+            name: name.to_string(),
             variable_type,
             expression
         })
