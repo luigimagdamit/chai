@@ -4,6 +4,7 @@ mod parser;
 mod common;
 mod llvm;
 mod jit;
+mod codegen;
 
 use parser::parser::Parser;
 use std::io::{self, Write};

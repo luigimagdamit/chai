@@ -1,5 +1,6 @@
 use std::fmt;
-use crate::{llvm::llvm_print::llvm_call_print_local, parser::declaration::declaration::{PrintStatement, VariableDeclaration}};
+use crate::parser::visitor::visitor::{Accept, Visitor};
+use crate::llvm::llvm_print::llvm_call_print_local;
 use super::binary::is_boolean_op;
 use crate::llvm::llvm_string::*;
 #[allow(unused)]
@@ -139,19 +140,7 @@ impl fmt::Display for Binary {
 
 // Expressions
 // These are all the default actions I want to use with Expression Types
-pub trait Visitor {
-    fn visit_literal(&mut self, literal: &DataType) -> String;
-    fn visit_binary(&mut self, binary: &Binary) -> String;
-    fn visit_string(&mut self, str_constant: &StringConstant) -> String;
-    fn visit_variable_expression(&mut self, variable_expression: &VariableExpression) -> String;
 
-    // Statements
-    fn visit_print(&mut self, print_statement: &PrintStatement) -> String;
-    fn visit_variable_declaration(&mut self, variable_declaration: &VariableDeclaration) -> String;
-}
-pub trait Accept {
-    fn accept<V: Visitor> (&self, visitor: &mut V) -> String;
-}
 pub trait Register {
     fn register(&self) -> String;
 }

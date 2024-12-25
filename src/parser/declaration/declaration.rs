@@ -1,5 +1,6 @@
 use std::fmt;
-use crate::parser::expression::expr::{DataType, Expression, Visitor, Accept};
+use crate::parser::expression::expr::{DataType, Expression};
+use crate::parser::visitor::visitor::{Accept, Visitor};
 #[derive(Clone)]
 pub struct PrintStatement {
     pub expression: Expression

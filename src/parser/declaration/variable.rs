@@ -1,11 +1,12 @@
 use crate::parser::parser::Parser;
 use crate::parser::core::symbol::{create_new_symbol, get_symbol, set_symbol};
 use crate::parser::expression::expression::expression;
-use crate::parser::expression::expr::{Accept, DataType, Expression, ParseError};
+use crate::parser::expression::expr::{DataType, Expression, ParseError};
 use crate::scanner::token::TokenType;
-
+use crate::parser::visitor::visitor::{Accept};
 use super::declaration::Declaration;
-use super::print::{PrintVisitor, RebuildVisitor};
+use crate::parser::visitor::rebuild_visitor::{RebuildVisitor};
+use crate::parser::visitor::print_visitor::PrintVisitor;
 
 // evaluate an expression, then assign the expression at the location of the local variable with store
 pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
