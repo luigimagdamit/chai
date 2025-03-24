@@ -37,12 +37,32 @@ impl CodegenPrint for LlvmPrint {
     }
     fn var_expr(expr: &VariableExpression) -> String {
         match expr.datatype {
-            DataType::Integer(_) => format!("%{}_{} = load i32, i32* %{} ; loading existing variable", expr.name, expr.count, expr.name),
-            DataType::Boolean(_) => format!("%{}_{} = load i1, i1* %{} ; loading existing variable", expr.name, expr.count, expr.name),
-            DataType::String(_) => format!("%{}_{} = load i8*, i8** %{} ; loading existing variable", expr.name, expr.count, expr.name),
+            DataType::Integer(_) => load(expr, InstructionType::Integer),
+            DataType::Boolean(_) => load(expr, InstructionType::Boolean),
+            DataType::String(_) => load(expr, InstructionType::StringPtr),
             
-            _ => panic!("not supported for strings: variable expressions")
         }
         
+    }
+}
+
+// Load Codegen Function
+// Loads a value at the pointer location
+fn load(var_expr: &VariableExpression, instruction_type: InstructionType) -> String {
+    let type_str = instruction_type.as_str();
+    format!("%{}_{} = load {type_str}, {type_str}* %{} ; loading existing variable", var_expr.name, var_expr.count, var_expr.name)
+}
+enum InstructionType {
+    Integer,
+    Boolean,
+    StringPtr
+}
+impl InstructionType {
+    fn as_str(&self) -> &str {
+        match self {
+            InstructionType::Integer => "i32",
+            InstructionType::Boolean => "i1",
+            InstructionType::StringPtr => "i8*"
+        }
     }
 }
