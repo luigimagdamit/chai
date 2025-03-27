@@ -12,14 +12,8 @@ impl CodegenPrint for LlvmPrint {
     fn print_str_constant(expr: &Expression) -> String {
         format!("call i32 (i8*, ...) @printf(i8* {})", expr.resolve_operand())
     }
-    fn new_variable(dec: &VariableDeclaration) -> String {
-        match dec.as_datatype() {
-            DataType::Integer(_) => format!("%{} = alloca i32", dec.name),
-            DataType::Boolean(_) => format!("%{} = alloca i1", dec.name),
-            DataType::String(_) => format!("%{} = alloca i8*", dec.name)
-        }
-        
-    }
+    fn new_variable(dec: &VariableDeclaration) -> String { alloca(dec) }
+
     fn store_variable(dec: &VariableDeclaration) -> String {
         if let Some(expr) = &dec.expression {
             match expr.as_datatype() {
@@ -36,21 +30,31 @@ impl CodegenPrint for LlvmPrint {
         
     }
     fn var_expr(expr: &VariableExpression) -> String {
-        match expr.datatype {
-            DataType::Integer(_) => load(expr, InstructionType::Integer),
-            DataType::Boolean(_) => load(expr, InstructionType::Boolean),
-            DataType::String(_) => load(expr, InstructionType::StringPtr),
-            
-        }
+        load(expr)
         
     }
 }
 
 // Load Codegen Function
 // Loads a value at the pointer location
-fn load(var_expr: &VariableExpression, instruction_type: InstructionType) -> String {
-    let type_str = instruction_type.as_str();
+// TODO: Modify load so that it just takes a any keyword like load. can share with load, store
+fn load(var_expr: &VariableExpression) -> String {
+    let type_str = (&var_expr.datatype).as_str();
     format!("%{}_{} = load {type_str}, {type_str}* %{} ; loading existing variable", var_expr.name, var_expr.count, var_expr.name)
+}
+fn store() {
+
+}
+fn alloca(dec: &VariableDeclaration) -> String {
+    let datatype = &dec.as_datatype();
+    let type_str = datatype.as_str();
+    let name = &dec.name;
+    format!("%{name} = alloca {type_str}")
+    // match dec.as_datatype() {
+    //     DataType::Integer(_) => format!("%{} = alloca i32", dec.name),
+    //     DataType::Boolean(_) => format!("%{} = alloca i1", dec.name),
+    //     DataType::String(_) => format!("%{} = alloca i8*", dec.name)
+    // }
 }
 enum InstructionType {
     Integer,
