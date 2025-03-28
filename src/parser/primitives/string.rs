@@ -20,7 +20,8 @@ pub fn parse_string(parser: &mut Parser) -> Result<Expression, ParseError> {
 
                 index: str.index,
 
-                register: parser.expr_count as usize
+                register: parser.expr_count as usize,
+                datatype: DataType::String(format!("{}", parser.expr_count as usize))
             });
             parser.ast_stack.push(AstNode::from_expression(str_constant.clone()));
             parser.emit_instruction(&str_constant.as_str_constant().place());
@@ -49,7 +50,8 @@ pub fn parse_string(parser: &mut Parser) -> Result<Expression, ParseError> {
 
                 index: new_index,
 
-                register: parser.expr_count as usize
+                register: parser.expr_count as usize,
+                datatype: DataType::String(format!("{}", parser.expr_count as usize))
             });
 
             parser.emit_instruction(&str_constant.as_str_constant().place());

@@ -7,12 +7,41 @@ use crate::llvm::llvm_string::*;
 
 const DATATYPE_INT_ERROR: &'static str = "Could not retrieve i32 from Datatype";
 const DATATYPE_BOOL_ERROR: &'static str = "Could not retrieve i1 from Datatype";
+
+// Primitives
+// Binary
+// VarExpr
+pub trait ExprNode {
+    fn get_value(&self) -> String; // get resolved expr value
+    fn get_type(&self) -> &str; // get datatype as a str
+    fn to_datatype(&self) -> &DataType;
+}
+
 // DataType is a literal
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum DataType {
     Integer(Option<i32>),
     String(String),
     Boolean(Option<bool>)
+}
+impl ExprNode for DataType {
+    fn get_value(&self) -> String {
+        match self {
+            DataType::Integer(int) => int.expect(DATATYPE_INT_ERROR).to_string(),
+            DataType::Boolean(bool) => convert_bool(bool.expect(DATATYPE_BOOL_ERROR)).to_string(),
+            _ => "".to_string()
+        }
+    }
+    fn get_type(&self) -> &str {
+        match self {
+            DataType::Integer(int) => "i32",
+            DataType::Boolean(bool) => "i1",
+            _ => ""
+        }
+    }
+    fn to_datatype(&self) -> &DataType {
+        self
+    }
 }
 // Turn an i32 integer into a DataType::Integer
 impl From<i32> for DataType {
@@ -97,6 +126,18 @@ pub struct Binary {
     datatype: DataType
 
 }
+impl ExprNode for Binary {
+    fn get_value(&self) -> String {
+        // should return the register in this case
+        format!("%{}", self.register)
+    }
+    fn get_type(&self) -> &str {
+        self.as_datatype().get_type()
+    }
+    fn to_datatype(&self) -> &DataType {
+        self.as_datatype()
+    }
+}
 #[allow(unused)]
 impl Binary {
     pub fn new(left: Expression, right: Expression, operator: Operation, register: &str, datatype: DataType) -> Binary {
@@ -152,6 +193,17 @@ pub struct VariableExpression {
     pub datatype: DataType,
     pub count: usize
 }
+impl ExprNode for VariableExpression {
+    fn get_type(&self) -> &str {
+        self.datatype.get_type()
+    }
+    fn get_value(&self) -> String {
+        format!("%{}_{}", self.name, self.count)
+    }
+    fn to_datatype(&self) -> &DataType {
+        &self.datatype
+    }
+}
 impl From<VariableExpression> for Expression {
     fn from(value: VariableExpression) -> Self {
         Expression::Variable(value)
@@ -162,7 +214,18 @@ pub struct StringConstant {
     pub name: String,
     pub length: usize,
     pub index: usize,
-    pub register: usize
+    pub register: usize,
+    pub datatype: DataType
+}
+
+impl ExprNode for StringConstant {
+    fn get_type(&self) -> &str { "i8" }
+    fn get_value(&self) -> String {
+        format!("%{}", self.register)
+    }
+    fn to_datatype(&self) -> &DataType {
+        &self.datatype
+    }
 }
 impl StringConstant {
     pub fn print(&self) -> String {
@@ -181,6 +244,12 @@ pub enum Expression {
     StringConstant(StringConstant),
     Empty
 }
+
+// impl ExprNode for DataType {
+//     fn accept() -> String {
+
+//     }
+// }
 impl Register for Expression {
     fn register(&self) -> String {
         //println!("; [Register Trait] Placing expression in register for declaration use.");
@@ -262,21 +331,14 @@ impl Expression {
         }
         
     }
+    // make it so that this eventually calls get_value() for everything
     pub fn resolve_operand(&self) -> String {
         match self {
-            Expression::Binary(b) => format!("%{}", b.register),
-            Expression::Literal(i) => {
-                match i {
-                    DataType::Integer(int) => int.expect(DATATYPE_INT_ERROR).to_string(),
-                    DataType::Boolean(bool) => convert_bool(bool.expect(DATATYPE_BOOL_ERROR)).to_string(),
-                    _ => "".to_string()
-                }
-            },
-            Expression::StringConstant(_) => self.register(),
-            Expression::Variable(variable) => {
-                format!("%{}_{}", variable.name, variable.count)
-            }
-            _ => "".to_string()
+            Expression::Binary(b) => b.get_value(),
+            Expression::Literal(i) => i.get_value(),
+            Expression::StringConstant(s) => s.get_value(),
+            Expression::Variable(v) => v.get_value(),
+            _ => panic!("resolve_operand should have gotten an object that takes the ExprNode trait")
         }
     }
     pub fn from_literal(literal: DataType) -> Expression{

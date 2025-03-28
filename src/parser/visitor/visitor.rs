@@ -1,9 +1,9 @@
 use crate::parser::expression::expr::{DataType, Binary, StringConstant, VariableExpression};
 use crate::parser::declaration::declaration::{VariableDeclaration, PrintStatement};
 pub trait Visitor {
-    fn visit_literal(&mut self, literal: &DataType) -> String;
-    fn visit_binary(&mut self, binary: &Binary) -> String;
-    fn visit_string(&mut self, str_constant: &StringConstant) -> String;
+    fn visit_literal(&mut self, literal: &DataType) -> String; // 1 (base type)
+    fn visit_binary(&mut self, binary: &Binary) -> String; // 1 + 2  (container type)
+    fn visit_string(&mut self, str_constant: &StringConstant) -> String; // "s" (base type)
     fn visit_variable_expression(&mut self, variable_expression: &VariableExpression) -> String;
 
     // Statements
