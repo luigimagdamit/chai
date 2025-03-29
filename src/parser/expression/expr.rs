@@ -1,7 +1,6 @@
 use std::fmt;
 use crate::parser::visitor::visitor::{Accept, Visitor};
 use crate::llvm::llvm_print::llvm_call_print_local;
-use super::binary::is_boolean_op;
 use crate::llvm::llvm_string::*;
 #[allow(unused)]
 
@@ -15,6 +14,7 @@ pub trait ExprNode {
     fn get_value(&self) -> String; // get resolved expr value
     fn get_type(&self) -> &str; // get datatype as a str
     fn to_datatype(&self) -> &DataType;
+    fn print(&self) -> String;
 }
 
 // DataType is a literal
@@ -42,6 +42,18 @@ impl ExprNode for DataType {
     fn to_datatype(&self) -> &DataType {
         self
     }
+    fn print(&self) -> String {
+        match self {
+            DataType::Integer(int) => {
+                format!("add i32 {}, 0; a", int.expect(DATATYPE_INT_ERROR))
+            },
+            DataType::Boolean(bool) => {
+                let bool_val = if bool.expect(DATATYPE_BOOL_ERROR) {1} else {0};
+                format!("add i1 {bool_val}, 0")
+            }
+            _ => "".to_string()
+        }
+    }
 }
 // Turn an i32 integer into a DataType::Integer
 impl From<i32> for DataType {
@@ -61,24 +73,19 @@ impl From<bool> for DataType {
 }
 
 impl DataType {
-    pub fn print(&self) -> String {
-        match self {
-            DataType::Integer(int) => {
-                format!("add i32 {}, 0; a", int.expect(DATATYPE_INT_ERROR))
-            },
-            DataType::Boolean(bool) => {
-                let bool_val = if bool.expect(DATATYPE_BOOL_ERROR) {1} else {0};
-                format!("add i1 {bool_val}, 0")
-            }
-            _ => "".to_string()
-        }
-    }
+
     pub fn as_str(&self) -> &str {
         match self {
             DataType::Integer(_) => "i32",
             DataType::Boolean(_) => "i1",
             DataType::String(_) => "i8*"
         }
+    }
+    pub fn empty_bool() -> DataType {
+        DataType::Boolean(Some(true))
+    }
+    pub fn empty_int() -> DataType {
+        DataType::Integer(None)
     }
     pub fn _place(&self, register: usize) -> String {
         format!("%{} = {}", register, self.print())
@@ -98,6 +105,14 @@ pub enum Operation {
     GreaterEqual,
     LessThan,
     LessEqual
+}
+impl Operation {
+    pub fn is_boolean_op(&self) -> bool{
+        match &self {
+            Operation::Add | Operation::Div | Operation::Mul | Operation::Sub => false,
+            _ => true
+        }
+    }
 }
 impl fmt::Display for Operation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -137,14 +152,8 @@ impl ExprNode for Binary {
     fn to_datatype(&self) -> &DataType {
         self.as_datatype()
     }
-}
-#[allow(unused)]
-impl Binary {
-    pub fn new(left: Expression, right: Expression, operator: Operation, register: &str, datatype: DataType) -> Binary {
-        Binary {left: Box::new(left), right: Box::new(right), operator, register: register.to_string(), datatype}
-    }
-    pub fn print(&self) -> String {
-        if is_boolean_op(self.operator.clone()) {
+    fn print(&self) -> String {
+        if self.operator.is_boolean_op() {
             format!("{}", llvm_call_print_local(
                 self.register.clone()
                     .parse()
@@ -159,6 +168,13 @@ impl Binary {
         }
         
     }
+}
+#[allow(unused)]
+impl Binary {
+    pub fn new(left: Expression, right: Expression, operator: Operation, register: &str, datatype: DataType) -> Binary {
+        Binary {left: Box::new(left), right: Box::new(right), operator, register: register.to_string(), datatype}
+    }
+
 
     pub fn get_left(&self) -> Expression {
         *self.left.clone()
@@ -203,6 +219,10 @@ impl ExprNode for VariableExpression {
     fn to_datatype(&self) -> &DataType {
         &self.datatype
     }
+    fn print(&self) -> String {
+        let type_str = (&self.datatype).as_str();
+        format!("%{}_{} = load {type_str}, {type_str}* %{} ; loading existing variable", self.name, self.count, self.name)
+    }
 }
 impl From<VariableExpression> for Expression {
     fn from(value: VariableExpression) -> Self {
@@ -226,11 +246,12 @@ impl ExprNode for StringConstant {
     fn to_datatype(&self) -> &DataType {
         &self.datatype
     }
-}
-impl StringConstant {
-    pub fn print(&self) -> String {
+    fn print(&self) -> String {
         format!("call i32 (i8*, ...) @printf(i8* %{})", self.register)
     }
+}
+impl StringConstant {
+    
     pub fn place(&self) -> String {
         format!("%{} = {} ; place() in impl StringConstant", self.register, &llvm_retrieve_static_string(self.length, self.index))
     }
@@ -245,11 +266,7 @@ pub enum Expression {
     Empty
 }
 
-// impl ExprNode for DataType {
-//     fn accept() -> String {
 
-//     }
-// }
 impl Register for Expression {
     fn register(&self) -> String {
         //println!("; [Register Trait] Placing expression in register for declaration use.");
@@ -320,7 +337,7 @@ impl Expression {
     pub fn resolve_binary(&self) -> String {
         match self {
             Expression::Binary(b) => {
-                let tag = b.as_datatype().as_str();
+                let tag = b.to_datatype().as_str();
                 let mut codegen = format!("{} {tag} ", b.operator);
                 codegen += &b.get_left().resolve_operand();
                 codegen += &", ".to_string();

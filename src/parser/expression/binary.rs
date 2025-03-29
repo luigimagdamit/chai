@@ -37,20 +37,14 @@ pub fn parse_binary(parser: &mut Parser)  -> Result<Expression, ParseError>{
     
 }
 
-pub fn is_boolean_op(instruction: Operation) -> bool{
-    match instruction {
-        Operation::Add | Operation::Div | Operation::Mul | Operation::Sub => false,
-        _ => true
-    }
-}
-fn binary_op(parser: &mut Parser, instruction: Operation)  -> Result<Expression, ParseError>
+
+fn binary_op(parser: &mut Parser, inst: Operation)  -> Result<Expression, ParseError>
 {
     let (b_expr, a_expr) = get_binary_operands(parser);
 
     match (b_expr.as_datatype(), a_expr.as_datatype()) {
         (DataType::Integer(_), DataType::Integer(_)) => {
-            let datatype = DataType::Integer(None);
-            let ast_node = Expression::new_binary(b_expr, a_expr, instruction, &parser.expr_increment().to_string(), datatype);
+            let ast_node = Expression::new_binary(b_expr, a_expr, inst, &parser.expr_increment().to_string(), DataType::empty_int());
 
             let codegen = "".to_string() + &ast_node.register();
             parser.emit_instruction(&codegen);
@@ -58,9 +52,8 @@ fn binary_op(parser: &mut Parser, instruction: Operation)  -> Result<Expression,
                     
             return Ok(ast_node)
         },
-        (DataType::Boolean(_), DataType::Boolean(_)) if is_boolean_op(instruction.clone()) => {
-            let register= parser.expr_increment();
-            let ast_node = Expression::new_binary(b_expr, a_expr, instruction, &register.to_string(), DataType::Boolean(None));
+        (DataType::Boolean(_), DataType::Boolean(_)) if inst.is_boolean_op() => {
+            let ast_node = Expression::new_binary(b_expr, a_expr, inst, &parser.expr_increment().to_string(), DataType::empty_bool());
             let codegen = "".to_string() + &ast_node.register();
             parser.emit_instruction(&codegen);
 

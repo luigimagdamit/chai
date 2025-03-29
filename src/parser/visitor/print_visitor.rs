@@ -3,6 +3,7 @@ use crate::parser::declaration::declaration::{VariableDeclaration, PrintStatemen
 use crate::parser::visitor::visitor::Visitor;
 use crate::codegen::llvm_codegen::LlvmPrint;
 use crate::codegen::codegen_print::CodegenPrint;
+use crate::parser::expression::expr::ExprNode;
 pub struct PrintVisitor;
 impl Visitor for PrintVisitor {
     fn visit_literal(&mut self, literal: &DataType) -> String{
@@ -49,6 +50,6 @@ impl Visitor for PrintVisitor {
         
     }
     fn visit_variable_expression(&mut self, variable_expression: &VariableExpression) -> String {
-        LlvmPrint::var_expr(variable_expression)
+        variable_expression.print()
     }
 }
