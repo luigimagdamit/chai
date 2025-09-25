@@ -1,8 +1,6 @@
 use crate::parser::expression::expr::{DataType, Binary, StringConstant, Expression, Operation, VariableExpression};
 use crate::parser::declaration::declaration::{VariableDeclaration, PrintStatement};
 use crate::parser::visitor::visitor::Visitor;
-use crate::codegen::llvm_codegen::LlvmPrint;
-use crate::codegen::codegen_print::CodegenPrint;
 use crate::parser::expression::expr::ExprNode;
 pub struct PrintVisitor;
 

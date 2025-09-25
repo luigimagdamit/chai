@@ -3,11 +3,10 @@ use crate::parser::expression::parse_rule::get_rule;
 use crate::parser::expression::precedence::Precedence;
 use crate::llvm::expr_mode::expr_mode;
 use crate::scanner::token::TokenType;
-
 use super::expr::{Expression, ParseError};
+
 pub fn expression(parser: &mut Parser) {
     parse_precedence(parser, Precedence::PrecAssignment);
-    // assume this is just a high level expression
     expr_mode(parser);
 }
 

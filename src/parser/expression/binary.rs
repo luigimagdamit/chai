@@ -7,6 +7,8 @@ use crate::parser::expression::expr::{Expression, Operation};
 use crate::parser::expression::parse_rule::get_rule;
 use crate::scanner::token::TokenType;
 
+type ExprPair = (Expression, Expression);
+
 pub fn parse_binary(parser: &mut Parser)  -> Result<Expression, ParseError>{
     if let Some(token) = parser.previous {
        
@@ -20,8 +22,6 @@ pub fn parse_binary(parser: &mut Parser)  -> Result<Expression, ParseError>{
             TokenType::Minus => binary_op(parser, Operation::Sub),
             TokenType::Star => binary_op(parser, Operation::Mul),
             TokenType::Slash => binary_op(parser, Operation::Div),
-
-
             TokenType::EqualEqual => binary_op(parser, Operation::Equal),
             TokenType::BangEqual => binary_op(parser, Operation::NotEqual),
             TokenType::Greater => binary_op(parser, Operation::GreaterThan),
@@ -44,9 +44,15 @@ fn binary_op(parser: &mut Parser, inst: Operation)  -> Result<Expression, ParseE
 
     match (b_expr.as_datatype(), a_expr.as_datatype()) {
         (DataType::Integer(_), DataType::Integer(_)) => {
-            let ast_node = Expression::new_binary(b_expr, a_expr, inst, &parser.expr_increment().to_string(), DataType::empty_int());
-
+            let ast_node = Expression::new_binary(
+                b_expr, 
+                a_expr, 
+                inst, 
+                &parser.expr_increment().to_string(), 
+                DataType::empty_int()
+            );
             let codegen = "".to_string() + &ast_node.register();
+
             parser.emit_instruction(&codegen);
             parser.ast_stack.push(AstNode::Expression(ast_node.clone()));
                     
@@ -55,9 +61,8 @@ fn binary_op(parser: &mut Parser, inst: Operation)  -> Result<Expression, ParseE
         (DataType::Boolean(_), DataType::Boolean(_)) if inst.is_boolean_op() => {
             let ast_node = Expression::new_binary(b_expr, a_expr, inst, &parser.expr_increment().to_string(), DataType::empty_bool());
             let codegen = "".to_string() + &ast_node.register();
+
             parser.emit_instruction(&codegen);
-
-
             parser.ast_stack.push(AstNode::Expression(ast_node.clone()));
             
             return Ok(ast_node)
@@ -68,8 +73,7 @@ fn binary_op(parser: &mut Parser, inst: Operation)  -> Result<Expression, ParseE
 
 
 
-fn get_binary_operands(parser: &mut Parser) -> (Expression, Expression) {
-    
+fn get_binary_operands(parser: &mut Parser) -> ExprPair {
     let local_right = parser.ast_stack
         .pop()
         .expect("Tried to get right operand from ast_node option, but unwrapped none");

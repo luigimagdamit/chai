@@ -17,8 +17,6 @@ type ParseFn<'a> = fn(&'a mut Parser) -> Result<Expression, ParseError>;
 pub fn get_rule<'a>(token_type: TokenType) -> ParseRule<'a> {
     // println!("GetRule: {}", token_type);
     match token_type {
-        // Parentheses 
-
         TokenType::LeftParen => ParseRule {
             prefix: Some(parse_grouping),
             infix: None,
@@ -29,7 +27,6 @@ pub fn get_rule<'a>(token_type: TokenType) -> ParseRule<'a> {
             infix: None,
             precedence: Precedence::PrecNone
         },
-
         TokenType::True => ParseRule { 
             prefix: Some(parse_literal), 
             infix: None,

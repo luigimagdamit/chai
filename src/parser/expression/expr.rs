@@ -8,14 +8,16 @@ use crate::llvm::llvm_string::*;
 const DATATYPE_INT_ERROR: &'static str = "Could not retrieve i32 from Datatype";
 const DATATYPE_BOOL_ERROR: &'static str = "Could not retrieve i1 from Datatype";
 
-pub trait ExprNode {
-    fn get_value(&self) -> String; // get resolved expr value
-    fn get_type(&self) -> &str; // get datatype as a str
-    fn to_datatype(&self) -> &DataType;
-    fn print(&self) -> String;
+// Highest level structure
+#[derive(Clone)]
+pub enum Expression {
+    Literal(DataType),
+    Variable(VariableExpression),
+    Binary(Binary),
+    StringConstant(StringConstant),
+    Empty
 }
 
-// DataType is a literal
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum DataType {
     Integer(Option<i32>),
@@ -23,6 +25,40 @@ pub enum DataType {
     Boolean(Option<bool>)
 }
 
+#[derive(Clone)]
+pub struct Binary {
+    left: Box<Expression>,
+    right: Box<Expression>,
+    pub operator: Operation,
+    register: String,
+    datatype: DataType
+
+}
+
+#[derive(Clone)]
+pub struct VariableExpression {
+    pub name: String,
+    pub datatype: DataType,
+    pub count: usize
+}
+
+#[derive(Clone)]
+pub struct StringConstant {
+    pub name: String,
+    pub length: usize,
+    pub index: usize,
+    pub register: usize,
+    pub datatype: DataType
+}
+
+//===========================
+// Each inherits from this ExprNode trait
+pub trait ExprNode {
+    fn get_value(&self) -> String; // get resolved expr value
+    fn get_type(&self) -> &str; // get datatype as a str
+    fn to_datatype(&self) -> &DataType;
+    fn print(&self) -> String;
+}
 impl ExprNode for DataType {
     fn get_value(&self) -> String {
         match self {
@@ -52,7 +88,63 @@ impl ExprNode for DataType {
         }
     }
 }
+impl ExprNode for Binary {
+    fn get_value(&self) -> String {
+        // should return the register in this case
+        format!("%{}", self.register)
+    }
+    fn get_type(&self) -> &str {
+        self.as_datatype().get_type()
+    }
+    fn to_datatype(&self) -> &DataType {
+        self.as_datatype()
+    }
+    fn print(&self) -> String {
+        if self.operator.is_boolean_op() {
+            format!("{}", llvm_call_print_local(
+                self.register.clone()
+                    .parse()
+                    .expect("Could not convert the register name to a string")
+                , "i1"))
+        } else {
+            format!("{}", llvm_call_print_local(self.register
+                .clone()
+                .parse()
+                .expect("Could not parse register name to a string")
+            , "i32"))
+        }
+        
+    }
+}
+impl ExprNode for VariableExpression {
+    fn get_type(&self) -> &str {
+        self.datatype.get_type()
+    }
+    fn get_value(&self) -> String {
+        format!("%{}_{}", self.name, self.count)
+    }
+    fn to_datatype(&self) -> &DataType {
+        &self.datatype
+    }
+    fn print(&self) -> String {
+        let type_str = (&self.datatype).as_str();
+        format!("%{}_{} = load {type_str}, {type_str}* %{} ; loading existing variable", self.name, self.count, self.name)
+    }
+}
+impl ExprNode for StringConstant {
+    fn get_type(&self) -> &str { "i8" }
+    fn get_value(&self) -> String {
+        format!("%{}", self.register)
+    }
+    fn to_datatype(&self) -> &DataType {
+        &self.datatype
+    }
+    fn print(&self) -> String {
+        format!("call i32 (i8*, ...) @printf(i8* %{})", self.register)
+    }
+}
 
+// ============================
 impl From<i32> for DataType {
     fn from(item: i32) -> DataType {
         DataType::Integer(Some(item))
@@ -89,44 +181,8 @@ impl DataType {
 }
 
 
-#[derive(Clone)]
-pub struct Binary {
-    left: Box<Expression>,
-    right: Box<Expression>,
-    pub operator: Operation,
-    register: String,
-    datatype: DataType
 
-}
-impl ExprNode for Binary {
-    fn get_value(&self) -> String {
-        // should return the register in this case
-        format!("%{}", self.register)
-    }
-    fn get_type(&self) -> &str {
-        self.as_datatype().get_type()
-    }
-    fn to_datatype(&self) -> &DataType {
-        self.as_datatype()
-    }
-    fn print(&self) -> String {
-        if self.operator.is_boolean_op() {
-            format!("{}", llvm_call_print_local(
-                self.register.clone()
-                    .parse()
-                    .expect("Could not convert the register name to a string")
-                , "i1"))
-        } else {
-            format!("{}", llvm_call_print_local(self.register
-                .clone()
-                .parse()
-                .expect("Could not parse register name to a string")
-            , "i32"))
-        }
-        
-    }
-}
-#[allow(unused)]
+
 impl Binary {
     pub fn new(left: Expression, right: Expression, operator: Operation, register: &str, datatype: DataType) -> Binary {
         Binary {left: Box::new(left), right: Box::new(right), operator, register: register.to_string(), datatype}
@@ -144,59 +200,19 @@ impl fmt::Display for Binary {
     }
 }
 
-// Expressions
-// These are all the default actions I want to use with Expression Types
 
 pub trait Register {
     fn register(&self) -> String;
 }
-#[derive(Clone)]
-pub struct VariableExpression {
-    pub name: String,
-    pub datatype: DataType,
-    pub count: usize
-}
-impl ExprNode for VariableExpression {
-    fn get_type(&self) -> &str {
-        self.datatype.get_type()
-    }
-    fn get_value(&self) -> String {
-        format!("%{}_{}", self.name, self.count)
-    }
-    fn to_datatype(&self) -> &DataType {
-        &self.datatype
-    }
-    fn print(&self) -> String {
-        let type_str = (&self.datatype).as_str();
-        format!("%{}_{} = load {type_str}, {type_str}* %{} ; loading existing variable", self.name, self.count, self.name)
-    }
-}
+
+
 impl From<VariableExpression> for Expression {
     fn from(value: VariableExpression) -> Self {
         Expression::Variable(value)
     }
 }
-#[derive(Clone)]
-pub struct StringConstant {
-    pub name: String,
-    pub length: usize,
-    pub index: usize,
-    pub register: usize,
-    pub datatype: DataType
-}
 
-impl ExprNode for StringConstant {
-    fn get_type(&self) -> &str { "i8" }
-    fn get_value(&self) -> String {
-        format!("%{}", self.register)
-    }
-    fn to_datatype(&self) -> &DataType {
-        &self.datatype
-    }
-    fn print(&self) -> String {
-        format!("call i32 (i8*, ...) @printf(i8* %{})", self.register)
-    }
-}
+
 impl StringConstant {
     
     pub fn place(&self) -> String {
@@ -204,14 +220,6 @@ impl StringConstant {
     }
 }
 
-#[derive(Clone)]
-pub enum Expression {
-    Literal(DataType),
-    Variable(VariableExpression),
-    Binary(Binary),
-    StringConstant(StringConstant),
-    Empty
-}
 
 
 impl Register for Expression {

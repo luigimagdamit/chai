@@ -2,6 +2,7 @@ use crate::parser::expression::expr::ParseError;
 use crate::parser::core::ast_node::AstNode;
 use super::super::parser::Parser;
 use super::super:: expression::expr::{DataType, Expr, Expression};
+
 pub fn parse_number(parser: &mut Parser) -> Result<Expression, ParseError> {
     let value = String::from(parser.previous.expect("Tried to get previous token, but it was empty").start);
     let number_leaf = Expr {
