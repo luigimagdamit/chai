@@ -1,5 +1,6 @@
 use std::fmt;
 use crate::parser::visitor::visitor::{Accept, Visitor};
+use crate::common::util::convert_bool;
 use crate::llvm::llvm_print::llvm_call_print_local;
 use crate::llvm::llvm_string::*;
 #[allow(unused)]
@@ -7,9 +8,6 @@ use crate::llvm::llvm_string::*;
 const DATATYPE_INT_ERROR: &'static str = "Could not retrieve i32 from Datatype";
 const DATATYPE_BOOL_ERROR: &'static str = "Could not retrieve i1 from Datatype";
 
-// Primitives
-// Binary
-// VarExpr
 pub trait ExprNode {
     fn get_value(&self) -> String; // get resolved expr value
     fn get_type(&self) -> &str; // get datatype as a str
@@ -24,6 +22,7 @@ pub enum DataType {
     String(String),
     Boolean(Option<bool>)
 }
+
 impl ExprNode for DataType {
     fn get_value(&self) -> String {
         match self {
@@ -34,8 +33,8 @@ impl ExprNode for DataType {
     }
     fn get_type(&self) -> &str {
         match self {
-            DataType::Integer(int) => "i32",
-            DataType::Boolean(bool) => "i1",
+            DataType::Integer(_) => "i32",
+            DataType::Boolean(_) => "i1",
             _ => ""
         }
     }
@@ -44,9 +43,7 @@ impl ExprNode for DataType {
     }
     fn print(&self) -> String {
         match self {
-            DataType::Integer(int) => {
-                format!("add i32 {}, 0; a", int.expect(DATATYPE_INT_ERROR))
-            },
+            DataType::Integer(int) => format!("add i32 {}, 0; a", int.expect(DATATYPE_INT_ERROR)),
             DataType::Boolean(bool) => {
                 let bool_val = if bool.expect(DATATYPE_BOOL_ERROR) {1} else {0};
                 format!("add i1 {bool_val}, 0")
@@ -55,7 +52,7 @@ impl ExprNode for DataType {
         }
     }
 }
-// Turn an i32 integer into a DataType::Integer
+
 impl From<i32> for DataType {
     fn from(item: i32) -> DataType {
         DataType::Integer(Some(item))
@@ -73,7 +70,6 @@ impl From<bool> for DataType {
 }
 
 impl DataType {
-
     pub fn as_str(&self) -> &str {
         match self {
             DataType::Integer(_) => "i32",
@@ -89,45 +85,6 @@ impl DataType {
     }
     pub fn _place(&self, register: usize) -> String {
         format!("%{} = {}", register, self.print())
-    }
-}
-
-
-#[derive(Clone, PartialEq, Debug)]
-pub enum Operation {
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Equal,
-    NotEqual,
-    GreaterThan,
-    GreaterEqual,
-    LessThan,
-    LessEqual
-}
-impl Operation {
-    pub fn is_boolean_op(&self) -> bool{
-        match &self {
-            Operation::Add | Operation::Div | Operation::Mul | Operation::Sub => false,
-            _ => true
-        }
-    }
-}
-impl fmt::Display for Operation {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Operation::Add => write!(f, "add"),
-            Operation::Sub => write!(f, "sub"),
-            Operation::Mul => write!(f, "mul"),
-            Operation::Div => write!(f, "div"),
-            Operation::Equal => write!(f, "icmp eq"),
-            Operation::NotEqual => write!(f, "icmp ne"),
-            Operation::GreaterEqual => write!(f, "icmp sge"),
-            Operation::GreaterThan => write!(f, "icmp sgt"),
-            Operation::LessEqual => write!(f, "icmp sle"),
-            Operation::LessThan => write!(f, "icmp slt")
-        }
     }
 }
 
@@ -174,21 +131,11 @@ impl Binary {
     pub fn new(left: Expression, right: Expression, operator: Operation, register: &str, datatype: DataType) -> Binary {
         Binary {left: Box::new(left), right: Box::new(right), operator, register: register.to_string(), datatype}
     }
-
-
-    pub fn get_left(&self) -> Expression {
-        *self.left.clone()
-    }
-    pub fn get_right(&self) -> Expression {
-        *self.right.clone()
-    }
-    pub fn as_datatype(&self) -> &DataType{
-        &self.datatype
-    }
+    pub fn get_left(&self) -> &Expression { &self.left }
+    pub fn get_right(&self) -> &Expression { &self.right }
+    pub fn as_datatype(&self) -> &DataType{ &self.datatype }
 }
-pub fn convert_bool(b: bool) -> u32 {
-    if b {1} else {0}
-}
+
 
 
 impl fmt::Display for Binary {
@@ -408,9 +355,42 @@ pub struct Expr {
     pub right: String,
     pub data_type: DataType
 }
-#[allow(unused)]
-impl Expr {
-    pub fn print_leaf(&self) {
-        println!("<leaf> <left: {}> <right: {}> <data_type: {}>", self.left, self.right, self.data_type);
+
+#[derive(Clone, PartialEq, Debug)]
+pub enum Operation {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Equal,
+    NotEqual,
+    GreaterThan,
+    GreaterEqual,
+    LessThan,
+    LessEqual
+}
+impl Operation {
+    pub fn is_boolean_op(&self) -> bool{
+        match &self {
+            Operation::Add | Operation::Div | Operation::Mul | Operation::Sub => false,
+            _ => true
+        }
     }
 }
+impl fmt::Display for Operation {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Operation::Add => write!(f, "add"),
+            Operation::Sub => write!(f, "sub"),
+            Operation::Mul => write!(f, "mul"),
+            Operation::Div => write!(f, "div"),
+            Operation::Equal => write!(f, "icmp eq"),
+            Operation::NotEqual => write!(f, "icmp ne"),
+            Operation::GreaterEqual => write!(f, "icmp sge"),
+            Operation::GreaterThan => write!(f, "icmp sgt"),
+            Operation::LessEqual => write!(f, "icmp sle"),
+            Operation::LessThan => write!(f, "icmp slt")
+        }
+    }
+}
+

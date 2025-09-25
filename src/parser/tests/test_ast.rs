@@ -58,7 +58,7 @@ mod tests {
         
     }
     pub fn binary_operands(bin: Binary) -> (Expression, Expression) {
-        return (bin.get_left(), bin.get_right())
+        return (bin.get_left().clone(), bin.get_right().clone())
     }
     pub fn test_operand_value_int(expr: Expression, value: i32) {
         match expr {

@@ -63,10 +63,10 @@ fn main() {
             s if s.is_ascii()=> {
 
                 let contents = std::fs::read_to_string(s).unwrap();
-                let parser = &mut Parser::init_parser(&contents);
+                let _ = &mut Parser::init_parser(&contents);
 
 
-                jit_compile(&contents);
+                let _ = jit_compile(&contents);
             }
             _ => {}
         }

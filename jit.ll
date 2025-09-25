@@ -311,18 +311,18 @@ exit63:
 
 
 	;String Constants
-@str7 = private unnamed_addr constant [14 x i8] c"this is chai\0A\00", align 1
+@str11 = private unnamed_addr constant [5 x i8] c"yup\0A\00", align 1
+@str10 = private unnamed_addr constant [22 x i8] c"ok shutting down now\0A\00", align 1
+@str6 = private unnamed_addr constant [5 x i8] c"zzz\0A\00", align 1
+@str1 = private unnamed_addr constant [10 x i8] c"beignets\0A\00", align 1
 @str0 = private unnamed_addr constant [14 x i8] c"hello world!\0A\00", align 1
 @str3 = private unnamed_addr constant [11 x i8] c"lets eat!\0A\00", align 1
-@str6 = private unnamed_addr constant [5 x i8] c"zzz\0A\00", align 1
-@str10 = private unnamed_addr constant [22 x i8] c"ok shutting down now\0A\00", align 1
-@str8 = private unnamed_addr constant [33 x i8] c"here is me declaring a variable\0A\00", align 1
-@str4 = private unnamed_addr constant [5 x i8] c"nom\0A\00", align 1
-@str1 = private unnamed_addr constant [10 x i8] c"beignets\0A\00", align 1
 @str2 = private unnamed_addr constant [14 x i8] c"cafe au lait\0A\00", align 1
 @str5 = private unnamed_addr constant [11 x i8] c"ima sleep\0A\00", align 1
-@str11 = private unnamed_addr constant [5 x i8] c"yup\0A\00", align 1
+@str7 = private unnamed_addr constant [14 x i8] c"this is chai\0A\00", align 1
+@str8 = private unnamed_addr constant [33 x i8] c"here is me declaring a variable\0A\00", align 1
 @str9 = private unnamed_addr constant [22 x i8] c"this is the variable\0A\00", align 1
+@str4 = private unnamed_addr constant [5 x i8] c"nom\0A\00", align 1
 
 
 @fmt = private constant [4 x i8] c"%d\0A\00"

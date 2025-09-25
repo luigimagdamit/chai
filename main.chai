@@ -11,7 +11,7 @@ fn main() int {
 
     var snacks: int = 10;
 
-    while (snacks != 0) {
+    while (snacks > 0) {
         snacks = snacks - 1;
 
         if (hungry == true) {

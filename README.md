@@ -1,12 +1,20 @@
-Chai is a compiled programming language implemented in Rust that features a lexer, recursive descent and Pratt parsing, and a custom code generation module targeting LLVM IR. It can compile to many different architectures such as x86 or ARM processors. 
+# Chai Programming Language
 
-The compiler supports variables, control flow, and C ABI interoperability. It includes a custom standard library written in C, offering built-in functionality and system-level integration.
+Chai is a **compiled programming language** implemented in **Rust**.  
+It features:
 
-Chai focuses on maintaining concise code similar to Golang, but plans to integrate algebraic data types similar to those found in functional programming languages.
+- **Lexer** and **recursive-descent parsing** with **Pratt expressions**.
+- A custom **code generation** module targeting **LLVM IR**, allowing compilation to multiple architectures such as **x86** and **ARM**.
+- Support for **variables**, **control flow**, and **C ABI interoperability**.
+- A lightweight **standard library written in C** for built-in functionality and system-level integration.
 
-Here is a quick sneak peek:
+Chai’s syntax aims to be **concise like Go**, while future plans include **algebraic data types** inspired by functional programming languages.
 
-```go
+---
+
+## Quick Example
+
+```c
 fn main() int {
     print("hello world!");
 
@@ -17,7 +25,6 @@ fn main() int {
     print(beverage);
 
     var hungry: bool = true;
-
     var snacks: int = 10;
 
     while (snacks != 0) {
@@ -32,11 +39,47 @@ fn main() int {
             print("zzz");
             hungry = true;
         }
-
     }
 }
+````
+
+---
+
+## Build Instructions
+
+### Prerequisites
+
+* **Rust** (latest stable version)
+* **LLVM** (ensure `llvm-config` is in your `PATH`)
+
+### Steps
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/luigimagdamit/chai.git
+cd chai
+
+# 2. Build the compiler
+cargo build --release
+
+# 3. Run the compiler
+# Replace 'example.chai' with your source file
+./target/release/chai example.chai
 ```
 
+This will emit LLVM IR and produce an executable for your platform (x86, ARM, etc.) depending on your LLVM setup.
 
+---
 
+## Roadmap
+
+* Algebraic data types
+* Expanded standard library
+* Additional backends and optimizations
+
+---
+
+## License
+
+Specify your license here (e.g., MIT, Apache 2.0).
 

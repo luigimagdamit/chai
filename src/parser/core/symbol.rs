@@ -34,7 +34,7 @@ pub fn get_symbol(parser: &mut Parser, name: &str) {
 // be for setting it after initial assignment
 pub fn set_symbol(parser: &mut Parser, name: &str, new_value: Expression) {
 
-    if let Some(variable) = parser.symbol_table.get(&name.to_string()).clone() {
+    if let Some(variable) = parser.symbol_table.get(&name.to_string()) {
         let a_type = &variable.variable_type;
         let b_type = &new_value.as_datatype();
     

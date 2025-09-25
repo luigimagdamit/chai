@@ -31,8 +31,6 @@ pub struct Parser<'a>{
     pub scanner: Scanner<'a>,
     had_error: bool,
     panic_mode: bool,
-    // pub left_hand: Option<Expr>,
-    // pub right_hand: Option<Expr>
     pub constant_stack: Vec<Option<Expr>>,
     pub ast_stack: Vec<AstNode>,
     pub string_table: HashMap<String, StringEntry>,

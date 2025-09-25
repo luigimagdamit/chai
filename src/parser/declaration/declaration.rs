@@ -1,6 +1,10 @@
 use std::fmt;
-use crate::parser::expression::expr::{DataType, Expression};
+use crate::parser::expression::expr::{DataType, Expression, Operation};
 use crate::parser::visitor::visitor::{Accept, Visitor};
+use crate::codegen::llvm_codegen::LlvmPrint;
+use crate::codegen::codegen_print::CodegenPrint;
+use crate::parser::expression::expr::ExprNode;
+
 #[derive(Clone)]
 pub struct PrintStatement {
     pub expression: Expression
@@ -54,6 +58,9 @@ impl VariableDeclaration {
             self.variable_type.clone()
         }
     }
+    pub fn print(&self) -> String {
+        LlvmPrint::new_variable(&self) + &"\n\t" + &LlvmPrint::store_variable(&self)
+    }
 }
 
 #[derive(Clone)]
@@ -103,6 +110,40 @@ impl fmt::Display for Declaration {
                 write!(f, "{var_struct}")
             },
             _ => panic!()
+        }
+    }
+}
+
+impl PrintStatement {
+    pub fn print(&self) -> String {
+        
+        match &self.expression {
+            Expression::Binary(binary) => {
+                match binary.operator {
+                    Operation::Equal | Operation::GreaterEqual | Operation::GreaterThan |Operation::LessEqual |Operation::LessThan | Operation::NotEqual => {
+                        LlvmPrint::print_i1(&Expression::from(binary))
+                    },
+                    _ => LlvmPrint::print_i32(&Expression::from(binary))
+                }
+            },
+            Expression::Literal(literal) => {
+                match literal {
+                    DataType::Integer(_) => LlvmPrint::print_i32(&Expression::from(literal)),
+                    DataType::Boolean(_) => LlvmPrint::print_i1(&Expression::from(literal)), 
+                    _ => panic!()
+                }
+            },
+            Expression::StringConstant(str_constant) => {
+                str_constant.print()
+            }
+            Expression::Variable(variable) => {
+                match variable.datatype {
+                    DataType::Integer(_) => LlvmPrint::print_i32(&Expression::from(variable.clone())),
+                    DataType::Boolean(_) => LlvmPrint::print_i1(&Expression::from(variable.clone())),
+                    DataType::String(_) => LlvmPrint::print_str_constant(&Expression::from(variable.clone())),
+                }
+            },
+            _ => panic!("Unrecognized print statement expression input")
         }
     }
 }
