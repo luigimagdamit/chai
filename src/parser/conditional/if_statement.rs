@@ -7,106 +7,16 @@ use crate::parser::{
 };
 use crate::parser::expression::expr::Expr;
 use crate::scanner::token::TokenType;
+use crate::codegen::ir_traits::{BranchIR, ConditionalIR};
+use crate::codegen::llvm_ir::{LlvmConditional, LlvmIRFactory};
 
 // Conditional statement parsing and LLVM code generation
 //
 // This module provides improved if-statement parsing with proper AST representation,
 // separation of concerns, and support for else-if chains.
 
-/// Shared trait for common LLVM branching operations
-pub trait LlvmBranch {
-    fn depth(&self) -> u32;
-    fn jump_to_end(&self) -> String {
-        format!("br label %end{}", self.depth())
-    }
-}
-
-// Specific enum for If statement LLVM operations
-#[derive(Clone, Debug)]
-pub enum LlvmIf {
-    Simple(u32), // represents the depth
-}
-
-impl LlvmBranch for LlvmIf {
-    fn depth(&self) -> u32 {
-        match self {
-            Self::Simple(depth) => *depth
-        }
-    }
-}
-
-impl LlvmIf {
-    pub fn new(depth: u32) -> Self {
-        Self::Simple(depth)
-    }
-
-    pub fn create_conditional_branch(&self, bool_reg: u32) -> String {
-        format!("br i1 %{}, label %then{}, label %else{}", bool_reg, self.depth(), self.depth())
-    }
-
-    pub fn create_else_if_branch(&self, bool_reg: u32, else_if_index: u32) -> String {
-        format!("br i1 %{}, label %elseif{}_{}, label %else{}", bool_reg, self.depth(), else_if_index, self.depth())
-    }
-
-    pub fn then_label(&self) -> String {
-        format!("then{}:", self.depth())
-    }
-
-    pub fn else_if_label(&self, else_if_index: u32) -> String {
-        format!("\nelseif{}_{}:", self.depth(), else_if_index)
-    }
-
-    pub fn else_label(&self) -> String {
-        format!("\nelse{}:", self.depth())
-    }
-
-    pub fn end_label(&self) -> String {
-        format!("\nend{}:", self.depth())
-    }
-}
-
-// Specific enum for While statement LLVM operations
-#[derive(Clone, Debug)]
-pub enum LlvmWhile {
-    Loop(u32), // represents the depth
-}
-
-impl LlvmBranch for LlvmWhile {
-    fn depth(&self) -> u32 {
-        match self {
-            Self::Loop(depth) => *depth
-        }
-    }
-}
-
-impl LlvmWhile {
-    pub fn new(depth: u32) -> Self {
-        Self::Loop(depth)
-    }
-
-    pub fn condition_branch(&self, bool_reg: u32) -> String {
-        format!("br i1 %{}, label %body{}, label %exit{}", bool_reg, self.depth(), self.depth())
-    }
-
-    pub fn condition_label(&self) -> String {
-        format!("\ncond{}:", self.depth())
-    }
-
-    pub fn body_label(&self) -> String {
-        format!("\nbody{}:", self.depth())
-    }
-
-    pub fn exit_label(&self) -> String {
-        format!("\nexit{}:", self.depth())
-    }
-
-    pub fn jump_to_condition(&self) -> String {
-        format!("br label %cond{}", self.depth())
-    }
-}
-
-// Legacy type alias for backward compatibility
-pub type LlvmConditional = LlvmIf;
+// Re-export the generic types for backward compatibility
+pub use crate::codegen::llvm_ir::{LlvmConditional as LlvmIf, LlvmLoop as LlvmWhile};
 
 /// Parsing state for building the conditional AST
 /// Separates parsing logic from code generation
@@ -120,9 +30,9 @@ struct ConditionalParser {
 }
 
 /// Code generation for conditional statements
-/// Handles LLVM instruction emission for if statements
-struct ConditionalCodegen {
-    llvm_if: LlvmIf,
+/// Generic over any IR backend that implements ConditionalIR
+struct ConditionalCodegen<IR: ConditionalIR> {
+    ir: IR,
     expr_count: u32,
 }
 impl ConditionalParser {
@@ -195,32 +105,32 @@ impl ConditionalParser {
     }
 }
 
-impl ConditionalCodegen {
-    fn new(depth: u32, expr_count: u32) -> Self {
+impl<IR: ConditionalIR> ConditionalCodegen<IR> {
+    fn new(ir: IR, expr_count: u32) -> Self {
         Self {
-            llvm_if: LlvmIf::new(depth),
+            ir,
             expr_count,
         }
     }
 
     fn generate_condition_branch(&self, parser: &mut Parser) {
-        parser.emit_instruction(&self.llvm_if.create_conditional_branch(self.expr_count - 1));
+        parser.emit_instruction(&self.ir.conditional_branch(self.expr_count - 1));
     }
 
     fn generate_then_label(&self, parser: &mut Parser) {
-        parser.emit_instruction(&self.llvm_if.then_label());
+        parser.emit_instruction(&self.ir.then_label());
     }
 
     fn generate_else_label(&self, parser: &mut Parser) {
-        parser.emit_instruction(&self.llvm_if.else_label());
+        parser.emit_instruction(&self.ir.else_label());
     }
 
     fn generate_end_label(&self, parser: &mut Parser) {
-        parser.emit_instruction(&self.llvm_if.end_label());
+        parser.emit_instruction(&self.ir.end_label());
     }
 
     fn generate_jump_to_end(&self, parser: &mut Parser) {
-        parser.emit_instruction(&self.llvm_if.jump_to_end());
+        parser.emit_instruction(&self.ir.jump_to_end());
     }
 }
 /// Main entry point for parsing if statements
@@ -235,9 +145,10 @@ pub fn if_statement(parser: &mut Parser) {
         .parse_else_branch(parser)
         .finalize(parser);
 
-    // Generate LLVM code
+    // Generate IR code (LLVM by default, but can be swapped)
     if let Some(_condition) = &conditional_parser.condition {
-        let codegen = ConditionalCodegen::new(conditional_parser.depth, conditional_parser.condition_register);
+        let ir = LlvmConditional::new(conditional_parser.depth);
+        let codegen = ConditionalCodegen::new(ir, conditional_parser.condition_register);
 
         parser.comment(&format!("depth: {}", conditional_parser.depth));
         codegen.generate_condition_branch(parser);

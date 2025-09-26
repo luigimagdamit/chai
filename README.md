@@ -50,7 +50,7 @@ fn main() int {
 ### Prerequisites
 
 * **Rust** (latest stable version)
-* **LLVM** (ensure `llvm-config` is in your `PATH`)
+* **Clang 18.1.8**
 
 ### Steps
 

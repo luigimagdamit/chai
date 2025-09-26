@@ -1,12 +1,18 @@
 use std::fmt;
 use crate::parser::visitor::visitor::{Accept, Visitor};
 use crate::common::util::convert_bool;
-use crate::llvm::llvm_print::llvm_call_print_local;
-use crate::llvm::llvm_string::*;
+use crate::codegen::expr_ir::{TypeIR, BinaryOpIR, LiteralIR, PrintIR, ExpressionIR};
+use crate::codegen::llvm_expr_ir::LlvmExpressionIR;
 #[allow(unused)]
 
 const DATATYPE_INT_ERROR: &'static str = "Could not retrieve i32 from Datatype";
 const DATATYPE_BOOL_ERROR: &'static str = "Could not retrieve i1 from Datatype";
+
+/// Helper function to get the default IR implementation
+/// This can be made configurable later via a global setting or dependency injection
+fn get_expr_ir() -> LlvmExpressionIR {
+    LlvmExpressionIR
+}
 
 // Highest level structure
 #[derive(Clone)]
@@ -68,22 +74,17 @@ impl ExprNode for DataType {
         }
     }
     fn get_type(&self) -> &str {
-        match self {
-            DataType::Integer(_) => "i32",
-            DataType::Boolean(_) => "i1",
-            _ => ""
-        }
+        let ir = get_expr_ir();
+        ir.datatype_to_string(self)
     }
     fn to_datatype(&self) -> &DataType {
         self
     }
     fn print(&self) -> String {
+        let ir = get_expr_ir();
         match self {
-            DataType::Integer(int) => format!("add i32 {}, 0; a", int.expect(DATATYPE_INT_ERROR)),
-            DataType::Boolean(bool) => {
-                let bool_val = if bool.expect(DATATYPE_BOOL_ERROR) {1} else {0};
-                format!("add i1 {bool_val}, 0")
-            }
+            DataType::Integer(int) => ir.int_literal(int.expect(DATATYPE_INT_ERROR)),
+            DataType::Boolean(bool) => ir.bool_literal(bool.expect(DATATYPE_BOOL_ERROR)),
             _ => "".to_string()
         }
     }
@@ -100,20 +101,15 @@ impl ExprNode for Binary {
         self.as_datatype()
     }
     fn print(&self) -> String {
+        let ir = get_expr_ir();
+        let register = self.register.clone().parse()
+            .expect("Could not parse register name to a string");
+
         if self.operator.is_boolean_op() {
-            format!("{}", llvm_call_print_local(
-                self.register.clone()
-                    .parse()
-                    .expect("Could not convert the register name to a string")
-                , "i1"))
+            ir.print_bool(register)
         } else {
-            format!("{}", llvm_call_print_local(self.register
-                .clone()
-                .parse()
-                .expect("Could not parse register name to a string")
-            , "i32"))
+            ir.print_int(register)
         }
-        
     }
 }
 impl ExprNode for VariableExpression {
@@ -127,12 +123,16 @@ impl ExprNode for VariableExpression {
         &self.datatype
     }
     fn print(&self) -> String {
+        let ir = get_expr_ir();
         let type_str = (&self.datatype).as_str();
-        format!("%{}_{} = load {type_str}, {type_str}* %{} ; loading existing variable", self.name, self.count, self.name)
+        ir.load_variable(&self.name, type_str, self.count)
     }
 }
 impl ExprNode for StringConstant {
-    fn get_type(&self) -> &str { "i8" }
+    fn get_type(&self) -> &str {
+        let ir = get_expr_ir();
+        ir.string_type()
+    }
     fn get_value(&self) -> String {
         format!("%{}", self.register)
     }
@@ -140,7 +140,8 @@ impl ExprNode for StringConstant {
         &self.datatype
     }
     fn print(&self) -> String {
-        format!("call i32 (i8*, ...) @printf(i8* %{})", self.register)
+        let ir = get_expr_ir();
+        ir.print_string(self.register)
     }
 }
 
@@ -163,11 +164,8 @@ impl From<bool> for DataType {
 
 impl DataType {
     pub fn as_str(&self) -> &str {
-        match self {
-            DataType::Integer(_) => "i32",
-            DataType::Boolean(_) => "i1",
-            DataType::String(_) => "i8*"
-        }
+        let ir = get_expr_ir();
+        ir.datatype_to_string(self)
     }
     pub fn empty_bool() -> DataType {
         DataType::Boolean(Some(true))
@@ -216,7 +214,8 @@ impl From<VariableExpression> for Expression {
 impl StringConstant {
     
     pub fn place(&self) -> String {
-        format!("%{} = {} ; place() in impl StringConstant", self.register, &llvm_retrieve_static_string(self.length, self.index))
+        let ir = get_expr_ir();
+        ir.string_literal(self.register, self.length, self.index)
     }
 }
 
@@ -292,16 +291,16 @@ impl Expression {
     pub fn resolve_binary(&self) -> String {
         match self {
             Expression::Binary(b) => {
-                let tag = b.to_datatype().as_str();
-                let mut codegen = format!("{} {tag} ", b.operator);
-                codegen += &b.get_left().resolve_operand();
-                codegen += &", ".to_string();
-                codegen += &b.get_right().resolve_operand();
-                format!("%{} = ", b.register) + &codegen
+                let ir = get_expr_ir();
+                let result_type = b.to_datatype().as_str();
+                let left_operand = b.get_left().resolve_operand();
+                let right_operand = b.get_right().resolve_operand();
+
+                ir.binary_op(&b.register, &b.operator, &left_operand, &right_operand, result_type)
             },
             _ => panic!()
         }
-        
+
     }
     // make it so that this eventually calls get_value() for everything
     pub fn resolve_operand(&self) -> String {
