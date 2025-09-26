@@ -7,6 +7,8 @@ use crate::parser::{
 use crate::scanner::token::TokenType;
 use crate::codegen::ir_traits::{BranchIR, LoopIR};
 use crate::codegen::llvm_ir::LlvmLoop;
+use crate::codegen::c_ir::CLoop;
+use crate::codegen::backend_config::{get_current_backend, IRBackend};
 
 /// Generic loop parser that works with any IR backend
 struct LoopParser {
@@ -74,23 +76,49 @@ pub fn while_statement(parser: &mut Parser) {
     // Parse the while loop structure
     let mut loop_parser = LoopParser::new();
 
-    // Setup and parse condition
-    let ir = LlvmLoop::new(parser.expr_count);
-    let codegen = LoopCodegen::new(ir, 0); // Will be updated after condition parsing
+    // Generate IR code based on current backend
+    match get_current_backend() {
+        IRBackend::LLVM => {
+            // Setup and parse condition
+            let ir = LlvmLoop::new(parser.expr_count);
+            let codegen = LoopCodegen::new(ir, 0); // Will be updated after condition parsing
 
-    codegen.generate_setup(parser);
-    loop_parser.parse_condition(parser);
+            codegen.generate_setup(parser);
+            loop_parser.parse_condition(parser);
 
-    parser.comment(&format!("depth: {}", loop_parser.depth));
+            parser.comment(&format!("depth: {}", loop_parser.depth));
 
-    // Create new codegen with correct condition register
-    let ir = LlvmLoop::new(loop_parser.depth);
-    let codegen = LoopCodegen::new(ir, loop_parser.condition_register);
+            // Create new codegen with correct condition register
+            let ir = LlvmLoop::new(loop_parser.depth);
+            let codegen = LoopCodegen::new(ir, loop_parser.condition_register);
 
-    codegen.generate_condition_branch(parser);
-    codegen.generate_body_label(parser);
+            codegen.generate_condition_branch(parser);
+            codegen.generate_body_label(parser);
 
-    loop_parser.parse_body(parser);
+            loop_parser.parse_body(parser);
 
-    codegen.generate_loop_back(parser);
+            codegen.generate_loop_back(parser);
+        },
+        IRBackend::C => {
+            // Setup and parse condition
+            let ir = CLoop::new(parser.expr_count);
+            let codegen = LoopCodegen::new(ir, 0); // Will be updated after condition parsing
+
+            codegen.generate_setup(parser);
+            loop_parser.parse_condition(parser);
+
+            parser.comment(&format!("depth: {}", loop_parser.depth));
+
+            // Create new codegen with correct condition register
+            let ir = CLoop::new(loop_parser.depth);
+            let codegen = LoopCodegen::new(ir, loop_parser.condition_register);
+
+            codegen.generate_condition_branch(parser);
+            codegen.generate_body_label(parser);
+
+            loop_parser.parse_body(parser);
+
+            codegen.generate_loop_back(parser);
+        }
+    }
 }

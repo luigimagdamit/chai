@@ -3,15 +3,27 @@ use crate::parser::visitor::visitor::{Accept, Visitor};
 use crate::common::util::convert_bool;
 use crate::codegen::expr_ir::{TypeIR, BinaryOpIR, LiteralIR, PrintIR, ExpressionIR};
 use crate::codegen::llvm_expr_ir::LlvmExpressionIR;
+use crate::codegen::c_expr_ir::CExpressionIR;
+use crate::codegen::backend_config::{get_current_backend, IRBackend};
 #[allow(unused)]
 
 const DATATYPE_INT_ERROR: &'static str = "Could not retrieve i32 from Datatype";
 const DATATYPE_BOOL_ERROR: &'static str = "Could not retrieve i1 from Datatype";
 
-/// Helper function to get the default IR implementation
-/// This can be made configurable later via a global setting or dependency injection
-fn get_expr_ir() -> LlvmExpressionIR {
-    LlvmExpressionIR
+/// Macro to execute IR-specific code based on current backend
+macro_rules! with_expr_ir {
+    ($method:ident($($args:expr),*)) => {{
+        match get_current_backend() {
+            IRBackend::LLVM => {
+                let ir = LlvmExpressionIR;
+                ir.$method($($args),*)
+            }
+            IRBackend::C => {
+                let ir = CExpressionIR;
+                ir.$method($($args),*)
+            }
+        }
+    }};
 }
 
 // Highest level structure
@@ -74,17 +86,21 @@ impl ExprNode for DataType {
         }
     }
     fn get_type(&self) -> &str {
-        let ir = get_expr_ir();
-        ir.datatype_to_string(self)
+        with_expr_ir!(datatype_to_string(self))
     }
     fn to_datatype(&self) -> &DataType {
         self
     }
     fn print(&self) -> String {
-        let ir = get_expr_ir();
         match self {
-            DataType::Integer(int) => ir.int_literal(int.expect(DATATYPE_INT_ERROR)),
-            DataType::Boolean(bool) => ir.bool_literal(bool.expect(DATATYPE_BOOL_ERROR)),
+            DataType::Integer(int) => {
+                let value = int.expect(DATATYPE_INT_ERROR);
+                with_expr_ir!(int_literal(value))
+            },
+            DataType::Boolean(bool) => {
+                let value = bool.expect(DATATYPE_BOOL_ERROR);
+                with_expr_ir!(bool_literal(value))
+            },
             _ => "".to_string()
         }
     }
@@ -101,14 +117,13 @@ impl ExprNode for Binary {
         self.as_datatype()
     }
     fn print(&self) -> String {
-        let ir = get_expr_ir();
         let register = self.register.clone().parse()
             .expect("Could not parse register name to a string");
 
         if self.operator.is_boolean_op() {
-            ir.print_bool(register)
+            with_expr_ir!(print_bool(register))
         } else {
-            ir.print_int(register)
+            with_expr_ir!(print_int(register))
         }
     }
 }
@@ -123,15 +138,13 @@ impl ExprNode for VariableExpression {
         &self.datatype
     }
     fn print(&self) -> String {
-        let ir = get_expr_ir();
         let type_str = (&self.datatype).as_str();
-        ir.load_variable(&self.name, type_str, self.count)
+        with_expr_ir!(load_variable(&self.name, type_str, self.count))
     }
 }
 impl ExprNode for StringConstant {
     fn get_type(&self) -> &str {
-        let ir = get_expr_ir();
-        ir.string_type()
+        with_expr_ir!(string_type())
     }
     fn get_value(&self) -> String {
         format!("%{}", self.register)
@@ -140,8 +153,7 @@ impl ExprNode for StringConstant {
         &self.datatype
     }
     fn print(&self) -> String {
-        let ir = get_expr_ir();
-        ir.print_string(self.register)
+        with_expr_ir!(print_string(self.register))
     }
 }
 
@@ -164,8 +176,7 @@ impl From<bool> for DataType {
 
 impl DataType {
     pub fn as_str(&self) -> &str {
-        let ir = get_expr_ir();
-        ir.datatype_to_string(self)
+        with_expr_ir!(datatype_to_string(self))
     }
     pub fn empty_bool() -> DataType {
         DataType::Boolean(Some(true))
@@ -214,8 +225,7 @@ impl From<VariableExpression> for Expression {
 impl StringConstant {
     
     pub fn place(&self) -> String {
-        let ir = get_expr_ir();
-        ir.string_literal(self.register, self.length, self.index)
+        with_expr_ir!(string_literal(self.register, self.length, self.index))
     }
 }
 
@@ -291,12 +301,11 @@ impl Expression {
     pub fn resolve_binary(&self) -> String {
         match self {
             Expression::Binary(b) => {
-                let ir = get_expr_ir();
                 let result_type = b.to_datatype().as_str();
                 let left_operand = b.get_left().resolve_operand();
                 let right_operand = b.get_right().resolve_operand();
 
-                ir.binary_op(&b.register, &b.operator, &left_operand, &right_operand, result_type)
+                with_expr_ir!(binary_op(&b.register, &b.operator, &left_operand, &right_operand, result_type))
             },
             _ => panic!()
         }

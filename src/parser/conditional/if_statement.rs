@@ -8,7 +8,9 @@ use crate::parser::{
 use crate::parser::expression::expr::Expr;
 use crate::scanner::token::TokenType;
 use crate::codegen::ir_traits::{BranchIR, ConditionalIR};
-use crate::codegen::llvm_ir::{LlvmConditional, LlvmIRFactory};
+use crate::codegen::llvm_ir::LlvmConditional;
+use crate::codegen::c_ir::CConditional;
+use crate::codegen::backend_config::{get_current_backend, IRBackend};
 
 // Conditional statement parsing and LLVM code generation
 //
@@ -145,17 +147,33 @@ pub fn if_statement(parser: &mut Parser) {
         .parse_else_branch(parser)
         .finalize(parser);
 
-    // Generate IR code (LLVM by default, but can be swapped)
+    // Generate IR code based on current backend
     if let Some(_condition) = &conditional_parser.condition {
-        let ir = LlvmConditional::new(conditional_parser.depth);
-        let codegen = ConditionalCodegen::new(ir, conditional_parser.condition_register);
+        match get_current_backend() {
+            IRBackend::LLVM => {
+                let ir = LlvmConditional::new(conditional_parser.depth);
+                let codegen = ConditionalCodegen::new(ir, conditional_parser.condition_register);
 
-        parser.comment(&format!("depth: {}", conditional_parser.depth));
-        codegen.generate_condition_branch(parser);
-        codegen.generate_then_label(parser);
-        codegen.generate_jump_to_end(parser);
-        codegen.generate_else_label(parser);
-        codegen.generate_jump_to_end(parser);
-        codegen.generate_end_label(parser);
+                parser.comment(&format!("depth: {}", conditional_parser.depth));
+                codegen.generate_condition_branch(parser);
+                codegen.generate_then_label(parser);
+                codegen.generate_jump_to_end(parser);
+                codegen.generate_else_label(parser);
+                codegen.generate_jump_to_end(parser);
+                codegen.generate_end_label(parser);
+            },
+            IRBackend::C => {
+                let ir = CConditional::new(conditional_parser.depth);
+                let codegen = ConditionalCodegen::new(ir, conditional_parser.condition_register);
+
+                parser.comment(&format!("depth: {}", conditional_parser.depth));
+                codegen.generate_condition_branch(parser);
+                codegen.generate_then_label(parser);
+                codegen.generate_jump_to_end(parser);
+                codegen.generate_else_label(parser);
+                codegen.generate_jump_to_end(parser);
+                codegen.generate_end_label(parser);
+            }
+        }
     }
 }

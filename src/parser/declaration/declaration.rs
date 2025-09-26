@@ -1,9 +1,27 @@
 use std::fmt;
 use crate::parser::expression::expr::{DataType, Expression, Operation};
 use crate::parser::visitor::visitor::{Accept, Visitor};
-use crate::codegen::llvm_codegen::LlvmPrint;
-use crate::codegen::codegen_print::CodegenPrint;
 use crate::parser::expression::expr::ExprNode;
+use crate::codegen::declaration_ir::DeclarationIR;
+use crate::codegen::llvm_declaration_ir::LlvmDeclarationIR;
+use crate::codegen::c_declaration_ir::CDeclarationIR;
+use crate::codegen::backend_config::{get_current_backend, IRBackend};
+
+/// Macro to execute declaration IR-specific code based on current backend
+macro_rules! with_declaration_ir {
+    ($method:ident($($args:expr),*)) => {{
+        match get_current_backend() {
+            IRBackend::LLVM => {
+                let ir = LlvmDeclarationIR;
+                ir.$method($($args),*)
+            }
+            IRBackend::C => {
+                let ir = CDeclarationIR;
+                ir.$method($($args),*)
+            }
+        }
+    }};
+}
 
 #[derive(Clone)]
 pub struct PrintStatement {
@@ -111,7 +129,7 @@ impl VariableDeclaration {
         }
     }
     pub fn print(&self) -> String {
-        LlvmPrint::new_variable(&self) + &"\n\t" + &LlvmPrint::store_variable(&self)
+        with_declaration_ir!(generate_variable_declaration(self))
     }
 }
 
@@ -175,34 +193,6 @@ impl fmt::Display for Declaration {
 
 impl PrintStatement {
     pub fn print(&self) -> String {
-        
-        match &self.expression {
-            Expression::Binary(binary) => {
-                match binary.operator {
-                    Operation::Equal | Operation::GreaterEqual | Operation::GreaterThan |Operation::LessEqual |Operation::LessThan | Operation::NotEqual => {
-                        LlvmPrint::print_i1(&Expression::from(binary))
-                    },
-                    _ => LlvmPrint::print_i32(&Expression::from(binary))
-                }
-            },
-            Expression::Literal(literal) => {
-                match literal {
-                    DataType::Integer(_) => LlvmPrint::print_i32(&Expression::from(literal)),
-                    DataType::Boolean(_) => LlvmPrint::print_i1(&Expression::from(literal)), 
-                    _ => panic!()
-                }
-            },
-            Expression::StringConstant(str_constant) => {
-                str_constant.print()
-            }
-            Expression::Variable(variable) => {
-                match variable.datatype {
-                    DataType::Integer(_) => LlvmPrint::print_i32(&Expression::from(variable.clone())),
-                    DataType::Boolean(_) => LlvmPrint::print_i1(&Expression::from(variable.clone())),
-                    DataType::String(_) => LlvmPrint::print_str_constant(&Expression::from(variable.clone())),
-                }
-            },
-            _ => panic!("Unrecognized print statement expression input")
-        }
+        with_declaration_ir!(generate_print_statement(&self.expression))
     }
 }

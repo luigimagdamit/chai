@@ -9,7 +9,26 @@ use crate::parser::core::ast_node::AstNode;
 
 use crate::common::error::ErrorCode;
 use crate::parser::expression::expr::Expr;
-use crate::llvm::llvm_print::{llvm_fmt_string_int, llvm_main_close, llvm_print_bool_declare, llvm_print_define, llvm_print_i32_define};
+use crate::codegen::parser_ir::ParserIR;
+use crate::codegen::llvm_parser_ir::LlvmParserIR;
+use crate::codegen::c_parser_ir::CParserIR;
+use crate::codegen::backend_config::{get_current_backend, IRBackend};
+
+/// Macro to execute parser IR-specific code based on current backend
+macro_rules! with_parser_ir {
+    ($method:ident($($args:expr),*)) => {{
+        match get_current_backend() {
+            IRBackend::LLVM => {
+                let ir = LlvmParserIR;
+                ir.$method($($args),*)
+            }
+            IRBackend::C => {
+                let ir = CParserIR;
+                ir.$method($($args),*)
+            }
+        }
+    }};
+}
 use crate::parser::parse_fn::declaration;
 
 use crate::parser::core::symbol::SymbolTableEntry;
@@ -179,14 +198,8 @@ impl<'a>Parser <'a>{
         }
     }
     // Should always be included
-    fn llvm_stdlib(&self) {
-        if !PARSE_SUPRESS_PREDEFINES && EMIT_VERBOSE {
-            llvm_print_define();
-            llvm_print_bool_declare();
-            llvm_fmt_string_int();
-            llvm_print_i32_define();
-        }
-        
+    fn generate_stdlib(&self) {
+        with_parser_ir!(generate_stdlib());
     }
     // debug purposes only
     pub fn expression_mode(&mut self) {
@@ -211,9 +224,9 @@ impl<'a>Parser <'a>{
     pub fn compile(&mut self) {
         self.advance();
         if !PARSE_EXPRESSION_MODE {
-            self.llvm_stdlib();
+            self.generate_stdlib();
             self.declaration_mode();
-            self.compilation += &llvm_main_close();
+            self.compilation += &with_parser_ir!(generate_main_close());
             self.comment("String Constants");
             let strings = self.string_table.values().clone();
             for entry in strings {
@@ -223,7 +236,7 @@ impl<'a>Parser <'a>{
                 }
 
             }
-            
+
         } else {
 
             self.expression_mode();
