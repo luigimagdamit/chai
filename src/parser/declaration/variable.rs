@@ -8,6 +8,54 @@ use super::declaration::Declaration;
 use crate::parser::visitor::rebuild_visitor::RebuildVisitor;
 use crate::parser::visitor::print_visitor::PrintVisitor;
 
+fn parse_type_annotation(parser: &mut Parser) -> DataType {
+    // Check if it's an array type [type] or simple type
+    if parser.check_current(TokenType::LeftBracket) {
+        // Array type syntax: [int], [bool], etc.
+        parser.advance(); // consume '['
+
+        parser.consume(
+            TokenType::Identifier,
+            "Expected element type identifier in array declaration"
+        );
+
+        let element_type_token = parser.previous.expect("Expected a token when getting the element type identifier");
+        let element_type = match element_type_token.start {
+            "int" => DataType::Integer(None),
+            "bool" => DataType::Boolean(None),
+            "str" => DataType::String("".to_string()),
+            _ => {
+                parser.error_at_previous("Unsupported array element type");
+                DataType::Integer(None) // fallback
+            }
+        };
+
+        parser.consume(
+            TokenType::RightBracket,
+            "Expected ']' after array element type"
+        );
+
+        // For now, create an array with unknown size (we'll determine it from the assignment)
+        DataType::Array(vec![element_type], 0)
+    } else {
+        // Simple type syntax: int, bool, str
+        parser.consume(
+            TokenType::Identifier,
+            "Expected a type identifier when declaring variable"
+        );
+        let type_token = parser.previous.expect("Expected a token when getting the type identifier");
+        match type_token.start {
+            "int" => DataType::Integer(None),
+            "bool" => DataType::Boolean(None),
+            "str" => DataType::String("".to_string()),
+            _ => {
+                parser.error_at_previous("Unsupported variable type");
+                DataType::Integer(None) // fallback
+            }
+        }
+    }
+}
+
 // evaluate an expression, then assign the expression at the location of the local variable with store
 pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
     let mut visitor = PrintVisitor;
@@ -23,6 +71,26 @@ pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
         parser.emit_instruction(&test.accept(&mut visitor));
         create_new_symbol(parser, var_name, expr_datatype);
         parser.print_symbols();
+    }
+}
+
+pub fn variable_assignment_with_inference(parser: &mut Parser, var_name: &str) {
+    // Parse the expression to determine the type
+    expression(parser);
+
+    if let Some(ast_node) = parser.ast_stack.pop() {
+        let expr = ast_node.to_expression();
+        let inferred_type = expr.as_datatype();
+
+        // Create the variable declaration with inferred type
+        let decl = Declaration::new_variable(var_name, Some(expr), inferred_type.clone());
+        let mut visitor = PrintVisitor;
+        decl.accept(&mut visitor);
+
+        // Store the variable in the symbol table
+        create_new_symbol(parser, var_name, inferred_type);
+    } else {
+        parser.error_at_previous("Expected expression for variable assignment");
     }
 }
 
@@ -54,74 +122,47 @@ pub fn variable_assignment_with_type(parser: &mut Parser, var_name: &str, expect
 }
 pub fn variable_declaration(parser: &mut Parser) {
     let global_name = parse_variable_name(parser, "Expected a variable name");
-    parser.consume(
-        TokenType::Colon, 
-        "Expected : when declaring variable"
-    );
-    // Check if it's an array type [type] or simple type
-    let type_tag = if parser.check_current(TokenType::LeftBracket) {
-        // Array type syntax: [int], [bool], etc.
-        parser.advance(); // consume '['
 
-        parser.consume(
-            TokenType::Identifier,
-            "Expected element type identifier in array declaration"
-        );
-
-        let element_type_token = parser.previous.expect("Expected a token when getting the element type identifier");
-        let element_type = match element_type_token.start {
-            "int" => DataType::Integer(None),
-            "bool" => DataType::Boolean(None),
-            "str" => DataType::String("".to_string()),
-            _ => {
-                parser.error_at_previous("Unsupported array element type");
-                DataType::Integer(None) // fallback
-            }
-        };
-
-        parser.consume(
-            TokenType::RightBracket,
-            "Expected ']' after array element type"
-        );
-
-        // Create array type with default size (will be determined from initialization)
-        DataType::Array(vec![element_type], 0)
+    // Check if there's a type annotation (colon) or direct assignment (equals)
+    let type_tag = if parser.check_current(TokenType::Colon) {
+        parser.advance(); // consume ':'
+        Some(parse_type_annotation(parser))
+    } else if parser.check_current(TokenType::Equal) {
+        // Type inference - we'll determine the type from the expression
+        None
     } else {
-        // Simple type syntax: int, bool, str
-        parser.consume(
-            TokenType::Identifier,
-            "Expected a type identifier when declaring variable"
-        );
-        let type_token = parser.previous.expect("Expected a token when getting the type identifier");
-        match type_token.start {
-            "int" => DataType::Integer(None),
-            "bool" => DataType::Boolean(None),
-            "str" => DataType::String("".to_string()),
-            _ => {
-                parser.error_at_previous("Unsupported variable type");
-                DataType::Integer(None) // fallback
-            }
-        }
+        parser.error_at_previous("Expected ':' for type annotation or '=' for assignment");
+        return;
     };
 
     if parser.match_current(TokenType::Equal) {
-        // Use type-aware assignment for arrays
-        match &type_tag {
-            DataType::Array(_, _) => variable_assignment_with_type(parser, &global_name, type_tag.clone()),
-            _ => variable_assignment(parser, &global_name)
+        match type_tag {
+            Some(explicit_type) => {
+                // Use explicit type
+                match &explicit_type {
+                    DataType::Array(_, _) => variable_assignment_with_type(parser, &global_name, explicit_type),
+                    _ => variable_assignment(parser, &global_name)
+                }
+            }
+            None => {
+                // Type inference from expression
+                variable_assignment_with_inference(parser, &global_name)
+            }
+        }
+    } else {
+        // Declaration without assignment
+        match type_tag {
+            Some(explicit_type) => {
+                let decl = Declaration::new_variable(&global_name, None, explicit_type);
+                let mut visitor = PrintVisitor;
+                decl.accept(&mut visitor);
+            }
+            None => {
+                parser.error_at_previous("Variable declaration requires either type annotation or assignment");
+            }
         }
     }
-    else {
-        let mut visitor = PrintVisitor;
-        let test = Declaration::new_variable(
-            &global_name, 
-            None, 
-            type_tag.clone()
-        );
-        parser.emit_instruction(&test.accept(&mut visitor));
-        create_new_symbol(parser, &global_name, type_tag);
-    }
-    parser.expr_count += 1;
+
     parser.consume(TokenType::Semicolon, "Expected a semicolon after variable declaration");
 }
 
@@ -151,6 +192,17 @@ pub fn parse_variable_name(parser: &mut Parser, err_msg: &str) -> String {
 
 pub fn parse_get_variable(parser: &mut Parser) -> Result<Expression, ParseError>{
     let value = parser.previous.expect("Tried to get previous token, but it was empty");
+    println!("DEBUG: parse_get_variable called for variable: {}", value.start);
     get_symbol(parser, value.start);
-    Ok(Expression::Empty)
+
+    // get_symbol puts the variable expression on the stack
+    // For prefix parsing, we should leave it on the stack for infix parsers to consume
+    println!("DEBUG: AST stack size in parse_get_variable: {}", parser.ast_stack.len());
+    if let Some(ast_node) = parser.ast_stack.last() {
+        println!("DEBUG: Successfully found variable expression, leaving on stack");
+        Ok(ast_node.clone().to_expression())
+    } else {
+        println!("DEBUG: Failed to find variable expression");
+        Err(ParseError::Generic)
+    }
 }

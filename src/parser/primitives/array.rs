@@ -1,14 +1,13 @@
 use super::super::parser::Parser;
-use crate::parser::expression::expr::{DataType, Expression, ParseError, ArrayExpression};
+use crate::parser::expression::expr::{DataType, Expression, ParseError, ArrayExpression, VariableExpression};
 use crate::parser::core::ast_node::AstNode;
-use crate::parser::expression::expression::parse_precedence;
-use crate::parser::expression::precedence::Precedence;
+use crate::parser::declaration::variable::parse_get_variable;
 use crate::scanner::token::TokenType;
 
 /// Parse array literals like [1, 2, 3] or [true, false, true]
 pub fn parse_array_literal(parser: &mut Parser) -> Result<Expression, ParseError> {
-    // We're currently on the '[' token, advance to the first element
-    parser.advance();
+    // The precedence parser has already advanced past the '[' token,
+    // so we're now positioned at the first element
 
     let mut elements = Vec::new();
     let mut element_type = None;
@@ -35,10 +34,45 @@ pub fn parse_array_literal(parser: &mut Parser) -> Result<Expression, ParseError
 
     // Parse array elements
     loop {
-        // Parse the next expression
-        parse_precedence(parser, Precedence::PrecAssignment);
-        let ast_node = parser.ast_stack.pop().ok_or(ParseError::Generic)?;
-        let expr_result = ast_node.to_expression();
+        // Parse individual array element based on token type
+        let expr_result = match parser.current {
+            Some(token) => {
+                match token.token_type {
+                    TokenType::Number => {
+                        parser.advance();
+                        let number_str = parser.previous.unwrap().start;
+                        let number_val: i32 = number_str.parse().unwrap_or(0);
+                        Expression::from_literal(DataType::Integer(Some(number_val)))
+                    }
+                    TokenType::True => {
+                        parser.advance();
+                        Expression::from_literal(DataType::Boolean(Some(true)))
+                    }
+                    TokenType::False => {
+                        parser.advance();
+                        Expression::from_literal(DataType::Boolean(Some(false)))
+                    }
+                    TokenType::String => {
+                        parser.advance();
+                        let string_val = parser.previous.unwrap().start.to_string();
+                        Expression::from_literal(DataType::String(string_val))
+                    }
+                    TokenType::Identifier => {
+                        // Variable reference - use the existing function
+                        parse_get_variable(parser)?
+                    }
+                    _ => {
+                        parser.error_at_previous("Unsupported array element type");
+                        return Err(ParseError::Generic);
+                    }
+                }
+            }
+            None => {
+                parser.error_at_previous("Unexpected end of input in array literal");
+                return Err(ParseError::Generic);
+            }
+        };
+
         let expr_datatype = expr_result.as_datatype();
 
         // Check type consistency for the array
@@ -102,16 +136,16 @@ pub fn parse_array_literal(parser: &mut Parser) -> Result<Expression, ParseError
     };
 
     // Emit array allocation instruction
-    let alloca_instruction = format!("\t%{} = alloca [{}], align 16",
-        parser.expr_count, array_size);
+    let alloca_instruction = format!("\t%{} = alloca [{} x {}], align 16",
+        parser.expr_count, array_size, element_type_str);
     parser.emit_instruction(&alloca_instruction);
 
     // Emit initialization instructions for each element
     for (index, element) in array_expr.elements.iter().enumerate() {
         // Generate element pointer
         let ptr_reg = parser.expr_count + 1000 + (index as u32);
-        let ptr_instruction = format!("\t%{} = getelementptr inbounds [{}], [{}]* %{}, i64 0, i64 {}",
-            ptr_reg, array_size, array_size, parser.expr_count, index);
+        let ptr_instruction = format!("\t%{} = getelementptr inbounds [{} x {}], [{} x {}]* %{}, i64 0, i64 {}",
+            ptr_reg, array_size, element_type_str, array_size, element_type_str, parser.expr_count, index);
         parser.emit_instruction(&ptr_instruction);
 
         // Store the element value
@@ -131,17 +165,31 @@ pub fn parse_array_literal(parser: &mut Parser) -> Result<Expression, ParseError
 
 /// Parse array indexing like arr[0] or arr[index]
 pub fn parse_array_index(parser: &mut Parser) -> Result<Expression, ParseError> {
+    println!("DEBUG: parse_array_index called!");
+    println!("DEBUG: Current token: {:?}", parser.current);
+    println!("DEBUG: Previous token: {:?}", parser.previous);
+
     // The left side should be an array variable
+    println!("DEBUG: AST stack size before pop: {}", parser.ast_stack.len());
     let array_expr = parser.ast_stack.pop().ok_or(ParseError::Generic)?;
     let array_expression = array_expr.to_expression();
 
-    // Advance past the '['
-    parser.advance();
+    println!("DEBUG: Found array expression");
 
-    // Parse the index expression
-    parse_precedence(parser, Precedence::PrecAssignment);
-    let index_ast = parser.ast_stack.pop().ok_or(ParseError::Generic)?;
-    let index_expr = index_ast.to_expression();
+    // The '[' token has already been consumed by the precedence parser
+    // We are now positioned at the index expression
+
+    // Parse the index expression - simple number for now
+    if !parser.check_current(TokenType::Number) {
+        println!("DEBUG: Expected number but found: {:?}", parser.current);
+        parser.error_at_previous("Array index must be a number");
+        return Err(ParseError::Generic);
+    }
+
+    parser.advance();
+    let index_str = parser.previous.unwrap().start;
+    let index_val: i32 = index_str.parse().unwrap_or(0);
+    let index_expr = Expression::from_literal(DataType::Integer(Some(index_val)));
 
     // Expect ']'
     if !parser.check_current(TokenType::RightBracket) {
@@ -151,17 +199,21 @@ pub fn parse_array_index(parser: &mut Parser) -> Result<Expression, ParseError> 
     parser.advance(); // consume ']'
 
     // Generate array indexing IR
+    println!("DEBUG: About to match array expression type");
     match &array_expression {
         Expression::Variable(var_expr) => {
             // Generate element pointer access
-            let ptr_reg = parser.expr_count;
+            // Use a high register number to avoid conflicts with array literal registers
+            let ptr_reg = parser.expr_count + 1010;
+            println!("DEBUG: Array indexing ptr_reg: {}, expr_count: {}", ptr_reg, parser.expr_count);
             let element_type_str = match &var_expr.datatype {
                 DataType::Array(_, size) => {
                     // Generate getelementptr instruction
-                    let ptr_instruction = format!("\t%{} = getelementptr inbounds [{}], [{}]* %{}, i64 0, {}",
-                        ptr_reg, size, size, var_expr.name, index_expr.resolve_operand());
+                    let element_type = "i32"; // For now, assume array elements are integers
+                    let ptr_instruction = format!("\t%{} = getelementptr inbounds [{} x {}], [{} x {}]* %{}, i64 0, i64 {}",
+                        ptr_reg, size, element_type, size, element_type, var_expr.name, index_expr.resolve_operand());
                     parser.emit_instruction(&ptr_instruction);
-                    "i32" // For now, assume array elements are integers
+                    element_type
                 }
                 _ => {
                     parser.error_at_previous("Cannot index non-array type");
@@ -170,7 +222,7 @@ pub fn parse_array_index(parser: &mut Parser) -> Result<Expression, ParseError> 
             };
 
             // Generate load instruction
-            let load_reg = parser.expr_count + 1;
+            let load_reg = ptr_reg + 1;
             let load_instruction = format!("\t%{} = load {}, {}* %{}",
                 load_reg, element_type_str, element_type_str, ptr_reg);
             parser.emit_instruction(&load_instruction);
@@ -178,9 +230,17 @@ pub fn parse_array_index(parser: &mut Parser) -> Result<Expression, ParseError> 
             parser.expr_count += 2;
 
             // Return a variable expression representing the loaded value
-            let result_expr = Expression::from_literal(DataType::Integer(None));
+            // For register references, we need a way to get just %{load_reg}
+            // Since VariableExpression::get_value() returns %{name}_{count},
+            // and we want %{load_reg}, we can create a custom variable with name that already includes %
+            let result_expr = Expression::Variable(VariableExpression {
+                name: format!("{}", load_reg), // Just the register number
+                datatype: DataType::Integer(None),
+                count: 0  // This will make get_value() return %{load_reg}_0
+            });
             parser.ast_stack.push(AstNode::from_expression(result_expr.clone()));
 
+            println!("DEBUG: parse_array_index Variable case returning successfully");
             Ok(result_expr)
         }
         Expression::Array(array_expr) => {
@@ -193,22 +253,27 @@ pub fn parse_array_index(parser: &mut Parser) -> Result<Expression, ParseError> 
             };
 
             // Generate element pointer access
-            let ptr_reg = parser.expr_count;
-            let ptr_instruction = format!("\t%{} = getelementptr inbounds [{}], [{}]* %{}, i64 0, {}",
-                ptr_reg, array_expr.size, array_expr.size, array_expr.register, index_expr.resolve_operand());
+            let ptr_reg = parser.expr_count + 1010;
+            let ptr_instruction = format!("\t%{} = getelementptr inbounds [{} x {}], [{} x {}]* %{}, i64 0, i64 {}",
+                ptr_reg, array_expr.size, element_type_str, array_expr.size, element_type_str, array_expr.register, index_expr.resolve_operand());
             parser.emit_instruction(&ptr_instruction);
 
             // Generate load instruction
-            let load_reg = parser.expr_count + 1;
+            let load_reg = ptr_reg + 1;
             let load_instruction = format!("\t%{} = load {}, {}* %{}",
                 load_reg, element_type_str, element_type_str, ptr_reg);
             parser.emit_instruction(&load_instruction);
 
             parser.expr_count += 2;
 
-            let result_expr = Expression::from_literal(array_expr.element_type.clone());
+            let result_expr = Expression::Variable(VariableExpression {
+                name: load_reg.to_string(),
+                datatype: array_expr.element_type.clone(),
+                count: 0
+            });
             parser.ast_stack.push(AstNode::from_expression(result_expr.clone()));
 
+            println!("DEBUG: parse_array_index returning successfully");
             Ok(result_expr)
         }
         _ => {

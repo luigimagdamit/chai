@@ -23,7 +23,11 @@ pub trait TypeIR {
             DataType::Integer(_) => self.int_type(),
             DataType::Boolean(_) => self.bool_type(),
             DataType::String(_) => self.string_type(),
-            DataType::Array(_, _) => "array", // Generic array type for now
+            DataType::Array(_, _) => {
+                // Arrays need special handling since they require dynamic type construction
+                // This should not be used for arrays - use alloca function directly
+                "i32*" // Pointer to array - fallback
+            }
         }
     }
 }

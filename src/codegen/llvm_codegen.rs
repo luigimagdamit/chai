@@ -20,7 +20,12 @@ impl CodegenPrint for LlvmPrint {
                 DataType::Integer(_) => format!("store i32 {}, i32* %{}", expr.resolve_operand(), dec.name),
                 DataType::Boolean(_) => format!("store i1 {}, i1* %{}", expr.resolve_operand(), dec.name),
                 DataType::String(_) => format!("store i8* {}, i8** %{}", expr.resolve_operand(), dec.name),
-                _ => panic!("Strings not supported for storing variables")
+                DataType::Array(_, _) => {
+                    // For arrays, the allocation and initialization is already handled in the array parsing
+                    // The array expression should have already generated the necessary LLVM IR
+                    "".to_string() // No additional store needed
+                }
+                _ => panic!("Unsupported data type for storing variables")
             }
             
         } else {
@@ -47,14 +52,28 @@ fn store() {
 }
 fn alloca(dec: &VariableDeclaration) -> String {
     let datatype = &dec.as_datatype();
-    let type_str = datatype.as_str();
     let name = &dec.name;
-    format!("%{name} = alloca {type_str}")
-    // match dec.as_datatype() {
-    //     DataType::Integer(_) => format!("%{} = alloca i32", dec.name),
-    //     DataType::Boolean(_) => format!("%{} = alloca i1", dec.name),
-    //     DataType::String(_) => format!("%{} = alloca i8*", dec.name)
-    // }
+
+    match datatype {
+        DataType::Array(element_types, size) => {
+            // Generate proper LLVM array type based on element type and size
+            let element_type_str = if element_types.is_empty() {
+                "i32" // Default to integer
+            } else {
+                match &element_types[0] {
+                    DataType::Integer(_) => "i32",
+                    DataType::Boolean(_) => "i1",
+                    DataType::String(_) => "i8*",
+                    _ => "i32" // Default fallback
+                }
+            };
+            format!("%{name} = alloca [{size} x {element_type_str}], align 16")
+        }
+        _ => {
+            let type_str = datatype.as_str();
+            format!("%{name} = alloca {type_str}")
+        }
+    }
 }
 enum InstructionType {
     Integer,
