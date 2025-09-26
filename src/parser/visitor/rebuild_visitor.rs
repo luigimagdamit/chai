@@ -1,4 +1,4 @@
-use crate::parser::expression::expr::{DataType, Binary, StringConstant, Operation, VariableExpression};
+use crate::parser::expression::expr::{DataType, Binary, StringConstant, Operation, VariableExpression, ArrayExpression};
 use crate::parser::declaration::declaration::{VariableDeclaration, PrintStatement};
 use crate::parser::visitor::visitor::{Visitor, Accept};
 
@@ -29,6 +29,9 @@ impl Visitor for RebuildVisitor {
     fn visit_string(&mut self, str_constant: &StringConstant) -> String {
         format!("{}", str_constant.name)
     }
+    fn visit_array(&mut self, array: &ArrayExpression) -> String {
+        format!("array[{}]:{}", array.size, array.name)
+    }
     fn visit_print(&mut self, print_statement: &PrintStatement) -> String {
         format!("print({});", print_statement.expression.accept(self))
     }
@@ -54,6 +57,13 @@ impl Visitor for RebuildVisitor {
                     format!("var {} : str = {};", variable_declaration.name, expr.accept(self))
                 } else {
                     format!("var {} : str;", variable_declaration.name)
+                }
+            },
+            DataType::Array(_, size) => {
+                if let Some(expr) = &variable_declaration.expression {
+                    format!("var {} : array[{}] = {};", variable_declaration.name, size, expr.accept(self))
+                } else {
+                    format!("var {} : array[{}];", variable_declaration.name, size)
                 }
             },
         }

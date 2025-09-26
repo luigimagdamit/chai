@@ -1,19 +1,5 @@
 fn main() int {
-    print("hello world!");
-
-    var breakfast: str = "beignets";
-    var beverage: str = "cafe au lait";
-
-    print(breakfast);
-    print(beverage);
-
     var hungry: bool = true;
-
-    var snacks: int = 10;
-
-    while (snacks > 0) {
-        snacks = snacks - 1;
-
         if (hungry == true) {
             print("lets eat!");
             print("nom");
@@ -23,58 +9,4 @@ fn main() int {
             print("zzz");
             hungry = true;
         }
-
-    }
-        var greeting: str = "hello world!";
-    var intro: str = "this is chai";
-
-    print(greeting);
-    print(greeting);
-    print(intro);
-    print(intro);
-    print(greeting);
-
-    var a: int = 123;
-    var b: int = 69;
-
-    print(a);
-    print(b);
-    print(a > b);
-    print(a < b);
-    print(a == b);
-    print(a == (b + 54));
-
-    
-
-    print("hello world!");
-    print("this is chai");
-
-    print("here is me declaring a variable");
-    print("this is the variable");
-    var i: int = 24;
-    print(i);
-    var flag: bool;
-
-    print(1 < 2);
-    print(3 > 1);
-    print(2 == 3);
-    print(true);
-    print(false);
-
-    var seppuku: str = "ok shutting down now";
-    print(seppuku);
-
-    var ae: int = 0;
-    var be: int = 0;
-
-    while (ae < 5) {
-        print(ae);
-        ae = ae + 1;
-        while (be < 5) {
-            print(be);
-            be  = be + 1;
-        }
-        be = 0;
-        print("yup");
-    }
 }

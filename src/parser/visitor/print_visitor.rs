@@ -1,4 +1,4 @@
-use crate::parser::expression::expr::{DataType, Binary, StringConstant, Expression, Operation, VariableExpression};
+use crate::parser::expression::expr::{DataType, Binary, StringConstant, Expression, Operation, VariableExpression, ArrayExpression};
 use crate::parser::declaration::declaration::{VariableDeclaration, PrintStatement};
 use crate::parser::visitor::visitor::Visitor;
 use crate::parser::expression::expr::ExprNode;
@@ -14,6 +14,9 @@ impl Visitor for PrintVisitor {
     }
     fn visit_string(&mut self, str_constant: &StringConstant) -> String {
         str_constant.print()
+    }
+    fn visit_array(&mut self, array: &ArrayExpression) -> String {
+        array.print()
     }
     fn visit_print(&mut self, print_statement: &PrintStatement) -> String {
         print_statement.print()

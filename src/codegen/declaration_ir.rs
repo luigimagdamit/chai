@@ -42,6 +42,7 @@ pub trait DeclarationIR: VariableIR + PrintIR {
                     DataType::Integer(_) => self.print_i32(&Expression::from(variable.clone())),
                     DataType::Boolean(_) => self.print_i1(&Expression::from(variable.clone())),
                     DataType::String(_) => self.print_str_constant(&Expression::from(variable.clone())),
+                    DataType::Array(_, _) => panic!("Array printing not supported yet"),
                 }
             },
             _ => panic!("Unsupported expression type for printing")

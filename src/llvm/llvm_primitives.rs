@@ -17,6 +17,20 @@ pub fn llvm_top_level_expr(_value: &str, value_type: &DataType, index: u32) -> S
             let codegen = llvm_new_static_string(str.len(), index as usize, &str[1..str.len() - 1]);
             println!("{}", codegen);
             codegen
+        },
+        DataType::Array(elements, size) => {
+            // Generate LLVM for array literal
+            let element_type = if !elements.is_empty() {
+                match &elements[0] {
+                    DataType::Integer(_) => "i32",
+                    DataType::Boolean(_) => "i1",
+                    _ => "i32" // fallback
+                }
+            } else { "i32" };
+
+            let codegen = format!("@arr{} = global [{} x {}] zeroinitializer", index, size, element_type);
+            println!("{}", codegen);
+            codegen
         }
     }
     

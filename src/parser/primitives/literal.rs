@@ -35,6 +35,13 @@ pub fn parse_literal(parser: &mut Parser) -> Result<Expression, ParseError> {
         match prev.token_type {
             TokenType::False => {
                 create_boolean(parser, TokenType::False);
+
+                // Generate LLVM instruction to create register with boolean value
+                let register_num = parser.expr_count;
+                let instruction = format!("\t%{} = add i1 0, 0", register_num);
+                parser.emit_instruction(&instruction);
+                parser.expr_count += 1;
+
                 let false_expr = Expression::from_literal(DataType::Boolean(Some(false)));
                 parser.ast_stack.push(AstNode::from_expression(false_expr.clone()));
 
@@ -42,6 +49,13 @@ pub fn parse_literal(parser: &mut Parser) -> Result<Expression, ParseError> {
             },
             TokenType::True => {
                 create_boolean(parser, TokenType::True);
+
+                // Generate LLVM instruction to create register with boolean value
+                let register_num = parser.expr_count;
+                let instruction = format!("\t%{} = add i1 0, 1", register_num);
+                parser.emit_instruction(&instruction);
+                parser.expr_count += 1;
+
                 let true_expr = Expression::from_literal(DataType::Boolean(Some(true)));
                 parser.ast_stack.push(AstNode::from_expression(true_expr.clone()));
                 Ok(true_expr)

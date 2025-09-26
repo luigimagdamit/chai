@@ -33,6 +33,7 @@ pub enum Expression {
     Variable(VariableExpression),
     Binary(Binary),
     StringConstant(StringConstant),
+    Array(ArrayExpression),
     Empty
 }
 
@@ -40,7 +41,8 @@ pub enum Expression {
 pub enum DataType {
     Integer(Option<i32>),
     String(String),
-    Boolean(Option<bool>)
+    Boolean(Option<bool>),
+    Array(Vec<DataType>, usize) // elements, size
 }
 
 #[derive(Clone)]
@@ -69,6 +71,15 @@ pub struct StringConstant {
     pub datatype: DataType
 }
 
+#[derive(Clone)]
+pub struct ArrayExpression {
+    pub name: String,
+    pub elements: Vec<Expression>,
+    pub element_type: DataType,
+    pub size: usize,
+    pub register: usize
+}
+
 //===========================
 // Each inherits from this ExprNode trait
 pub trait ExprNode {
@@ -82,6 +93,7 @@ impl ExprNode for DataType {
         match self {
             DataType::Integer(int) => int.expect(DATATYPE_INT_ERROR).to_string(),
             DataType::Boolean(bool) => convert_bool(bool.expect(DATATYPE_BOOL_ERROR)).to_string(),
+            DataType::Array(_, size) => format!("array[{}]", size),
             _ => "".to_string()
         }
     }
@@ -101,6 +113,7 @@ impl ExprNode for DataType {
                 let value = bool.expect(DATATYPE_BOOL_ERROR);
                 with_expr_ir!(bool_literal(value))
             },
+            DataType::Array(_, size) => format!("; Array of size {}", size),
             _ => "".to_string()
         }
     }
@@ -157,6 +170,23 @@ impl ExprNode for StringConstant {
     }
 }
 
+impl ExprNode for ArrayExpression {
+    fn get_type(&self) -> &str {
+        self.element_type.get_type()
+    }
+    fn get_value(&self) -> String {
+        format!("%{}", self.register)
+    }
+    fn to_datatype(&self) -> &DataType {
+        // For now, return a reference to the element type since we can't create a temporary DataType::Array
+        &self.element_type
+    }
+    fn print(&self) -> String {
+        // For now, arrays can't be printed directly
+        format!("; Array {} of size {}", self.name, self.size)
+    }
+}
+
 // ============================
 impl From<i32> for DataType {
     fn from(item: i32) -> DataType {
@@ -183,6 +213,13 @@ impl DataType {
     }
     pub fn empty_int() -> DataType {
         DataType::Integer(None)
+    }
+    pub fn empty_array(element_type: DataType, size: usize) -> DataType {
+        DataType::Array(vec![element_type; size], size)
+    }
+    pub fn array_from_elements(elements: Vec<DataType>) -> DataType {
+        let size = elements.len();
+        DataType::Array(elements, size)
     }
     pub fn _place(&self, register: usize) -> String {
         format!("%{} = {}", register, self.print())
@@ -223,9 +260,31 @@ impl From<VariableExpression> for Expression {
 
 
 impl StringConstant {
-    
+
     pub fn place(&self) -> String {
         with_expr_ir!(string_literal(self.register, self.length, self.index))
+    }
+}
+
+impl ArrayExpression {
+    pub fn new(name: String, elements: Vec<Expression>, element_type: DataType, size: usize, register: usize) -> ArrayExpression {
+        ArrayExpression {
+            name,
+            elements,
+            element_type,
+            size,
+            register,
+        }
+    }
+
+    pub fn empty(name: String, element_type: DataType, size: usize, register: usize) -> ArrayExpression {
+        ArrayExpression {
+            name,
+            elements: Vec::new(),
+            element_type,
+            size,
+            register,
+        }
     }
 }
 
@@ -239,6 +298,7 @@ impl Register for Expression {
             Expression::Binary(binary) => Expression::from(binary.clone()).resolve_binary(),
             Expression::Literal(literal) => Expression::from(literal.clone()).resolve_binary(),
             Expression::StringConstant(str_constant) => format!("%{}", str_constant.register),
+            Expression::Array(array) => format!("%{}", array.register),
             _ => panic!()
 
         }
@@ -246,11 +306,12 @@ impl Register for Expression {
 }
 impl Accept for Expression {
     fn accept<V: Visitor> (&self, visitor: &mut V) -> String{
-        match self {    
+        match self {
             Expression::Literal(literal) => visitor.visit_literal(literal),
             Expression::Binary(binary) => visitor.visit_binary(binary),
             Expression::Variable(variable) => visitor.visit_variable_expression(variable),
             Expression::StringConstant(str_constant) => visitor.visit_string(str_constant),
+            Expression::Array(array) => visitor.visit_array(array),
             _ => panic!()
         }
     }
@@ -288,9 +349,23 @@ impl From<StringConstant> for Expression {
         Expression::StringConstant(value)
     }
 }
+
+impl From<ArrayExpression> for Expression {
+    fn from(value: ArrayExpression) -> Self {
+        Expression::Array(value)
+    }
+}
 impl Expression {
     pub fn new_binary(left: Expression, right: Expression, operator: Operation, register: &str, datatype: DataType) -> Expression {
         Expression::Binary(Binary::new(left, right, operator, register, datatype))
+    }
+
+    pub fn new_array(name: String, elements: Vec<Expression>, element_type: DataType, size: usize, register: usize) -> Expression {
+        Expression::Array(ArrayExpression::new(name, elements, element_type, size, register))
+    }
+
+    pub fn empty_array(name: String, element_type: DataType, size: usize, register: usize) -> Expression {
+        Expression::Array(ArrayExpression::empty(name, element_type, size, register))
     }
     pub fn as_str_constant(&self) -> StringConstant {
         match self {
@@ -318,6 +393,7 @@ impl Expression {
             Expression::Literal(i) => i.get_value(),
             Expression::StringConstant(s) => s.get_value(),
             Expression::Variable(v) => v.get_value(),
+            Expression::Array(a) => a.get_value(),
             _ => panic!("resolve_operand should have gotten an object that takes the ExprNode trait")
         }
     }
@@ -330,6 +406,10 @@ impl Expression {
             Expression::Binary(binary) => binary.datatype.clone(),
             Expression::Variable(variable) => variable.datatype.clone(),
             Expression::StringConstant(_) => DataType::String("".to_string()),
+            Expression::Array(array) => DataType::Array(
+                array.elements.iter().map(|e| e.as_datatype()).collect(),
+                array.size
+            ),
             _ => panic!()
         }
     }
@@ -340,6 +420,7 @@ impl fmt::Display for Expression {
         match self {
             Expression::Binary(b) => write!(f, "\n{b}"),
             Expression::Literal(l) => write!(f, "{l}"),
+            Expression::Array(a) => write!(f, "array[{}]:{}", a.size, a.name),
             _ => write!(f, "")
         }
     }
@@ -358,7 +439,15 @@ impl fmt::Display for DataType {
                 Some(item) => write!(f, "{}", item),
                 None => write!(f, "bool")
             },
-            DataType::String(str) => write!(f, "str:<{}>", str)
+            DataType::String(str) => write!(f, "str:<{}>", str),
+            DataType::Array(elements, size) => {
+                write!(f, "array[{}]:<", size)?;
+                for (i, elem) in elements.iter().enumerate() {
+                    if i > 0 { write!(f, ", ")?; }
+                    write!(f, "{}", elem)?;
+                }
+                write!(f, ">")
+            }
         }
     }
 }

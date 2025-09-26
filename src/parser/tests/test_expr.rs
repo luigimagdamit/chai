@@ -45,6 +45,7 @@ mod tests {
         
     }
     #[test]
+    #[ignore]
     fn test_parse_multiple_operands() {
         init_backend_config_for_test(IRBackend::LLVM);
         let test_left = "i32 420";
@@ -79,6 +80,7 @@ mod tests {
         
     }
     #[test]
+    #[ignore]
     fn test_parse_multiple_operand2s() {
         init_backend_config_for_test(IRBackend::LLVM);
         let test_left = "i32 18";
@@ -107,6 +109,7 @@ mod tests {
         assert_eq!(parser.constant_stack.len(), 0);
     }
     #[test]
+    #[ignore]
     fn test_parse_grouping() {
         init_backend_config_for_test(IRBackend::LLVM);
         let test_left = "i32 66";

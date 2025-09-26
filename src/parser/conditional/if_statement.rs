@@ -141,11 +141,9 @@ pub fn if_statement(parser: &mut Parser) {
     parser.expr_count += 3;
 
     let mut conditional_parser = ConditionalParser::new();
-    conditional_parser
-        .parse_condition(parser)
-        .parse_then_block(parser)
-        .parse_else_branch(parser)
-        .finalize(parser);
+
+    // Parse condition and generate condition branch
+    conditional_parser.parse_condition(parser);
 
     // Generate IR code based on current backend
     if let Some(_condition) = &conditional_parser.condition {
@@ -157,9 +155,21 @@ pub fn if_statement(parser: &mut Parser) {
                 parser.comment(&format!("depth: {}", conditional_parser.depth));
                 codegen.generate_condition_branch(parser);
                 codegen.generate_then_label(parser);
+
+                // Parse then block (instructions will be emitted during parsing)
+                conditional_parser.parse_then_block(parser);
+
+                // Jump to end after then block
                 codegen.generate_jump_to_end(parser);
+
+                // Generate else label and parse else branch
                 codegen.generate_else_label(parser);
+                conditional_parser.parse_else_branch(parser);
+
+                // Jump to end after else block
                 codegen.generate_jump_to_end(parser);
+
+                // Generate end label
                 codegen.generate_end_label(parser);
             },
             IRBackend::C => {
@@ -169,11 +179,25 @@ pub fn if_statement(parser: &mut Parser) {
                 parser.comment(&format!("depth: {}", conditional_parser.depth));
                 codegen.generate_condition_branch(parser);
                 codegen.generate_then_label(parser);
+
+                // Parse then block (instructions will be emitted during parsing)
+                conditional_parser.parse_then_block(parser);
+
+                // Jump to end after then block
                 codegen.generate_jump_to_end(parser);
+
+                // Generate else label and parse else branch
                 codegen.generate_else_label(parser);
+                conditional_parser.parse_else_branch(parser);
+
+                // Jump to end after else block
                 codegen.generate_jump_to_end(parser);
+
+                // Generate end label
                 codegen.generate_end_label(parser);
             }
         }
     }
+
+    conditional_parser.finalize(parser);
 }

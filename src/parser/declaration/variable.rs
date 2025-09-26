@@ -14,12 +14,41 @@ pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
     let mut rebuild = RebuildVisitor;
     expression(parser);
 
-
     if let Some(expr_ast) = parser.ast_stack.pop() {
-        let test = Declaration::new_variable(var_name, Some(expr_ast.clone().to_expression()), expr_ast.to_expression().as_datatype());
+        let expr = expr_ast.to_expression();
+        let expr_datatype = expr.as_datatype();
+
+        let test = Declaration::new_variable(var_name, Some(expr.clone()), expr_datatype.clone());
         parser.comment(&test.accept(&mut rebuild));
         parser.emit_instruction(&test.accept(&mut visitor));
-        create_new_symbol(parser, var_name, test.as_variable().as_datatype());
+        create_new_symbol(parser, var_name, expr_datatype);
+        parser.print_symbols();
+    }
+}
+
+// evaluate an expression with a specific expected type, then assign the expression
+pub fn variable_assignment_with_type(parser: &mut Parser, var_name: &str, expected_type: DataType) {
+    let mut visitor = PrintVisitor;
+    let mut rebuild = RebuildVisitor;
+    expression(parser);
+
+    if let Some(expr_ast) = parser.ast_stack.pop() {
+        let expr = expr_ast.to_expression();
+        let expr_datatype = expr.as_datatype();
+
+        // For arrays, update the size from the actual expression
+        let final_type = match (&expected_type, &expr) {
+            (DataType::Array(element_types, _), Expression::Array(array_expr)) => {
+                DataType::Array(element_types.clone(), array_expr.size)
+            }
+            _ => expected_type.clone()
+        };
+
+        // TODO: Add type compatibility checking here
+        let test = Declaration::new_variable(var_name, Some(expr.clone()), final_type.clone());
+        parser.comment(&test.accept(&mut rebuild));
+        parser.emit_instruction(&test.accept(&mut visitor));
+        create_new_symbol(parser, var_name, final_type);
         parser.print_symbols();
     }
 }
@@ -29,21 +58,59 @@ pub fn variable_declaration(parser: &mut Parser) {
         TokenType::Colon, 
         "Expected : when declaring variable"
     );
-    parser.consume(
-        TokenType::Identifier, 
-        "Expected a type identifier when declaring variable
-    ");
-    let type_tag = parser.previous.expect("Expected a token when getting the type identifier");
-    let type_tag = match type_tag.start {
-        "int" => DataType::Integer(None),
-        "bool" => DataType::Boolean(None),
-        "str" => DataType::String("".to_string()),
-        _ => panic!()
+    // Check if it's an array type [type] or simple type
+    let type_tag = if parser.check_current(TokenType::LeftBracket) {
+        // Array type syntax: [int], [bool], etc.
+        parser.advance(); // consume '['
+
+        parser.consume(
+            TokenType::Identifier,
+            "Expected element type identifier in array declaration"
+        );
+
+        let element_type_token = parser.previous.expect("Expected a token when getting the element type identifier");
+        let element_type = match element_type_token.start {
+            "int" => DataType::Integer(None),
+            "bool" => DataType::Boolean(None),
+            "str" => DataType::String("".to_string()),
+            _ => {
+                parser.error_at_previous("Unsupported array element type");
+                DataType::Integer(None) // fallback
+            }
+        };
+
+        parser.consume(
+            TokenType::RightBracket,
+            "Expected ']' after array element type"
+        );
+
+        // Create array type with default size (will be determined from initialization)
+        DataType::Array(vec![element_type], 0)
+    } else {
+        // Simple type syntax: int, bool, str
+        parser.consume(
+            TokenType::Identifier,
+            "Expected a type identifier when declaring variable"
+        );
+        let type_token = parser.previous.expect("Expected a token when getting the type identifier");
+        match type_token.start {
+            "int" => DataType::Integer(None),
+            "bool" => DataType::Boolean(None),
+            "str" => DataType::String("".to_string()),
+            _ => {
+                parser.error_at_previous("Unsupported variable type");
+                DataType::Integer(None) // fallback
+            }
+        }
     };
 
-    if parser.match_current(TokenType::Equal) { 
-        variable_assignment(parser, &global_name) 
-    } 
+    if parser.match_current(TokenType::Equal) {
+        // Use type-aware assignment for arrays
+        match &type_tag {
+            DataType::Array(_, _) => variable_assignment_with_type(parser, &global_name, type_tag.clone()),
+            _ => variable_assignment(parser, &global_name)
+        }
+    }
     else {
         let mut visitor = PrintVisitor;
         let test = Declaration::new_variable(

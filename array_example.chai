@@ -1,0 +1,16 @@
+fn main() int {
+    // Test array literal
+    var numbers = [1, 2, 3, 4, 5];
+
+    // Test array indexing
+    var first = numbers[0];
+    print(first);
+
+    // Test boolean array
+    var flags = [true, false, true];
+    var flag = flags[1];
+
+    if (flag == false) {
+        print("Flag is false!");
+    }
+}

@@ -45,12 +45,13 @@ pub fn set_symbol(parser: &mut Parser, name: &str, new_value: Expression) {
         match &variable.variable_type {
             // need to offset this to the llvm_codegen
             DataType::Integer(_) => parser.emit_instruction(
-                &format!("store i32 {}, i32* %{}\n\t ; set symbol (symbol.rs)\n", 
-                    new_value.resolve_operand(), 
+                &format!("store i32 {}, i32* %{}\n\t ; set symbol (symbol.rs)\n",
+                    new_value.resolve_operand(),
                     name
                 )),
             DataType::Boolean(_) => parser.emit_instruction(&format!("store i1 {}, i1* %{}\n\t ; set symbol (symbol.rs)\n", new_value.resolve_operand() , name)),
             DataType::String(_) => panic!("set_symbol() not impl for strings"),
+            DataType::Array(_, _) => panic!("set_symbol() not impl for arrays yet"),
         }
     } else {
 

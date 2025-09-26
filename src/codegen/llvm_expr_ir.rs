@@ -1,4 +1,4 @@
-use super::expr_ir::{TypeIR, BinaryOpIR, LiteralIR, PrintIR, ExpressionIR, ExprIRFactory};
+use super::expr_ir::{TypeIR, BinaryOpIR, LiteralIR, PrintIR, ArrayIR, ExpressionIR, ExprIRFactory};
 use crate::parser::expression::expr::Operation;
 use crate::llvm::llvm_print::llvm_call_print_local;
 use crate::llvm::llvm_string::llvm_retrieve_static_string;
@@ -18,6 +18,10 @@ impl TypeIR for LlvmExpressionIR {
 
     fn string_type(&self) -> &'static str {
         "i8*"
+    }
+
+    fn array_type(&self, element_type: &str, size: usize) -> String {
+        format!("[{} x {}]*", size, element_type)
     }
 }
 
@@ -63,6 +67,35 @@ impl PrintIR for LlvmExpressionIR {
 
     fn print_string(&self, register: usize) -> String {
         format!("call i32 (i8*, ...) @printf(i8* %{})", register)
+    }
+}
+
+impl ArrayIR for LlvmExpressionIR {
+    fn array_alloca(&self, element_type: &str, size: usize, register: usize) -> String {
+        format!("%{} = alloca [{} x {}], align 16", register, size, element_type)
+    }
+
+    fn array_element_ptr(&self, array_ptr: &str, element_type: &str, index: usize, result_reg: usize) -> String {
+        format!("%{} = getelementptr inbounds [{} x {}], [{} x {}]* {}, i64 0, i64 {}",
+                result_reg, element_type, element_type, element_type, element_type, array_ptr, index)
+    }
+
+    fn array_element_load(&self, element_ptr: &str, element_type: &str, result_reg: usize) -> String {
+        format!("%{} = load {}, {}* {}", result_reg, element_type, element_type, element_ptr)
+    }
+
+    fn array_element_store(&self, value: &str, element_ptr: &str, element_type: &str) -> String {
+        format!("store {} {}, {}* {}", element_type, value, element_type, element_ptr)
+    }
+
+    fn array_init(&self, array_ptr: &str, values: &[String], element_type: &str) -> String {
+        let mut instructions = Vec::new();
+        for (i, value) in values.iter().enumerate() {
+            let ptr_reg = format!("ptr_{}", i);
+            instructions.push(self.array_element_ptr(array_ptr, element_type, i, i * 1000)); // Use distinct register numbers
+            instructions.push(self.array_element_store(value, &format!("%{}", i * 1000), element_type));
+        }
+        instructions.join("\n\t")
     }
 }
 

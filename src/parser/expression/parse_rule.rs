@@ -3,7 +3,7 @@
 use crate::scanner::token::TokenType;
 use crate::parser::{
     declaration::variable::parse_get_variable, parser::Parser,
-    primitives::{literal::parse_literal, number::parse_number, string::parse_string},
+    primitives::{literal::parse_literal, number::parse_number, string::parse_string, array::{parse_array_literal, parse_array_index}},
     expression::{binary::parse_binary, precedence::Precedence, expression::parse_grouping, expr::{Expression, ParseError}}
 };
 
@@ -23,6 +23,16 @@ pub fn get_rule<'a>(token_type: TokenType) -> ParseRule<'a> {
             precedence: Precedence::PrecNone
         },
         TokenType::RightParen => ParseRule {
+            prefix: None,
+            infix: None,
+            precedence: Precedence::PrecNone
+        },
+        TokenType::LeftBracket => ParseRule {
+            prefix: Some(parse_array_literal),  // For array literals [1, 2, 3]
+            infix: Some(parse_array_index),     // For array indexing arr[0]
+            precedence: Precedence::PrecCall    // High precedence for indexing
+        },
+        TokenType::RightBracket => ParseRule {
             prefix: None,
             infix: None,
             precedence: Precedence::PrecNone

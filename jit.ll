@@ -2,61 +2,33 @@
 define i32 @main() {
 entry:
 
+		%3 = add i1 0, 1
 
-	;var a : int = 0
-	%a = alloca i32
-	store i32 0, i32* %a
+	;depth: 0
+	br i1 %3, label %then0, label %else0
+	then0:
 
-	;var b : int = 1
-	%b = alloca i32
-	store i32 1, i32* %b
+	;; print(100);;
+	call void @print_i32(i32 100); signature from PrintVisitor
 
-	;var i : int = 0
-	%i = alloca i32
-	store i32 0, i32* %i
-	%a_0 = load i32, i32* %a ; loading existing variable
 
-	;; print(a);;
-	call void @print_i32(i32 %a_0); signature from PrintVisitor
+	;; print(200);;
+	call void @print_i32(i32 200); signature from PrintVisitor
 
-	br label %cond4
+	br label %end0
 	
-cond4:
-	%i_0 = load i32, i32* %i ; loading existing variable
-	%4 = icmp slt i32 %i_0, 9
+else0:
 
-	;depth: 4
-	br i1 %4, label %body4, label %exit4
+	;; print(300);;
+	call void @print_i32(i32 300); signature from PrintVisitor
+
+
+	;; print(400);;
+	call void @print_i32(i32 400); signature from PrintVisitor
+
+	br label %end0
 	
-body4:
-	%b_0 = load i32, i32* %b ; loading existing variable
-
-	;var tmp : int = b
-	%tmp = alloca i32
-	store i32 %b_0, i32* %tmp
-	%a_1 = load i32, i32* %a ; loading existing variable
-	%b_1 = load i32, i32* %b ; loading existing variable
-	%7 = add i32 %a_1, %b_1
-	store i32 %7, i32* %b
-	 ; set symbol (symbol.rs)
-
-	%tmp_0 = load i32, i32* %tmp ; loading existing variable
-	store i32 %tmp_0, i32* %a
-	 ; set symbol (symbol.rs)
-
-	%tmp_1 = load i32, i32* %tmp ; loading existing variable
-
-	;; print(tmp);;
-	call void @print_i32(i32 %tmp_1); signature from PrintVisitor
-
-	%i_1 = load i32, i32* %i ; loading existing variable
-	%9 = add i32 %i_1, 1
-	store i32 %9, i32* %i
-	 ; set symbol (symbol.rs)
-
-	br label %cond4
-	
-exit4:
+end0:
 
 	ret i32 0 ; llvm_main_close
 }

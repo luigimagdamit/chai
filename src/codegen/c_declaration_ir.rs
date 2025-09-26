@@ -12,6 +12,7 @@ impl VariableIR for CDeclarationIR {
             crate::parser::expression::expr::DataType::Integer(_) => "int",
             crate::parser::expression::expr::DataType::Boolean(_) => "bool",
             crate::parser::expression::expr::DataType::String(_) => "char*",
+            crate::parser::expression::expr::DataType::Array(_, size) => &format!("int[{}]", size), // Basic array support
         };
         format!("{} {};", type_str, var_decl.name)
     }
