@@ -43,6 +43,15 @@ pub fn init_backend_config(backend: IRBackend) {
     });
 }
 
+/// Initialize backend for tests (allows re-initialization)
+pub fn init_backend_config_for_test(backend: IRBackend) {
+    if let Some(config) = BACKEND_CONFIG.get() {
+        *config.lock().unwrap() = backend;
+    } else {
+        init_backend_config(backend);
+    }
+}
+
 /// Get the current backend configuration
 pub fn get_current_backend() -> IRBackend {
     BACKEND_CONFIG

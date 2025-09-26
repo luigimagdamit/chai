@@ -1,11 +1,28 @@
 
-
 use super::super::parser::Parser;
 use crate::parser::expression::expr::{DataType, Expr, Expression, ParseError};
-
-
 use crate::parser::core::ast_node::AstNode;
 use crate::scanner::token::TokenType;
+use crate::codegen::primitives_ir::{BooleanIR, PrimitivesIR};
+use crate::codegen::llvm_primitives_ir::LlvmPrimitivesIR;
+use crate::codegen::c_primitives_ir::CPrimitivesIR;
+use crate::codegen::backend_config::{get_current_backend, IRBackend};
+
+/// Macro to execute primitives IR-specific code based on current backend
+macro_rules! with_primitives_ir {
+    ($method:ident($($args:expr),*)) => {{
+        match get_current_backend() {
+            IRBackend::LLVM => {
+                let ir = LlvmPrimitivesIR;
+                ir.$method($($args),*)
+            }
+            IRBackend::C => {
+                let ir = CPrimitivesIR;
+                ir.$method($($args),*)
+            }
+        }
+    }};
+}
 fn create_boolean(parser: &mut Parser, token_type: TokenType) {
     match token_type {
         TokenType::False => parser.new_expr(new_bool_val(false)),
@@ -42,36 +59,10 @@ pub fn parse_literal(parser: &mut Parser) -> Result<Expression, ParseError> {
 
 // Helper functions
 fn new_bool_val(bool_val: bool) -> Expr {
-    match bool_val {
-        true => Expr {
-            left: LlvmBooleanTag::True.left(),
-            right: LlvmBooleanTag::True.right(),
-            data_type: DataType::Boolean(Some(bool_val))
-        },
-        false => Expr {
-            left: LlvmBooleanTag::False.left(),
-            right: LlvmBooleanTag::False.right(),
-            data_type: DataType::Boolean(Some(bool_val))
-        }
-    }
-    
-}
-pub enum LlvmBooleanTag {
-    True,
-    False
-}
-impl LlvmBooleanTag {
-    fn left(&self) -> String{
-        match self {
-            LlvmBooleanTag::True => String::from("i1 1"),
-            LlvmBooleanTag::False => String::from("i1 0")
-        }
-    }
-    fn right(&self) -> String {
-        match self {
-            LlvmBooleanTag::True => String::from("1"),
-            LlvmBooleanTag::False => String::from("0")
-        }
+    Expr {
+        left: with_primitives_ir!(boolean_left(bool_val)),
+        right: with_primitives_ir!(boolean_right(bool_val)),
+        data_type: DataType::Boolean(Some(bool_val))
     }
 }
 const LITERAL_ERROR: &str = "Tried creating a new literal, but prev.token_type is not a True or False TokenType";

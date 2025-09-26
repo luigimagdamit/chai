@@ -2,10 +2,12 @@ pub mod test_jit{
     use serial_test::serial;
     use crate::parser::parser::Parser;
     use crate::jit::compile_test::jit_compile;
+    use crate::codegen::backend_config::{init_backend_config_for_test, IRBackend};
     use std::io::{self, Write};
     #[test]
     #[serial]
     fn test_print_int() {
+        init_backend_config_for_test(IRBackend::LLVM);
         let test_file = "./examples/add.chai";
 
         let contents = std::fs::read_to_string(test_file).unwrap();
@@ -18,6 +20,7 @@ pub mod test_jit{
     #[test]
     #[serial]
     fn test_print_bool() {
+        init_backend_config_for_test(IRBackend::LLVM);
         let test_file = "./examples/bool.chai";
 
         let contents = std::fs::read_to_string(test_file).unwrap();
@@ -30,6 +33,7 @@ pub mod test_jit{
     #[test]
     #[serial]
     fn test_fibonacci() {
+        init_backend_config_for_test(IRBackend::LLVM);
         let test_file = "./examples/fib.chai";
 
         let contents = std::fs::read_to_string(test_file).unwrap();

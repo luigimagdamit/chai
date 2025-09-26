@@ -1,15 +1,34 @@
 use super::super::parser::{Parser, StringEntry};
 use super::super::expression::expr::{DataType, Expr};
-use crate::llvm::llvm_string::*;
 use crate::parser::core::ast_node::AstNode;
 use crate::parser::expression::expr::{Expression, ParseError, StringConstant};
+use crate::codegen::primitives_ir::{StringIR, PrimitivesIR};
+use crate::codegen::llvm_primitives_ir::LlvmPrimitivesIR;
+use crate::codegen::c_primitives_ir::CPrimitivesIR;
+use crate::codegen::backend_config::{get_current_backend, IRBackend};
+
+/// Macro to execute primitives IR-specific code based on current backend
+macro_rules! with_primitives_ir {
+    ($method:ident($($args:expr),*)) => {{
+        match get_current_backend() {
+            IRBackend::LLVM => {
+                let ir = LlvmPrimitivesIR;
+                ir.$method($($args),*)
+            }
+            IRBackend::C => {
+                let ir = CPrimitivesIR;
+                ir.$method($($args),*)
+            }
+        }
+    }};
+}
 
 pub fn parse_string(parser: &mut Parser) -> Result<Expression, ParseError> {
     let value = parser.previous.unwrap().start;
     let length = value.len() ;
 
     
-    let codegen = llvm_new_static_string(length, parser.string_table.len(), &value[1..length - 1]);
+    let codegen = with_primitives_ir!(new_static_string(length, parser.string_table.len(), &value[1..length - 1]));
     
     match parser.string_table.get(value) {
         Some(existing_str) => {
@@ -67,7 +86,7 @@ pub fn parse_string(parser: &mut Parser) -> Result<Expression, ParseError> {
     Ok(res)
 }
 fn string_expr(str_length: usize, str_index: usize, str_value: &str, _register: u32) -> Expr {
-    let codegen = llvm_retrieve_static_string(str_length, str_index);
+    let codegen = with_primitives_ir!(retrieve_static_string(str_length, str_index));
 
     Expr {
         left: String::from(&codegen),

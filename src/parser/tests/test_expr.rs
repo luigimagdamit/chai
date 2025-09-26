@@ -8,8 +8,10 @@ mod tests {
     use crate::scanner::token::TokenType;
     use crate::parser::parser::Parser;
     use crate::parser::expression::precedence::Precedence;
-    #[test] 
+    use crate::codegen::backend_config::{init_backend_config_for_test, IRBackend};
+    #[test]
     fn test_parse_one_plus_two() {
+        init_backend_config_for_test(IRBackend::LLVM);
         let parser = &mut Parser::init_parser("1+2\0");
         parser.advance();
         parse_precedence(parser, Precedence::PrecAssignment);
@@ -44,6 +46,7 @@ mod tests {
     }
     #[test]
     fn test_parse_multiple_operands() {
+        init_backend_config_for_test(IRBackend::LLVM);
         let test_left = "i32 420";
         let test_right = "420";
 
@@ -53,12 +56,15 @@ mod tests {
         parse_precedence(parser, Precedence::PrecAssignment);
 
         if let Some(c) = &parser.constant_stack.pop().unwrap() {
+            println!("Debug - Constant stack item: left='{}', right='{}', data_type={:?}", c.left, c.right, c.data_type);
             if PARSE_CONSTANT_FOLD {
                 assert_eq!(c.left, test_left);
                 assert_eq!(c.right, test_right);
             } else {
                 match c.data_type {
                     DataType::Integer(value) => {
+                        println!("Debug - Generated IR: {}", parser.compilation);
+                        println!("Debug - Expected value: 420, got: {}", value.unwrap());
                         assert_eq!(parser.compilation, codegen_test);
                         assert_eq!(value.unwrap(), 420);
                     }
@@ -74,6 +80,7 @@ mod tests {
     }
     #[test]
     fn test_parse_multiple_operand2s() {
+        init_backend_config_for_test(IRBackend::LLVM);
         let test_left = "i32 18";
         let test_right = "18";
 
@@ -101,6 +108,7 @@ mod tests {
     }
     #[test]
     fn test_parse_grouping() {
+        init_backend_config_for_test(IRBackend::LLVM);
         let test_left = "i32 66";
         let test_right = "66";
 

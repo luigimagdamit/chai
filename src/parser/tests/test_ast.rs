@@ -11,8 +11,10 @@ mod tests {
     use crate::scanner::token::TokenType;
     use crate::parser::parser::Parser;
     use crate::parser::expression::precedence::Precedence;
-    #[test] 
+    use crate::codegen::backend_config::{init_backend_config_for_test, IRBackend};
+    #[test]
     fn test_parse_one_plus_two() {
+        init_backend_config_for_test(IRBackend::LLVM);
         let parser = &mut Parser::init_parser("1+2\0");
         parser.advance();
         parse_precedence(parser, Precedence::PrecAssignment);
@@ -36,6 +38,7 @@ mod tests {
     }
     #[test]
     fn test_parse_one_times_two() {
+        init_backend_config_for_test(IRBackend::LLVM);
         let parser = &mut Parser::init_parser("1*2\0");
         parser.advance();
         parse_precedence(parser, Precedence::PrecAssignment);

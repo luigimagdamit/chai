@@ -12,4 +12,7 @@ pub mod c_declaration_ir;
 pub mod parser_ir;
 pub mod llvm_parser_ir;
 pub mod c_parser_ir;
+pub mod primitives_ir;
+pub mod llvm_primitives_ir;
+pub mod c_primitives_ir;
 pub mod backend_config;

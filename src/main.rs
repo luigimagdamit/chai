@@ -93,7 +93,11 @@ fn compile_with_backend(source_file: &str, backend: IRBackend) {
 fn compile_to_c(source: &str, source_file: &str) {
     println!("Compiling {} to C...", source_file);
 
-    let parser = Parser::init_parser(source);
+    let mut parser = Parser::init_parser(source);
+    parser.compile(); // Actually run the compilation process!
+
+    // Debug: print the generated IR
+    println!("Generated IR:\n{}", parser.compilation);
 
     // Generate the C code using the parser's compilation output
     let generated_c_code = generate_c_wrapper(&parser.compilation);
