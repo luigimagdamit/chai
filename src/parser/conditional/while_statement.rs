@@ -1,24 +1,21 @@
-use std::fmt::format;
 
 use crate::parser::{
     parser::Parser,
-    expression::expr::DataType,
     expression::expression::expression,
-    parse_fn::declaration,
-    parse_fn::statement
+    parse_fn::declaration
 };
 use crate::scanner::token::TokenType;
-use crate::parser::conditional::if_statement::LlvmConditional;
+use crate::parser::conditional::if_statement::LlvmWhile;
 
 pub fn while_statement(parser: &mut Parser) {
     // if keyworld already consumed
     // parse expression
     
     let depth = parser.expr_count;
-    let branch = LlvmConditional::If(depth);
+    let branch = LlvmWhile::new(depth);
     
-    parser.emit_instruction(&branch.while_check_cond(0));
-    parser.emit_instruction(&branch.while_start());
+    parser.emit_instruction(&branch.jump_to_condition());
+    parser.emit_instruction(&branch.condition_label());
     expression(parser);
     
     
@@ -27,15 +24,15 @@ pub fn while_statement(parser: &mut Parser) {
     
     let expr = parser.expr_pop();
 
-    parser.emit_instruction(&branch.while_cond(expr.1 - 1));
-    parser.consume(TokenType::LeftBrace, "message");
-    parser.emit_instruction(&branch.while_body());
+    parser.emit_instruction(&branch.condition_branch(expr.1 - 1));
+    parser.consume(TokenType::LeftBrace, "Expected '{' after while condition");
+    parser.emit_instruction(&branch.body_label());
     // // parse block
     while !parser.match_current(TokenType::RightBrace) {
         declaration(parser);
     }
-    parser.emit_instruction(&branch.while_check_cond(expr.1));
-    parser.emit_instruction(&branch.while_exit());
+    parser.emit_instruction(&branch.jump_to_condition());
+    parser.emit_instruction(&branch.exit_label());
 
 
 }

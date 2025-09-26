@@ -9,6 +9,20 @@ use crate::parser::expression::expr::ExprNode;
 pub struct PrintStatement {
     pub expression: Expression
 }
+
+#[derive(Clone)]
+pub struct ConditionalStatement {
+    pub condition: Expression,
+    pub then_block: Vec<Declaration>,
+    pub else_ifs: Vec<ElseIfClause>,
+    pub else_block: Option<Vec<Declaration>>,
+}
+
+#[derive(Clone)]
+pub struct ElseIfClause {
+    pub condition: Expression,
+    pub block: Vec<Declaration>,
+}
 impl From<Expression> for PrintStatement {
     fn from(expression: Expression) -> Self {
         PrintStatement {
@@ -18,7 +32,8 @@ impl From<Expression> for PrintStatement {
 }
 #[derive(Clone)]
 pub enum Statement {
-    PrintStatement(PrintStatement)
+    PrintStatement(PrintStatement),
+    Conditional(ConditionalStatement)
 }
 impl From<PrintStatement> for Statement {
     fn from(print_statement: PrintStatement) -> Statement {
@@ -26,10 +41,47 @@ impl From<PrintStatement> for Statement {
     }
 }
 
+impl From<ConditionalStatement> for Statement {
+    fn from(conditional: ConditionalStatement) -> Statement {
+        Statement::Conditional(conditional)
+    }
+}
+
+impl ConditionalStatement {
+    pub fn new(
+        condition: Expression,
+        then_block: Vec<Declaration>,
+    ) -> Self {
+        Self {
+            condition,
+            then_block,
+            else_ifs: Vec::new(),
+            else_block: None,
+        }
+    }
+
+    pub fn with_else(mut self, else_block: Vec<Declaration>) -> Self {
+        self.else_block = Some(else_block);
+        self
+    }
+
+    pub fn with_else_if(mut self, condition: Expression, block: Vec<Declaration>) -> Self {
+        self.else_ifs.push(ElseIfClause { condition, block });
+        self
+    }
+}
+
+impl ElseIfClause {
+    pub fn new(condition: Expression, block: Vec<Declaration>) -> Self {
+        Self { condition, block }
+    }
+}
+
 impl fmt::Display for Statement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Statement::PrintStatement(expr) => write!(f, "\nPrint Statement => \n  | {}", expr.expression)
+            Statement::PrintStatement(expr) => write!(f, "\nPrint Statement => \n  | {}", expr.expression),
+            Statement::Conditional(cond) => write!(f, "\nIf Statement => Condition: {}", cond.condition)
         }
     }
 }
@@ -70,10 +122,11 @@ pub enum Declaration {
 }
 impl Accept for Declaration {
     fn accept<V: Visitor> (&self, visitor: &mut V) -> String{
-        match self {    
+        match self {
             Declaration::Statement(statement) => {
                 match statement {
-                    Statement::PrintStatement(print_statement) => visitor.visit_print(print_statement)
+                    Statement::PrintStatement(print_statement) => visitor.visit_print(print_statement),
+                    Statement::Conditional(_conditional) => "TODO: implement conditional visitor".to_string()
                 }
             },
             Declaration::Variable(var_declaration) => visitor.visit_variable_declaration(var_declaration)
@@ -83,6 +136,12 @@ impl Accept for Declaration {
 impl From<PrintStatement> for Declaration {
     fn from(value: PrintStatement) -> Self {
         Declaration::Statement(Statement::PrintStatement(value))
+    }
+}
+
+impl From<ConditionalStatement> for Declaration {
+    fn from(value: ConditionalStatement) -> Self {
+        Declaration::Statement(Statement::Conditional(value))
     }
 }
 impl Declaration {
