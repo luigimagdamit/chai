@@ -44,6 +44,11 @@ pub fn llvm_fmt_string_int() -> String{
     codegen
 }
 
+pub fn llvm_memcpy_declare() -> String {
+    let codegen = "declare void @llvm.memcpy.p0i8.p0i8.i64(i8* noalias nocapture writeonly, i8* noalias nocapture readonly, i64, i1 immarg)\n";
+    codegen.to_string()
+}
+
 pub fn llvm_print_bool_declare() -> String {
     println!("");
     let codegen = r#"define void @print_i1(i1 %b) {

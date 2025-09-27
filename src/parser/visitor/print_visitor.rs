@@ -1,4 +1,4 @@
-use crate::parser::expression::expr::{DataType, Binary, StringConstant, Expression, Operation, VariableExpression, ArrayExpression};
+use crate::parser::expression::expr::{DataType, Binary, StringConstant, Expression, Operation, VariableExpression, ArrayExpression, TempRegisterExpression};
 use crate::parser::declaration::declaration::{VariableDeclaration, PrintStatement};
 use crate::parser::visitor::visitor::Visitor;
 use crate::parser::expression::expr::ExprNode;
@@ -26,5 +26,8 @@ impl Visitor for PrintVisitor {
     }
     fn visit_variable_expression(&mut self, variable_expression: &VariableExpression) -> String {
         variable_expression.print()
+    }
+    fn visit_temp_register(&mut self, temp_register: &TempRegisterExpression) -> String {
+        temp_register.print()
     }
 }

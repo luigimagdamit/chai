@@ -44,8 +44,16 @@ impl CodegenPrint for LlvmPrint {
 // Loads a value at the pointer location
 // TODO: Modify load so that it just takes a any keyword like load. can share with load, store
 fn load(var_expr: &VariableExpression) -> String {
-    let type_str = (&var_expr.datatype).as_str();
-    format!("%{}_{} = load {type_str}, {type_str}* %{} ; loading existing variable", var_expr.name, var_expr.count, var_expr.name)
+    match &var_expr.datatype {
+        DataType::Array(_, size) => {
+            // For arrays, we need to get a pointer to the first element, not load the array itself
+            format!("%{}_{} = getelementptr inbounds [{} x i32], [{} x i32]* %{}, i64 0, i64 0 ; getting array pointer", var_expr.name, var_expr.count, size, size, var_expr.name)
+        }
+        _ => {
+            let type_str = (&var_expr.datatype).as_str();
+            format!("%{}_{} = load {type_str}, {type_str}* %{} ; loading existing variable", var_expr.name, var_expr.count, var_expr.name)
+        }
+    }
 }
 fn store() {
 

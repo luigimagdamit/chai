@@ -1,4 +1,4 @@
-use crate::parser::expression::expr::{DataType, Binary, StringConstant, Operation, VariableExpression, ArrayExpression};
+use crate::parser::expression::expr::{DataType, Binary, StringConstant, Operation, VariableExpression, ArrayExpression, TempRegisterExpression};
 use crate::parser::declaration::declaration::{VariableDeclaration, PrintStatement};
 use crate::parser::visitor::visitor::{Visitor, Accept};
 
@@ -71,5 +71,8 @@ impl Visitor for RebuildVisitor {
     }
     fn visit_variable_expression(&mut self, variable_expression: &VariableExpression) -> String {
         format!("{}", variable_expression.name)
+    }
+    fn visit_temp_register(&mut self, temp_register: &TempRegisterExpression) -> String {
+        format!("%{}", temp_register.register)
     }
 }

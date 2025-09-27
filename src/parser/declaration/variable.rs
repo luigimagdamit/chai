@@ -75,6 +75,8 @@ pub fn variable_assignment(parser: &mut Parser, var_name: &str) {
 }
 
 pub fn variable_assignment_with_inference(parser: &mut Parser, var_name: &str) {
+    use crate::parser::expression::expr::Expression;
+
     // Parse the expression to determine the type
     expression(parser);
 
@@ -82,13 +84,61 @@ pub fn variable_assignment_with_inference(parser: &mut Parser, var_name: &str) {
         let expr = ast_node.to_expression();
         let inferred_type = expr.as_datatype();
 
-        // Create the variable declaration with inferred type
-        let decl = Declaration::new_variable(var_name, Some(expr), inferred_type.clone());
-        let mut visitor = PrintVisitor;
-        decl.accept(&mut visitor);
+        println!("DEBUG: Variable assignment - expression type: {:?}", std::mem::discriminant(&expr));
+        match &expr {
+            Expression::Array(_) => println!("DEBUG: Found Expression::Array!"),
+            Expression::Literal(_) => println!("DEBUG: Found Expression::Literal"),
+            Expression::Variable(_) => println!("DEBUG: Found Expression::Variable"),
+            Expression::Binary(_) => println!("DEBUG: Found Expression::Binary"),
+            Expression::StringConstant(_) => println!("DEBUG: Found Expression::StringConstant"),
+            Expression::TempRegister(_) => println!("DEBUG: Found Expression::TempRegister"),
+            Expression::Empty => println!("DEBUG: Found Expression::Empty"),
+        }
 
-        // Store the variable in the symbol table
-        create_new_symbol(parser, var_name, inferred_type);
+        // Special handling for TempRegister and Array expressions
+        match &expr {
+            Expression::TempRegister(temp_reg) => {
+                // For temp registers, allocate a proper variable and store the register value
+                parser.comment(&format!("var {} = %{} (from temp register)", var_name, temp_reg.register));
+
+                // Allocate variable storage
+                let type_str = inferred_type.as_str();
+                parser.emit_instruction(&format!("\t%{} = alloca {}, align 4", var_name, type_str));
+
+                // Store the temp register value into the variable
+                parser.emit_instruction(&format!("\tstore {} %{}, {}* %{}", type_str, temp_reg.register, type_str, var_name));
+
+                // Store in symbol table
+                create_new_symbol(parser, var_name, inferred_type);
+            }
+            Expression::Array(array_expr) => {
+                // For arrays, copy the initialized array to the variable
+                parser.comment(&format!("var {} : array[{}] = array[{}]:arr_{};", var_name, array_expr.size, array_expr.size, array_expr.register));
+                println!("DEBUG: Array assignment detected! register = {}", array_expr.register);
+
+                // Allocate space for the array variable
+                parser.emit_instruction(&format!("\t%{} = alloca [{} x i32], align 16", var_name, array_expr.size));
+
+                // Use LLVM memcpy to copy the entire array at once
+                let size_bytes = array_expr.size * 4; // 4 bytes per i32
+                parser.emit_instruction(&format!("\t%{}_src = bitcast [{} x i32]* %{} to i8*", var_name, array_expr.size, array_expr.register));
+                parser.emit_instruction(&format!("\t%{}_dst = bitcast [{} x i32]* %{} to i8*", var_name, array_expr.size, var_name));
+                parser.emit_instruction(&format!("\tcall void @llvm.memcpy.p0i8.p0i8.i64(i8* %{}_dst, i8* %{}_src, i64 {}, i1 false)", var_name, var_name, size_bytes));
+                println!("DEBUG: Generated memcpy from %{} to %{}", array_expr.register, var_name);
+
+                // Store in symbol table
+                create_new_symbol(parser, var_name, inferred_type);
+            }
+            _ => {
+                // Normal variable declaration for other expression types
+                let decl = Declaration::new_variable(var_name, Some(expr), inferred_type.clone());
+                let mut visitor = PrintVisitor;
+                decl.accept(&mut visitor);
+
+                // Store the variable in the symbol table
+                create_new_symbol(parser, var_name, inferred_type);
+            }
+        }
     } else {
         parser.error_at_previous("Expected expression for variable assignment");
     }
@@ -112,11 +162,35 @@ pub fn variable_assignment_with_type(parser: &mut Parser, var_name: &str, expect
             _ => expected_type.clone()
         };
 
-        // TODO: Add type compatibility checking here
-        let test = Declaration::new_variable(var_name, Some(expr.clone()), final_type.clone());
-        parser.comment(&test.accept(&mut rebuild));
-        parser.emit_instruction(&test.accept(&mut visitor));
-        create_new_symbol(parser, var_name, final_type);
+        // Special handling for array expressions to copy values correctly
+        match &expr {
+            Expression::Array(array_expr) => {
+                println!("DEBUG: Found array assignment in variable_assignment_with_type! register = {}", array_expr.register);
+
+                // For arrays, copy the initialized array to the variable
+                parser.comment(&format!("var {} : array[{}] = array[{}]:arr_{};", var_name, array_expr.size, array_expr.size, array_expr.register));
+
+                // Allocate space for the array variable
+                parser.emit_instruction(&format!("\t%{} = alloca [{} x i32], align 16", var_name, array_expr.size));
+
+                // Use LLVM memcpy to copy the entire array at once
+                let size_bytes = array_expr.size * 4; // 4 bytes per i32
+                parser.emit_instruction(&format!("\t%{}_src = bitcast [{} x i32]* %{} to i8*", var_name, array_expr.size, array_expr.register));
+                parser.emit_instruction(&format!("\t%{}_dst = bitcast [{} x i32]* %{} to i8*", var_name, array_expr.size, var_name));
+                parser.emit_instruction(&format!("\tcall void @llvm.memcpy.p0i8.p0i8.i64(i8* %{}_dst, i8* %{}_src, i64 {}, i1 false)", var_name, var_name, size_bytes));
+                println!("DEBUG: Generated memcpy from %{} to %{}", array_expr.register, var_name);
+
+                // Store in symbol table
+                create_new_symbol(parser, var_name, final_type);
+            }
+            _ => {
+                // Normal variable declaration for other expression types
+                let test = Declaration::new_variable(var_name, Some(expr.clone()), final_type.clone());
+                parser.comment(&test.accept(&mut rebuild));
+                parser.emit_instruction(&test.accept(&mut visitor));
+                create_new_symbol(parser, var_name, final_type);
+            }
+        }
         parser.print_symbols();
     }
 }

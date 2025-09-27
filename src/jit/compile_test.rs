@@ -2,7 +2,7 @@ use std::fs::{self, File};
 use std::io::{self, Write};
 use std::process::{Command, exit};
 use std::time::{SystemTime, UNIX_EPOCH};
-use crate::llvm::llvm_print::{llvm_fmt_string_int, llvm_main_close, llvm_main_start, llvm_print_bool_declare, llvm_print_define, llvm_print_i32_define};
+use crate::llvm::llvm_print::{llvm_fmt_string_int, llvm_main_close, llvm_main_start, llvm_print_bool_declare, llvm_print_define, llvm_print_i32_define, llvm_memcpy_declare};
 use crate::parser::parser::Parser;
 fn chai_title() -> String {
     String::from(r#"
@@ -35,6 +35,7 @@ pub fn jit_compile(source: &str) -> io::Result<String>{
         parser.compilation += "\n";
         parser.compile(); // warmup
         parser.compilation += &llvm_fmt_string_int();
+        parser.compilation += &llvm_memcpy_declare();
         parser.compilation += &llvm_print_define();
         parser.compilation += &llvm_print_i32_define();
         parser.compilation += &llvm_print_bool_declare();

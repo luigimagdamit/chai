@@ -34,6 +34,7 @@ pub enum Expression {
     Binary(Binary),
     StringConstant(StringConstant),
     Array(ArrayExpression),
+    TempRegister(TempRegisterExpression),
     Empty
 }
 
@@ -60,6 +61,12 @@ pub struct VariableExpression {
     pub name: String,
     pub datatype: DataType,
     pub count: usize
+}
+
+#[derive(Clone)]
+pub struct TempRegisterExpression {
+    pub register: u32,
+    pub datatype: DataType,
 }
 
 #[derive(Clone)]
@@ -151,8 +158,32 @@ impl ExprNode for VariableExpression {
         &self.datatype
     }
     fn print(&self) -> String {
-        let type_str = (&self.datatype).as_str();
-        with_expr_ir!(load_variable(&self.name, type_str, self.count))
+        match &self.datatype {
+            DataType::Array(_, size) => {
+                // For arrays, we need to get a pointer to the first element, not load the array itself
+                format!("%{}_{} = getelementptr inbounds [{} x i32], [{} x i32]* %{}, i64 0, i64 0 ; getting array pointer", self.name, self.count, size, size, self.name)
+            }
+            _ => {
+                let type_str = (&self.datatype).as_str();
+                with_expr_ir!(load_variable(&self.name, type_str, self.count))
+            }
+        }
+    }
+}
+
+impl ExprNode for TempRegisterExpression {
+    fn get_type(&self) -> &str {
+        self.datatype.get_type()
+    }
+    fn get_value(&self) -> String {
+        format!("%{}", self.register)
+    }
+    fn to_datatype(&self) -> &DataType {
+        &self.datatype
+    }
+    fn print(&self) -> String {
+        // TempRegister doesn't need to print anything since it's already loaded
+        "".to_string()
     }
 }
 impl ExprNode for StringConstant {
@@ -299,6 +330,7 @@ impl Register for Expression {
             Expression::Literal(literal) => Expression::from(literal.clone()).resolve_binary(),
             Expression::StringConstant(str_constant) => format!("%{}", str_constant.register),
             Expression::Array(array) => format!("%{}", array.register),
+            Expression::TempRegister(temp) => format!("%{}", temp.register),
             _ => panic!()
 
         }
@@ -312,6 +344,7 @@ impl Accept for Expression {
             Expression::Variable(variable) => visitor.visit_variable_expression(variable),
             Expression::StringConstant(str_constant) => visitor.visit_string(str_constant),
             Expression::Array(array) => visitor.visit_array(array),
+            Expression::TempRegister(temp) => visitor.visit_temp_register(temp),
             _ => panic!()
         }
     }
@@ -394,6 +427,7 @@ impl Expression {
             Expression::StringConstant(s) => s.get_value(),
             Expression::Variable(v) => v.get_value(),
             Expression::Array(a) => a.get_value(),
+            Expression::TempRegister(t) => t.get_value(),
             _ => panic!("resolve_operand should have gotten an object that takes the ExprNode trait")
         }
     }
@@ -410,6 +444,7 @@ impl Expression {
                 array.elements.iter().map(|e| e.as_datatype()).collect(),
                 array.size
             ),
+            Expression::TempRegister(temp) => temp.datatype.clone(),
             _ => panic!()
         }
     }
@@ -421,6 +456,7 @@ impl fmt::Display for Expression {
             Expression::Binary(b) => write!(f, "\n{b}"),
             Expression::Literal(l) => write!(f, "{l}"),
             Expression::Array(a) => write!(f, "array[{}]:{}", a.size, a.name),
+            Expression::TempRegister(t) => write!(f, "%{}", t.register),
             _ => write!(f, "")
         }
     }

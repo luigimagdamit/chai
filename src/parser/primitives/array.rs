@@ -1,5 +1,5 @@
 use super::super::parser::Parser;
-use crate::parser::expression::expr::{DataType, Expression, ParseError, ArrayExpression, VariableExpression};
+use crate::parser::expression::expr::{DataType, Expression, ParseError, ArrayExpression, VariableExpression, TempRegisterExpression, ExprNode};
 use crate::parser::core::ast_node::AstNode;
 use crate::parser::declaration::variable::parse_get_variable;
 use crate::scanner::token::TokenType;
@@ -210,8 +210,9 @@ pub fn parse_array_index(parser: &mut Parser) -> Result<Expression, ParseError> 
                 DataType::Array(_, size) => {
                     // Generate getelementptr instruction
                     let element_type = "i32"; // For now, assume array elements are integers
-                    let ptr_instruction = format!("\t%{} = getelementptr inbounds [{} x {}], [{} x {}]* %{}, i64 0, i64 {}",
-                        ptr_reg, size, element_type, size, element_type, var_expr.name, index_expr.resolve_operand());
+                    // Use the loaded variable register (var_expr.get_value()) instead of the variable name
+                    let ptr_instruction = format!("\t%{} = getelementptr inbounds [{} x {}], [{} x {}]* {}, i64 0, i64 {}",
+                        ptr_reg, size, element_type, size, element_type, var_expr.get_value(), index_expr.resolve_operand());
                     parser.emit_instruction(&ptr_instruction);
                     element_type
                 }
@@ -229,14 +230,11 @@ pub fn parse_array_index(parser: &mut Parser) -> Result<Expression, ParseError> 
 
             parser.expr_count += 2;
 
-            // Return a variable expression representing the loaded value
-            // For register references, we need a way to get just %{load_reg}
-            // Since VariableExpression::get_value() returns %{name}_{count},
-            // and we want %{load_reg}, we can create a custom variable with name that already includes %
-            let result_expr = Expression::Variable(VariableExpression {
-                name: format!("{}", load_reg), // Just the register number
+            // Return a register reference expression
+            // Create a special temporary expression that represents the loaded register
+            let result_expr = Expression::TempRegister(TempRegisterExpression {
+                register: load_reg,
                 datatype: DataType::Integer(None),
-                count: 0  // This will make get_value() return %{load_reg}_0
             });
             parser.ast_stack.push(AstNode::from_expression(result_expr.clone()));
 
@@ -266,10 +264,9 @@ pub fn parse_array_index(parser: &mut Parser) -> Result<Expression, ParseError> 
 
             parser.expr_count += 2;
 
-            let result_expr = Expression::Variable(VariableExpression {
-                name: load_reg.to_string(),
+            let result_expr = Expression::TempRegister(TempRegisterExpression {
+                register: load_reg,
                 datatype: array_expr.element_type.clone(),
-                count: 0
             });
             parser.ast_stack.push(AstNode::from_expression(result_expr.clone()));
 
