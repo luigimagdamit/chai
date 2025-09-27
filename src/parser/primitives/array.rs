@@ -3,6 +3,7 @@ use crate::parser::expression::expr::{DataType, Expression, ParseError, ArrayExp
 use crate::parser::core::ast_node::AstNode;
 use crate::parser::declaration::variable::parse_get_variable;
 use crate::scanner::token::TokenType;
+use super::string::parse_string;
 
 /// Parse array literals like [1, 2, 3] or [true, false, true]
 pub fn parse_array_literal(parser: &mut Parser) -> Result<Expression, ParseError> {
@@ -67,8 +68,14 @@ pub fn parse_array_literal(parser: &mut Parser) -> Result<Expression, ParseError
                     }
                     TokenType::String => {
                         parser.advance();
-                        let string_val = parser.previous.unwrap().start.to_string();
-                        Expression::from_literal(DataType::String(string_val))
+                        // Use the proper string parsing function to handle string table and register allocation
+                        parse_string(parser)?;
+                        // Get the actual StringConstant expression that was pushed to the AST stack
+                        if let Some(ast_node) = parser.ast_stack.pop() {
+                            ast_node.to_expression()
+                        } else {
+                            return Err(ParseError::Generic);
+                        }
                     }
                     TokenType::Identifier => {
                         // Variable reference - use the existing function

@@ -1,0 +1,9 @@
+fn main() int {
+    var words: [str] = ["hello", "world", "test"];
+    var first: str = words[0];
+    print(first);
+    var second = words[1];
+    print(second);
+    var third = words[2];
+    print(third);
+}
