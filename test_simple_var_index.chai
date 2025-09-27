@@ -1,0 +1,9 @@
+fn main() int {
+    var numbers: [int] = [1, 20000, 3];
+    var i: int = 0;
+    var value = numbers[i];
+    print(value);
+    i = 1;
+    var second = numbers[i];
+    print(second);
+}

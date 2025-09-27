@@ -1,9 +1,10 @@
 fn main() int {
     var numbers: [int] = [1, 20000, 3];
-    var first = numbers[0];
-    print(first);
-    var second = numbers[1];
-    print(second);
-    var third = numbers[2];
-    print(third);
+    var i: int = 0;
+
+    while (i < 3) {
+        print(numbers[i]);
+        print(i);
+        i = i + 1;
+    }
 }

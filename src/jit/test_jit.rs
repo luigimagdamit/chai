@@ -231,4 +231,48 @@ fn main() int {
         let result = jit_compile(&contents).unwrap();
         assert_eq!(result, "-1\n-10\n-100\n");
     }
+
+    #[test]
+    #[serial]
+    fn test_array_strings() {
+        init_backend_config_for_test(IRBackend::LLVM);
+        let contents = r#"
+fn main() int {
+    var words: [str] = ["hello", "world", "test"];
+    var first = words[0];
+    print(first);
+    var second = words[1];
+    print(second);
+    var third = words[2];
+    print(third);
+}
+"#;
+
+        let parser = &mut Parser::init_parser(&contents);
+        parser.compile();
+
+        let result = jit_compile(&contents).unwrap();
+        assert_eq!(result, "hello\nworld\ntest\n");
+    }
+
+    #[test]
+    #[serial]
+    fn test_array_mixed_string_operations() {
+        init_backend_config_for_test(IRBackend::LLVM);
+        let contents = r#"
+fn main() int {
+    var greetings: [str] = ["hi", "bye"];
+    var msg = greetings[0];
+    print(msg);
+    var farewell = greetings[1];
+    print(farewell);
+}
+"#;
+
+        let parser = &mut Parser::init_parser(&contents);
+        parser.compile();
+
+        let result = jit_compile(&contents).unwrap();
+        assert_eq!(result, "hi\nbye\n");
+    }
 }

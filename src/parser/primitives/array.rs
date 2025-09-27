@@ -4,6 +4,8 @@ use crate::parser::core::ast_node::AstNode;
 use crate::parser::declaration::variable::parse_get_variable;
 use crate::scanner::token::TokenType;
 use super::string::parse_string;
+use crate::parser::expression::expression::parse_precedence;
+use crate::parser::expression::precedence::Precedence;
 
 /// Parse array literals like [1, 2, 3] or [true, false, true]
 pub fn parse_array_literal(parser: &mut Parser) -> Result<Expression, ParseError> {
@@ -199,17 +201,21 @@ pub fn parse_array_index(parser: &mut Parser) -> Result<Expression, ParseError> 
     // The '[' token has already been consumed by the precedence parser
     // We are now positioned at the index expression
 
-    // Parse the index expression - simple number for now
-    if !parser.check_current(TokenType::Number) {
-        println!("DEBUG: Expected number but found: {:?}", parser.current);
-        parser.error_at_previous("Array index must be a number");
+    // Parse the index expression - handle simple cases to avoid infinite recursion
+    let index_expr = if parser.check_current(TokenType::Number) {
+        // Handle literal numbers
+        parser.advance();
+        let index_str = parser.previous.unwrap().start;
+        let index_val: i32 = index_str.parse().unwrap_or(0);
+        Expression::from_literal(DataType::Integer(Some(index_val)))
+    } else if parser.check_current(TokenType::Identifier) {
+        // Handle variable references
+        parser.advance();
+        parse_get_variable(parser)?
+    } else {
+        parser.error_at_previous("Array index must be a number or variable");
         return Err(ParseError::Generic);
-    }
-
-    parser.advance();
-    let index_str = parser.previous.unwrap().start;
-    let index_val: i32 = index_str.parse().unwrap_or(0);
-    let index_expr = Expression::from_literal(DataType::Integer(Some(index_val)));
+    };
 
     // Expect ']'
     if !parser.check_current(TokenType::RightBracket) {
@@ -240,9 +246,24 @@ pub fn parse_array_index(parser: &mut Parser) -> Result<Expression, ParseError> 
                         "i32" // fallback for empty arrays
                     };
 
+                    // Handle index operand - cast i32 to i64 if needed
+                    let index_operand = match &index_expr {
+                        Expression::Variable(_) | Expression::TempRegister(_) => {
+                            // For variables, we need to cast i32 to i64
+                            let cast_reg = ptr_reg - 1;
+                            let cast_instruction = format!("\t%{} = sext i32 {} to i64", cast_reg, index_expr.resolve_operand());
+                            parser.emit_instruction(&cast_instruction);
+                            format!("%{}", cast_reg)
+                        },
+                        _ => {
+                            // For literals, use the value directly
+                            index_expr.resolve_operand()
+                        }
+                    };
+
                     // Use the variable name for array indexing
                     let ptr_instruction = format!("\t%{} = getelementptr inbounds [{} x {}], [{} x {}]* %{}, i64 0, i64 {}",
-                        ptr_reg, size, element_type, size, element_type, var_expr.name, index_expr.resolve_operand());
+                        ptr_reg, size, element_type, size, element_type, var_expr.name, index_operand);
                     parser.emit_instruction(&ptr_instruction);
                     element_type
                 }
@@ -258,7 +279,12 @@ pub fn parse_array_index(parser: &mut Parser) -> Result<Expression, ParseError> 
                 load_reg, element_type_str, element_type_str, ptr_reg);
             parser.emit_instruction(&load_instruction);
 
-            parser.expr_count += 2;
+            // Update register count (cast + getelementptr + load = 3 for variables, 2 for literals)
+            let register_increment = match &index_expr {
+                Expression::Variable(_) | Expression::TempRegister(_) => 3, // cast + getelementptr + load
+                _ => 2, // getelementptr + load
+            };
+            parser.expr_count += register_increment;
 
             // Return a register reference expression
             // Create a special temporary expression that represents the loaded register
@@ -286,10 +312,28 @@ pub fn parse_array_index(parser: &mut Parser) -> Result<Expression, ParseError> 
                 _ => "i32"
             };
 
+            // Handle index operand - cast i32 to i64 if needed for direct array access too
+            let index_operand = match &index_expr {
+                Expression::Variable(_) | Expression::TempRegister(_) => {
+                    // For variables, we need to cast i32 to i64
+                    let cast_reg = parser.expr_count + 1;
+                    let cast_instruction = format!("\t%{} = sext i32 {} to i64", cast_reg, index_expr.resolve_operand());
+                    parser.emit_instruction(&cast_instruction);
+                    format!("%{}", cast_reg)
+                },
+                _ => {
+                    // For literals, use the value directly
+                    index_expr.resolve_operand()
+                }
+            };
+
             // Generate element pointer access
-            let ptr_reg = parser.expr_count + 1;
+            let ptr_reg = parser.expr_count + match &index_expr {
+                Expression::Variable(_) | Expression::TempRegister(_) => 2, // cast + getelementptr
+                _ => 1, // just getelementptr
+            };
             let ptr_instruction = format!("\t%{} = getelementptr inbounds [{} x {}], [{} x {}]* %{}, i64 0, i64 {}",
-                ptr_reg, array_expr.size, element_type_str, array_expr.size, element_type_str, array_expr.register, index_expr.resolve_operand());
+                ptr_reg, array_expr.size, element_type_str, array_expr.size, element_type_str, array_expr.register, index_operand);
             parser.emit_instruction(&ptr_instruction);
 
             // Generate load instruction
@@ -298,7 +342,12 @@ pub fn parse_array_index(parser: &mut Parser) -> Result<Expression, ParseError> 
                 load_reg, element_type_str, element_type_str, ptr_reg);
             parser.emit_instruction(&load_instruction);
 
-            parser.expr_count += 2;
+            // Update register count (cast + getelementptr + load = 3 for variables, 2 for literals)
+            let register_increment = match &index_expr {
+                Expression::Variable(_) | Expression::TempRegister(_) => 3, // cast + getelementptr + load
+                _ => 2, // getelementptr + load
+            };
+            parser.expr_count += register_increment;
 
             let result_expr = Expression::TempRegister(TempRegisterExpression {
                 register: load_reg,

@@ -2,55 +2,40 @@
 define i32 @main() {
 entry:
 
-		%0 = alloca [3 x i32], align 16
-		%1 = getelementptr inbounds [3 x i32], [3 x i32]* %0, i64 0, i64 0
-		store i32 7, i32* %1
-		%2 = getelementptr inbounds [3 x i32], [3 x i32]* %0, i64 0, i64 1
-		store i32 8, i32* %2
-		%3 = getelementptr inbounds [3 x i32], [3 x i32]* %0, i64 0, i64 2
-		store i32 9, i32* %3
+		%0 = add i1 0, 1
 
-	;var inferred : array[3] = array[3]:arr_0;
-		%inferred = alloca [3 x i32], align 16
-		%inferred_src = bitcast [3 x i32]* %0 to i8*
-		%inferred_dst = bitcast [3 x i32]* %inferred to i8*
-		call void @llvm.memcpy.p0i8.p0i8.i64(i8* %inferred_dst, i8* %inferred_src, i64 12, i1 false)
-	%inferred_0 = getelementptr inbounds [3 x i32], [3 x i32]* %inferred, i64 0, i64 0 ; getting array pointer
-		%5 = getelementptr inbounds [3 x i32], [3 x i32]* %inferred, i64 0, i64 0
-		%6 = load i32, i32* %5
+	;var x : bool = true;
+	%x = alloca i1
+	store i1 1, i1* %x
+	%x_0 = load i1, i1* %x ; loading existing variable
+		%4 = add i1 0, 1
+	%5 = icmp eq i1 %x_0, 1
 
-	;var first = %6 (from temp register)
-		%first = alloca i32, align 4
-		store i32 %6, i32* %first
-	%first_0 = load i32, i32* %first ; loading existing variable
+	;depth: 0
+	br i1 %5, label %then0, label %else0
+	then0:
+		%7 = add i1 0, 0
+	store i1 0, i1* %x
+	 ; set symbol (symbol.rs)
 
-	;; print(first);;
-	call void @print_i32(i32 %first_0); signature from PrintVisitor
 
-	%inferred_1 = getelementptr inbounds [3 x i32], [3 x i32]* %inferred, i64 0, i64 0 ; getting array pointer
-		%8 = getelementptr inbounds [3 x i32], [3 x i32]* %inferred, i64 0, i64 1
-		%9 = load i32, i32* %8
+	;; print(555);;
+	call void @print_i32(i32 555); signature from PrintVisitor
 
-	;var second = %9 (from temp register)
-		%second = alloca i32, align 4
-		store i32 %9, i32* %second
-	%second_0 = load i32, i32* %second ; loading existing variable
+	br label %end0
+	
+else0:
+		%8 = add i1 0, 1
+	store i1 1, i1* %x
+	 ; set symbol (symbol.rs)
 
-	;; print(second);;
-	call void @print_i32(i32 %second_0); signature from PrintVisitor
 
-	%inferred_2 = getelementptr inbounds [3 x i32], [3 x i32]* %inferred, i64 0, i64 0 ; getting array pointer
-		%11 = getelementptr inbounds [3 x i32], [3 x i32]* %inferred, i64 0, i64 2
-		%12 = load i32, i32* %11
+	;; print(666);;
+	call void @print_i32(i32 666); signature from PrintVisitor
 
-	;var third = %12 (from temp register)
-		%third = alloca i32, align 4
-		store i32 %12, i32* %third
-	%third_0 = load i32, i32* %third ; loading existing variable
-
-	;; print(third);;
-	call void @print_i32(i32 %third_0); signature from PrintVisitor
-
+	br label %end0
+	
+end0:
 
 	ret i32 0 ; llvm_main_close
 }
