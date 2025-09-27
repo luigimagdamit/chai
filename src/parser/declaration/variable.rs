@@ -170,13 +170,21 @@ pub fn variable_assignment_with_type(parser: &mut Parser, var_name: &str, expect
                 // For arrays, copy the initialized array to the variable
                 parser.comment(&format!("var {} : array[{}] = array[{}]:arr_{};", var_name, array_expr.size, array_expr.size, array_expr.register));
 
-                // Allocate space for the array variable
-                parser.emit_instruction(&format!("\t%{} = alloca [{} x i32], align 16", var_name, array_expr.size));
+                // Get the correct element type string and size
+                let (element_type_str, element_size) = match &array_expr.element_type {
+                    DataType::Integer(_) => ("i32", 4),
+                    DataType::Boolean(_) => ("i1", 1),
+                    DataType::String(_) => ("i8*", 8),
+                    _ => ("i32", 4) // fallback
+                };
+
+                // Allocate space for the array variable with correct type
+                parser.emit_instruction(&format!("\t%{} = alloca [{} x {}], align 16", var_name, array_expr.size, element_type_str));
 
                 // Use LLVM memcpy to copy the entire array at once
-                let size_bytes = array_expr.size * 4; // 4 bytes per i32
-                parser.emit_instruction(&format!("\t%{}_src = bitcast [{} x i32]* %{} to i8*", var_name, array_expr.size, array_expr.register));
-                parser.emit_instruction(&format!("\t%{}_dst = bitcast [{} x i32]* %{} to i8*", var_name, array_expr.size, var_name));
+                let size_bytes = array_expr.size * element_size;
+                parser.emit_instruction(&format!("\t%{}_src = bitcast [{} x {}]* %{} to i8*", var_name, array_expr.size, element_type_str, array_expr.register));
+                parser.emit_instruction(&format!("\t%{}_dst = bitcast [{} x {}]* %{} to i8*", var_name, array_expr.size, element_type_str, var_name));
                 parser.emit_instruction(&format!("\tcall void @llvm.memcpy.p0i8.p0i8.i64(i8* %{}_dst, i8* %{}_src, i64 {}, i1 false)", var_name, var_name, size_bytes));
                 println!("DEBUG: Generated memcpy from %{} to %{}", array_expr.register, var_name);
 

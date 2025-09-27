@@ -2,58 +2,55 @@
 define i32 @main() {
 entry:
 
-		%0 = add i1 0, 1
+		%0 = alloca [3 x i1], align 16
+		%1 = getelementptr inbounds [3 x i1], [3 x i1]* %0, i64 0, i64 0
+		store i1 1, i1* %1
+		%2 = getelementptr inbounds [3 x i1], [3 x i1]* %0, i64 0, i64 1
+		store i1 0, i1* %2
+		%3 = getelementptr inbounds [3 x i1], [3 x i1]* %0, i64 0, i64 2
+		store i1 1, i1* %3
 
-	;var a : bool = true;
-	%a = alloca i1
-	store i1 1, i1* %a
-		%1 = add i1 0, 0
+	;var flags : array[3] = array[3]:arr_0;
+		%flags = alloca [3 x i1], align 16
+		%flags_src = bitcast [3 x i1]* %0 to i8*
+		%flags_dst = bitcast [3 x i1]* %flags to i8*
+		call void @llvm.memcpy.p0i8.p0i8.i64(i8* %flags_dst, i8* %flags_src, i64 3, i1 false)
+	%flags_0 = getelementptr inbounds [3 x i32], [3 x i32]* %flags, i64 0, i64 0 ; getting array pointer
+		%5 = getelementptr inbounds [3 x i1], [3 x i1]* %flags, i64 0, i64 0
+		%6 = load i1, i1* %5
 
-	;var b : bool = false;
-	%b = alloca i1
-	store i1 0, i1* %b
-	%a_0 = load i1, i1* %a ; loading existing variable
-		%5 = add i1 0, 1
-	%6 = icmp eq i1 %a_0, 1
+	;var first = %6 (from temp register)
+		%first = alloca i1, align 4
+		store i1 %6, i1* %first
+	%first_0 = load i1, i1* %first ; loading existing variable
 
-	;depth: 0
-	br i1 %6, label %then0, label %else0
-	then0:
+	;; print(first);;
+	call void @print_i1(i1 %first_0); signature from PrintVisitor
 
-	;; print(777);;
-	call void @print_i32(i32 777); signature from PrintVisitor
+	%flags_1 = getelementptr inbounds [3 x i32], [3 x i32]* %flags, i64 0, i64 0 ; getting array pointer
+		%8 = getelementptr inbounds [3 x i1], [3 x i1]* %flags, i64 0, i64 1
+		%9 = load i1, i1* %8
 
-	%b_0 = load i1, i1* %b ; loading existing variable
-		%11 = add i1 0, 0
-	%12 = icmp eq i1 %b_0, 0
+	;var second = %9 (from temp register)
+		%second = alloca i1, align 4
+		store i1 %9, i1* %second
+	%second_0 = load i1, i1* %second ; loading existing variable
 
-	;depth: 1
-	br i1 %12, label %then1, label %else1
-	then1:
+	;; print(second);;
+	call void @print_i1(i1 %second_0); signature from PrintVisitor
 
-	;; print(888);;
-	call void @print_i32(i32 888); signature from PrintVisitor
+	%flags_2 = getelementptr inbounds [3 x i32], [3 x i32]* %flags, i64 0, i64 0 ; getting array pointer
+		%11 = getelementptr inbounds [3 x i1], [3 x i1]* %flags, i64 0, i64 2
+		%12 = load i1, i1* %11
 
-	br label %end1
-	
-else1:
+	;var third = %12 (from temp register)
+		%third = alloca i1, align 4
+		store i1 %12, i1* %third
+	%third_0 = load i1, i1* %third ; loading existing variable
 
-	;; print(999);;
-	call void @print_i32(i32 999); signature from PrintVisitor
+	;; print(third);;
+	call void @print_i1(i1 %third_0); signature from PrintVisitor
 
-	br label %end1
-	
-end1:
-	br label %end0
-	
-else0:
-
-	;; print(0);;
-	call void @print_i32(i32 0); signature from PrintVisitor
-
-	br label %end0
-	
-end0:
 
 	ret i32 0 ; llvm_main_close
 }

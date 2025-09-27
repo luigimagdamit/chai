@@ -44,6 +44,19 @@ pub fn parse_array_literal(parser: &mut Parser) -> Result<Expression, ParseError
                         let number_val: i32 = number_str.parse().unwrap_or(0);
                         Expression::from_literal(DataType::Integer(Some(number_val)))
                     }
+                    TokenType::Minus => {
+                        // Handle negative numbers
+                        parser.advance(); // consume '-'
+                        if parser.check_current(TokenType::Number) {
+                            parser.advance(); // consume number
+                            let number_str = parser.previous.unwrap().start;
+                            let number_val: i32 = number_str.parse().unwrap_or(0);
+                            Expression::from_literal(DataType::Integer(Some(-number_val)))
+                        } else {
+                            parser.error_at_previous("Expected number after minus sign in array literal");
+                            return Err(ParseError::Generic);
+                        }
+                    }
                     TokenType::True => {
                         parser.advance();
                         Expression::from_literal(DataType::Boolean(Some(true)))
@@ -207,9 +220,19 @@ pub fn parse_array_index(parser: &mut Parser) -> Result<Expression, ParseError> 
             let ptr_reg = parser.expr_count + 1;
             println!("DEBUG: Array indexing ptr_reg: {}, expr_count: {}", ptr_reg, parser.expr_count);
             let element_type_str = match &var_expr.datatype {
-                DataType::Array(_, size) => {
-                    // Generate getelementptr instruction
-                    let element_type = "i32"; // For now, assume array elements are integers
+                DataType::Array(element_types, size) => {
+                    // Get the correct element type from the array type
+                    let element_type = if let Some(first_element) = element_types.first() {
+                        match first_element {
+                            DataType::Integer(_) => "i32",
+                            DataType::Boolean(_) => "i1",
+                            DataType::String(_) => "i8*",
+                            _ => "i32" // fallback
+                        }
+                    } else {
+                        "i32" // fallback for empty arrays
+                    };
+
                     // Use the variable name for array indexing
                     let ptr_instruction = format!("\t%{} = getelementptr inbounds [{} x {}], [{} x {}]* %{}, i64 0, i64 {}",
                         ptr_reg, size, element_type, size, element_type, var_expr.name, index_expr.resolve_operand());
@@ -232,9 +255,15 @@ pub fn parse_array_index(parser: &mut Parser) -> Result<Expression, ParseError> 
 
             // Return a register reference expression
             // Create a special temporary expression that represents the loaded register
+            let element_datatype = match element_type_str {
+                "i32" => DataType::Integer(None),
+                "i1" => DataType::Boolean(None),
+                "i8*" => DataType::String("".to_string()),
+                _ => DataType::Integer(None) // fallback
+            };
             let result_expr = Expression::TempRegister(TempRegisterExpression {
                 register: load_reg,
-                datatype: DataType::Integer(None),
+                datatype: element_datatype,
             });
             parser.ast_stack.push(AstNode::from_expression(result_expr.clone()));
 

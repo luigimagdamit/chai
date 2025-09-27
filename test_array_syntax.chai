@@ -1,5 +1,5 @@
 fn main() int {
-    var numbers: [int] = [1, 2, 3];
+    var numbers: [int] = [1, 20000, 3];
     var first = numbers[0];
     print(first);
     var second = numbers[1];
