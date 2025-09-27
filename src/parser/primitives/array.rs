@@ -143,7 +143,7 @@ pub fn parse_array_literal(parser: &mut Parser) -> Result<Expression, ParseError
     // Emit initialization instructions for each element
     for (index, element) in array_expr.elements.iter().enumerate() {
         // Generate element pointer
-        let ptr_reg = parser.expr_count + 1000 + (index as u32);
+        let ptr_reg = parser.expr_count + 1 + (index as u32);
         let ptr_instruction = format!("\t%{} = getelementptr inbounds [{} x {}], [{} x {}]* %{}, i64 0, i64 {}",
             ptr_reg, array_size, element_type_str, array_size, element_type_str, parser.expr_count, index);
         parser.emit_instruction(&ptr_instruction);
@@ -155,7 +155,7 @@ pub fn parse_array_literal(parser: &mut Parser) -> Result<Expression, ParseError
         parser.emit_instruction(&store_instruction);
     }
 
-    parser.expr_count += 1;
+    parser.expr_count += 1 + (array_size as u32);
 
     let result = Expression::Array(array_expr);
     parser.ast_stack.push(AstNode::from_expression(result.clone()));
@@ -203,16 +203,16 @@ pub fn parse_array_index(parser: &mut Parser) -> Result<Expression, ParseError> 
     match &array_expression {
         Expression::Variable(var_expr) => {
             // Generate element pointer access
-            // Use a high register number to avoid conflicts with array literal registers
-            let ptr_reg = parser.expr_count + 1010;
+            // Use next available register number
+            let ptr_reg = parser.expr_count + 1;
             println!("DEBUG: Array indexing ptr_reg: {}, expr_count: {}", ptr_reg, parser.expr_count);
             let element_type_str = match &var_expr.datatype {
                 DataType::Array(_, size) => {
                     // Generate getelementptr instruction
                     let element_type = "i32"; // For now, assume array elements are integers
-                    // Use the loaded variable register (var_expr.get_value()) instead of the variable name
-                    let ptr_instruction = format!("\t%{} = getelementptr inbounds [{} x {}], [{} x {}]* {}, i64 0, i64 {}",
-                        ptr_reg, size, element_type, size, element_type, var_expr.get_value(), index_expr.resolve_operand());
+                    // Use the variable name for array indexing
+                    let ptr_instruction = format!("\t%{} = getelementptr inbounds [{} x {}], [{} x {}]* %{}, i64 0, i64 {}",
+                        ptr_reg, size, element_type, size, element_type, var_expr.name, index_expr.resolve_operand());
                     parser.emit_instruction(&ptr_instruction);
                     element_type
                 }
@@ -251,7 +251,7 @@ pub fn parse_array_index(parser: &mut Parser) -> Result<Expression, ParseError> 
             };
 
             // Generate element pointer access
-            let ptr_reg = parser.expr_count + 1010;
+            let ptr_reg = parser.expr_count + 1;
             let ptr_instruction = format!("\t%{} = getelementptr inbounds [{} x {}], [{} x {}]* %{}, i64 0, i64 {}",
                 ptr_reg, array_expr.size, element_type_str, array_expr.size, element_type_str, array_expr.register, index_expr.resolve_operand());
             parser.emit_instruction(&ptr_instruction);
